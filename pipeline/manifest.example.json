@@ -1,0 +1,12 @@
+{
+  "contract_signed": "2025-07-03",
+  "report_settings": {
+    "contract_signed_verified": false,
+    "events": {},
+    "selections": []
+  },
+  "sources": [
+    {"key": "contract", "working_units": "data/contract/working-units.json", "sections": "data/contract/sections.json", "lines": "data/contract/lines.json"},
+    {"key": "blb", "working_units": "data/blb/working-units.json", "sections": "data/blb/sections.json", "lines": "data/blb/lines.json"}
+  ]
+}
