@@ -24,7 +24,7 @@ def report(pages,documents,page_count):
         for finding in p.get('transcription_findings',[]):flag(finding['code'],n,reason=finding['reason'])
         for c in p['checkboxes']:
             if c['state']=='uncertain':flag('checkbox_needs_review',n,checkbox_id=c['id'])
-    return {'schema_version':6,'status':'needs_review' if findings else 'awaiting_source_review',
+    return {'schema_version':6,'status':'needs_review' if findings or documents.get('review_flags') else 'awaiting_source_review',
         'boundary_findings':documents.get('review_flags',[]),'page_count':page_count,'emitted_pages':len(pages),'findings':findings,
         'accuracy':{'target':.99,'measured':False,'reason':'Requires independently reviewed source transcription; OCR confidence is not an accuracy measurement.'},
         'snapshot_sha256':digest({'pages':pages,'documents':documents})}
