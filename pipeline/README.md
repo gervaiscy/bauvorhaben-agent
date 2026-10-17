@@ -69,7 +69,8 @@ legal deadline extensions for weekends/holidays, contract conclusion, weather en
 
 ## Included sources and compatibility
 
-- `pdf-extractor/`: your supplied v4.3 archive, with integrity/checkpoint changes.
+- `pdf-extractor/`: two-file Gemini visible-page transcription workflow.
+- `extraction_support/`: document-boundary proposals, source review and JSON helpers.
 - `working-units/`: the earlier `bauvo-milestone-source-2026-10-04.zip` found beside your run3
   files, with source-snapshot verification added. The newly supplied archives did not contain this stage.
 - `enrich_working_units.py`: based on your October 11 archive (the October 10 archive is older).
@@ -99,24 +100,22 @@ Do not rerun PDF extraction if you have the matching sections, lines and assembl
 Keep those three outputs together. A checksum mismatch requires matching inputs or regeneration;
 changing the checksum merely to silence a mismatch is not a repair.
 
-For a fresh PDF run, keep your v4.3 command and add an explicit model and location:
+For a fresh extraction run from the repository root:
 
 ```sh
-python pdf-extractor/extract.py --input contract.pdf --output data/contract \
-  --project YOUR_PROJECT --location YOUR_LOCATION --model YOUR_MODEL \
-  --staging gs://YOUR_PRIVATE_BUCKET/contract-run
-
-bauvo-working-units --sections data/contract/sections.json \
-  --lines data/contract/lines.json --output data/contract/working-units.json \
-  --project YOUR_PROJECT --location YOUR_LOCATION --model YOUR_MODEL \
-  --raw-output data/contract/working-units-raw.json --trace-dir data/contract/trace
+make fresh-extract CASE=sample
 ```
 
-Repeat with a separate output directory for the BLB. PDF numeric/layout disagreements must be
-reviewed and corrected before report generation. `unverified_needs_review` blocks reports.
-After a real transcription review, record `status: "reviewed"` and reviewer information in
-sections.json, retaining its source PDF hash and matching lines checksum. If line text changed,
-regenerate Working Units and downstream proposals from the corrected snapshot.
+This calls `pdf-extractor/ocr_pipeline.py`, rendering each PDF page to a PNG
+and sending it individually to Gemini 3.5 Flash with minimal reasoning. Review
+`pages.json` before running working-unit extraction. See the repository README
+for configuration, document boundaries and source approval.
+
+
+Source findings require review against the rendered PDF. Use the root commands
+`make open-extraction`, `make resolve-extraction` and `make approve-extraction`
+to inspect and record review. Existing section-based outputs remain historical
+artifacts; new extraction runs use `pages.json` and `documents.json`.
 
 ## Manifest
 

@@ -37,6 +37,16 @@ class ExtractionApprovalTests(unittest.TestCase):
 
 class ScopedFindingTests(unittest.TestCase):
  fixture=ExtractionApprovalTests.fixture
+ def test_transcription_findings_require_explicit_review_and_preserve_text(self):
+  for code in ['uncertain_transcription','possible_nonliteral_transcription']:
+   with self.subTest(code=code),tempfile.TemporaryDirectory() as d:
+    root=Path(d);folder=self.fixture(root);before=(folder/'pages.json').read_bytes()
+    (folder/'quality-report.json').write_text(json.dumps({'schema_version':5,'status':'needs_review','findings':[{'code':code,'pdf_page':1}]}))
+    with self.assertRaises(ValueError):mod.resolve_finding(root,'blb',1,code,'Human','Compared rendered image','')
+    mod.resolve_finding(root,'blb',1,code,'Human','Compared rendered image; uncertainty remains recorded','reviewed')
+    self.assertEqual((folder/'pages.json').read_bytes(),before)
+    self.assertEqual(json.loads((folder/'quality-report.json').read_text())['status'],'awaiting_source_review')
+    with self.assertRaisesRegex(ValueError,'not source-reviewed'):mod.require_approved(root,[{'key':'blb'}])
  def test_only_source_checked_diagnostic_can_be_resolved_and_original_is_preserved(self):
   with tempfile.TemporaryDirectory() as d:
    root=Path(d);folder=self.fixture(root)
@@ -48,6 +58,20 @@ class ScopedFindingTests(unittest.TestCase):
    with self.assertRaises(ValueError):mod.approve(root,'blb','Human','Checked','reviewed')
 
 class OCRPrimaryApprovalTests(unittest.TestCase):
+ def test_gemini_review_requires_and_binds_rendered_image_inventory(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);folder=ExtractionApprovalTests().fixture(root)
+   data=json.loads((folder/'pages.json').read_text());data['pages'][0]['ocr_provider']='gemini'
+   (folder/'pages.json').write_text(json.dumps(data))
+   with self.assertRaisesRegex(ValueError,'inventory'):mod.hashes(folder)
+   image_hash=__import__('hashlib').sha256((folder/'page-images/page-0001.png').read_bytes()).hexdigest()
+   inventory={'images':[{'pdf_page':1,'image_file':'page-images/page-0001.png','image_sha256':image_hash}]}
+   (folder/'page-images.json').write_text(json.dumps(inventory))
+   self.assertIn('page-images.json',mod.hashes(folder))
+   mod.approve(root,'blb','Human','Compared rendered pages','reviewed')
+   (folder/'page-images.json').write_text('{"images":["changed"]}')
+   with self.assertRaises(ValueError):mod.require_approved(root,[{'key':'blb'}])
+
  def fixture(self,root):
   import hashlib
   folder=ExtractionApprovalTests().fixture(root)
@@ -70,3 +94,44 @@ class OCRPrimaryApprovalTests(unittest.TestCase):
    self.assertTrue((audit/'quality-report-before.json').exists())
    with self.assertRaisesRegex(ValueError,'not source-reviewed'):mod.require_approved(root,[{'key':'blb'}])
 
+
+class CropEvidenceApprovalTests(unittest.TestCase):
+ def test_approval_covers_both_crop_pixels_and_raw_response(self):
+  import hashlib
+  for target in ('page-images/crop.png','ocr-cache/crop.json'):
+   with self.subTest(target=target),tempfile.TemporaryDirectory() as d:
+    root=Path(d);folder=ExtractionApprovalTests().fixture(root)
+    crop=folder/'page-images/crop.png';crop.write_bytes(b'crop pixels')
+    raw=folder/'ocr-cache/crop.json';raw.write_bytes(b'crop response')
+    p=json.loads((folder/'pages.json').read_text())
+    p['pages'][0]['ocr_rechecks']=[{'attempts':[{'image':'page-images/crop.png','image_sha256':hashlib.sha256(crop.read_bytes()).hexdigest(),
+      'raw_ocr_file':'ocr-cache/crop.json','raw_ocr_sha256':hashlib.sha256(raw.read_bytes()).hexdigest()}]}]
+    (folder/'pages.json').write_text(json.dumps(p));mod.approve(root,'blb','Human','Source checked','reviewed')
+    mod.require_approved(root,[{'key':'blb'}]);(folder/target).write_bytes(b'changed')
+    with self.assertRaisesRegex(ValueError,'Crop OCR evidence changed'):mod.require_approved(root,[{'key':'blb'}])
+
+
+class PageTextSchemaApprovalTests(unittest.TestCase):
+ def test_schema6_without_lines_is_reviewable_and_remains_evidence_bound(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);folder=ExtractionApprovalTests().fixture(root)
+   for name in ('pages.json','quality-report.json'):
+    data=json.loads((folder/name).read_text());data['schema_version']=6
+    (folder/name).write_text(json.dumps(data))
+   mod.approve(root,'blb','Human','Compared all rendered pages with page text','reviewed')
+   mod.require_approved(root,[{'key':'blb'}])
+   data=json.loads((folder/'pages.json').read_text());data['pages'][0]['text']='Changed'
+   (folder/'pages.json').write_text(json.dumps(data))
+   with self.assertRaises(ValueError):mod.require_approved(root,[{'key':'blb'}])
+
+ def test_schema6_can_regroup_without_rewriting_page_text(self):
+  from extraction_review import prepare_regroup
+  import hashlib
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);folder=ExtractionApprovalTests().fixture(root)
+   data=json.loads((folder/'pages.json').read_text());data['schema_version']=6
+   (folder/'pages.json').write_text(json.dumps(data));before=(folder/'pages.json').read_bytes()
+   audit=prepare_regroup(root,'blb',lambda p:json.loads(p.read_text()),
+       lambda p,data:p.write_text(json.dumps(data)),lambda p:hashlib.sha256(p.read_bytes()).hexdigest())
+   self.assertTrue((audit/'audit.json').is_file())
+   self.assertEqual((folder/'pages.json').read_bytes(),before)

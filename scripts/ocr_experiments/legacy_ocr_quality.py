@@ -2,7 +2,7 @@
 import hashlib
 import html
 import json
-from document_ocr import digest
+from common import digest
 
 
 def report(pages,documents,page_count):
@@ -16,9 +16,14 @@ def report(pages,documents,page_count):
         n=p['pdf_page']
         if hashlib.sha256(p['text'].encode()).hexdigest()!=p['text_sha256']:flag('page_text_changed',n)
         if p.get('unassigned_text'):flag('ocr_line_geometry_missing',n,text=p['unassigned_text'])
-        low=[l['id'] for l in p['lines'] if l['confidence'] is None or l['confidence']<p['min_confidence']]
+        low=([l['id'] for l in p['lines'] if l['confidence'] is None or l['confidence']<p['min_confidence']]
+             if p.get('confidence_available',True) else [])
         if low:flag('low_ocr_confidence',n,line_ids=low)
         if not p['text'].strip():flag('empty_ocr_page',n)
+        for finding in p.get('transcription_findings',[]):flag(finding['code'],n,reason=finding['reason'])
+        for finding in p.get('repair_findings', []):flag(finding['code'],n,reason=finding['reason'])
+        for check in p.get('ocr_rechecks', []):
+            if check['status'] != 'confirmed':flag('ocr_region_needs_review',n,line_ids=[check['line_id']],reason=check.get('reason'),reasons=check['reasons'])
         for c in p['checkboxes']:
             if c['state']=='uncertain':flag('checkbox_needs_review',n,checkbox_id=c['id'])
     return {'schema_version':5,'status':'needs_review' if findings else 'awaiting_source_review',
@@ -34,6 +39,14 @@ def review_html(pages,documents,quality):
         output.append('<details><summary>'+title+'</summary><pre>'+e(json.dumps(data,ensure_ascii=False,indent=2))+'</pre></details>')
     for p in pages:
         output.append('<h2>PDF page '+str(p['pdf_page'])+'</h2><article><div><img src="page-images/page-'+str(p['pdf_page']).zfill(4)+'.png" alt="Rendered source page"></div><div><h3>Complete OCR text</h3><pre>'+e(p['text'])+'</pre>')
+        if p.get('coordinates_available') is False:
+            output.append('<p>Gemini visible-text transcription: coordinates and confidence scores are unavailable. Checkbox states are transcribed marks, not independently measured detections.</p>')
+        if p.get('repair_version'):
+            output.append('<details><summary>Original provider text (unchanged)</summary><pre>'+e(p['provider_text'])+'</pre></details>')
+            output.append('<details><summary>Coordinate repairs and crop rechecks</summary><pre>'+e(json.dumps({k:p[k] for k in ('corrections','ocr_rechecks','repair_findings')},ensure_ascii=False,indent=2))+'</pre></details>')
+            for check in p.get('ocr_rechecks', []):
+                for attempt in check['attempts']:
+                    output.append('<a href="'+e(attempt['image'],quote=True)+'"><img src="'+e(attempt['image'],quote=True)+'" alt="Enlarged OCR recheck crop"></a>')
         output.append('<details><summary>Stable OCR lines and coordinates</summary><pre>'+e(json.dumps(p['lines'],ensure_ascii=False,indent=2))+'</pre></details><h3>Checkboxes</h3><pre>'+e(json.dumps(p['checkboxes'],ensure_ascii=False,indent=2))+'</pre>')
         for c in p['checkboxes']:
             if c.get('review_crop'):output.append('<img style="max-width:400px" src="'+e(c['review_crop'],quote=True)+'" alt="Enlarged checkbox crop">')

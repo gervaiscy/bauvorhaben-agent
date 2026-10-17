@@ -9,9 +9,9 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 import pymupdf
 import document_ocr as ocr
-import extract
-from document_grouping import group_documents
-from ocr_quality import report
+import experimental_extract as extract
+from legacy_document_grouping import group_documents
+from legacy_ocr_quality import report
 
 
 def fixture(text='Visible clause\n'):

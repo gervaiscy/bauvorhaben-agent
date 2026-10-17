@@ -4,11 +4,11 @@ import json
 
 # Bump the affected protocol when orchestration changes a stage's input/output meaning.
 PROTOCOL={stage:1 for stage in ('extract','units','reconcile','review','timing','report')}
-PROTOCOL['extract']=5
+PROTOCOL['extract']=11
 PROTOCOL['units']=5
 for stage in ('reconcile','review','timing','report'):PROTOCOL[stage]=2
 FILES={
- 'extract':['pipeline/pdf-extractor/document_ocr.py','pipeline/pdf-extractor/ocr_pipeline.py','pipeline/pdf-extractor/ocr_quality.py','scripts/extraction_acceptance.py','pipeline/pdf-extractor/extract.py','pipeline/pdf-extractor/document_grouping.py'],
+ 'extract':['pipeline/pdf-extractor/*.py','pipeline/extraction_support/*.py','scripts/extraction_acceptance.py'],
  'units':['scripts/extraction_acceptance.py','pipeline/working-units/src/**/*.py','pipeline/enrich_working_units.py','pipeline/customer_report.py','pipeline/source_integrity.py'],
  'reconcile':['pipeline/batched_report.py','pipeline/customer_report.py','pipeline/enrich_working_units.py','pipeline/source_integrity.py','pipeline/report_schema.py'],
  'review':['pipeline/document_review.py','pipeline/document_report.py','pipeline/customer_report.py','pipeline/document_planning.py','pipeline/enrich_working_units.py','pipeline/source_integrity.py','pipeline/report_schema.py'],

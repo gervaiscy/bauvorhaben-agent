@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run extract.py over each PDF under a local directory or GCS prefix."""
+"""Run the Gemini page transcription pipeline over each PDF under a local directory or GCS prefix."""
 import argparse
 import hashlib
 import json
@@ -26,9 +26,9 @@ def main():
     p.add_argument('--publish',help='Optional private gs:// prefix for results')
     p.add_argument('--project',required=True)
     p.add_argument('--staging',help='Legacy option; no staging upload is needed')
-    p.add_argument('--location',default='eu')
-    p.add_argument('--model',default='gemini-3.5-flash')
-    p.add_argument('--ocr-processor')
+    p.add_argument('--location',default='global')
+    p.add_argument('--model',default='gemini-2.5-flash',help='Model for optional document-boundary proposals')
+    p.add_argument('--ocr-model',default='gemini-3.5-flash')
     p.add_argument('--resume',action='store_true',help='Skip contracts whose local quality-report.json already exists')
     args=p.parse_args()
     root=Path(args.output_root); root.mkdir(parents=True,exist_ok=True)
@@ -40,14 +40,19 @@ def main():
         if args.resume and (out/'quality-report.json').exists():
             result={'source':source,'status':'already_done','output':str(out)}
         else:
-            cmd=[sys.executable,str(Path(__file__).with_name('extract.py')),'--input',source,'--output',str(out),'--project',args.project,'--location',args.location,'--model',args.model]
-            if args.ocr_processor: cmd+=['--ocr-processor',args.ocr_processor]
+            cmd=[sys.executable,str(Path(__file__).resolve().parents[1]/'pipeline/pdf-extractor/ocr_pipeline.py'),'--input',source,'--output',str(out),'--project',args.project,'--location',args.location]
+            cmd+=['--ocr-model',args.ocr_model]
             with tempfile.TemporaryDirectory() as temporary:
                 if source.startswith('gs://'):
                     local=Path(temporary)/'source.pdf'
                     subprocess.run(['gcloud','storage','cp',source,str(local)],check=True)
                     cmd[cmd.index('--input')+1]=str(local)
                 completed=subprocess.run(cmd)
+                if completed.returncode == 0:
+                    completed=subprocess.run([sys.executable,
+                        str(Path(__file__).resolve().parents[1]/'pipeline/extraction_support/document_pipeline.py'),
+                        '--input',str(out/'pages.json'),'--output',str(out),'--project',args.project,
+                        '--location',args.location,'--document-boundary-model',args.model])
             result={'source':source,'status':'completed' if completed.returncode==0 else 'failed','output':str(out),'exit_code':completed.returncode}
         if args.publish and result['status']!='failed':
             for file in out.glob('*.json'):

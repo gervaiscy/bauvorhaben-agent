@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
-sys.path[:0]=[str(ROOT/'pipeline'),str(ROOT/'pipeline/pdf-extractor')]
+sys.path[:0]=[str(ROOT/'pipeline'),str(ROOT/'pipeline/pdf-extractor'),str(ROOT/'pipeline/extraction_support')]
 spec=importlib.util.spec_from_file_location('bauvo_cli',ROOT/'scripts/bauvo.py')
 cli=importlib.util.module_from_spec(spec);spec.loader.exec_module(cli)
 from customer_report import fingerprint
@@ -62,21 +62,44 @@ class LocalPipelineTests(unittest.TestCase):
             (Path(d)/'.env').write_text('GOOGLE_CLOUD_PROJECT=$(touch no)\n')
             self.assertEqual(cli.load_environment()['project'],'$(touch no)');self.assertFalse((Path(d)/'no').exists())
 
+    def test_pdf_transcription_default_is_independent_of_analysis_model(self):
+        with tempfile.TemporaryDirectory() as d,patch.object(cli,'ROOT',Path(d)),patch.dict(os.environ,{'BAUVO_MODEL':'gemini-2.5-flash'},clear=True):
+            config=cli.load_environment()
+            self.assertEqual(config['ocr_provider'],'gemini')
+            self.assertEqual(config['ocr_model'],'gemini-3.5-flash')
+            self.assertEqual(config['model'],'gemini-2.5-flash')
+            (Path(d)/'.env').write_text('BAUVO_OCR_PROVIDER=google-document-ai\nBAUVO_OCR_MODEL=custom-model\n')
+            config=cli.load_environment()
+            self.assertEqual(config['ocr_provider'],'google-document-ai')
+            self.assertEqual(config['ocr_model'],'custom-model')
+
+    def test_auth_check_probes_default_transcription_model_with_minimal_reasoning(self):
+        from unittest.mock import Mock
+        client=Mock();client.models.generate_content.return_value.text='OK'
+        with patch('google.auth.default',return_value=(object(),'p')),patch('google.genai.Client',return_value=client):
+            cli.doctor({'project':'p','location':'global','model':'gemini-2.5-flash','ocr_provider':'gemini','ocr_model':'gemini-3.5-flash'},live=True)
+        request=client.models.generate_content.call_args.kwargs
+        self.assertEqual(request['model'],'gemini-3.5-flash')
+        self.assertEqual(request['config']['thinking_config'],{'thinking_level':'MINIMAL'})
+
     def test_document_proposal_transport_sends_text_only_with_adc(self):
-        import extract
+        import grouping_client as extract
         from types import SimpleNamespace
         seen={}
         class Client:
             def __init__(self,**kwargs):seen['client']=kwargs;self.models=self
-            def generate_content(self,**kwargs):seen['request']=kwargs;return SimpleNamespace(text='{"documents":[]}',candidates=[SimpleNamespace(finish_reason='STOP')])
+            def generate_content(self,**kwargs):seen['request']=kwargs;return SimpleNamespace(text='{"pages":[]}',candidates=[SimpleNamespace(finish_reason='STOP')])
         with patch('google.genai.Client',Client):
             response=extract.gemini_sdk('p','global','m',[{'text':'Complete OCR page text'}])
-        self.assertEqual(response['documents'],[]);self.assertTrue(seen['client']['vertexai'])
+        self.assertEqual(response['pages'],[]);self.assertTrue(seen['client']['vertexai'])
         self.assertEqual(seen['request']['contents'][0].text,'Complete OCR page text')
         self.assertIsNone(seen['request']['contents'][0].inline_data)
+        from document_grouping import RESPONSE_SCHEMA
+        self.assertEqual(seen['request']['config'].response_json_schema,RESPONSE_SCHEMA)
+        self.assertFalse(RESPONSE_SCHEMA['additionalProperties'])
 
     def test_grouping_checkpoint_reuse_and_tamper_detection(self):
-        import extract
+        import grouping_client as extract
         from types import SimpleNamespace
         args=SimpleNamespace(project='p',location='global',model='m');calls=[]
         def invoke():calls.append(1);return {'spans':[]}
@@ -137,7 +160,7 @@ class WorkingUnitRuntimeTests(unittest.TestCase):
     def test_stage_fingerprint_ignores_unrelated_stage_edits(self):
         from cache_binding import stage_binding
         with tempfile.TemporaryDirectory() as d:
-            root=Path(d);file=root/'pipeline/pdf-extractor/extract.py';file.parent.mkdir(parents=True);file.write_text('pdf extraction')
+            root=Path(d);file=root/'pipeline/pdf-extractor/ocr_pipeline.py';file.parent.mkdir(parents=True);file.write_text('pdf extraction')
             initial=stage_binding(root,'extract');other=root/'pipeline/timing_assessment.py';other.write_text('timing change')
             self.assertEqual(stage_binding(root,'extract'),initial)
             file.write_text('new extraction');self.assertNotEqual(stage_binding(root,'extract'),initial)
@@ -186,11 +209,39 @@ class PageOrchestrationTests(unittest.TestCase):
             root=Path(tmp);run=root/'runs/sample/new';run.mkdir(parents=True)
             case={'sources':[{'key':'contract','pdf':'contract.pdf'}]}
             config={'project':'p','location':'global','model':'m','ocr_processor':'pinned','ocr_min_confidence':.98,'thinking_budget':0,'document_boundaries':'off'}
+            calls=[]
             def command(args,log):
-                self.assertIn('--document-boundaries',args)
-                out=Path(args[args.index('--output')+1]);out.mkdir(parents=True)
-                for name in ('pages.json','documents.json','quality-report.json','duplicate-pages.json'):(out/name).write_text('{}')
-                (out/'source-review.html').write_text('review')
+                calls.append(args)
+                out=Path(args[args.index('--output')+1]);out.mkdir(parents=True,exist_ok=True)
+                if Path(args[0]).name=='ocr_pipeline.py':
+                    self.assertNotIn('--document-boundaries',args)
+                    self.assertNotIn('--document-boundary-model',args)
+                    self.assertNotIn('--model',args)
+                    self.assertEqual(args[args.index('--ocr-provider')+1],'gemini')
+                    self.assertEqual(args[args.index('--ocr-model')+1],'gemini-3.5-flash')
+                    names=('page-images.json','pages.json')
+                else:
+                    self.assertEqual(Path(args[0]).name,'document_pipeline.py')
+                    self.assertEqual(Path(args[args.index('--input')+1]),out/'pages.json')
+                    self.assertTrue((out/'pages.json').exists())
+                    self.assertEqual(args[args.index('--document-boundary-model')+1],'m')
+                    self.assertEqual(args[args.index('--document-boundaries')+1],'off')
+                    names=('documents.json','quality-report.json','duplicate-pages.json')
+                    (out/'source-review.html').write_text('review')
+                for name in names:(out/name).write_text('{}')
             with patch.object(cli,'command',command):cli.execute_stage('extract',run,case,config)
+            self.assertEqual([Path(c[0]).name for c in calls],['ocr_pipeline.py','document_pipeline.py'])
             checkpoint=cli.read(run/'extract.done.json');self.assertTrue(any(p.endswith('/pages.json') for p in checkpoint['files']))
             self.assertFalse(any('sections.json' in p or 'blocks.json' in p or 'lines.json' in p for p in checkpoint['files']))
+
+
+class ProductionOCRProviderTests(unittest.TestCase):
+    def test_non_gemini_provider_is_rejected_before_launching_any_extraction(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config={'project':'p','location':'global','model':'m','thinking_budget':0,
+                    'ocr_provider':'google-document-ai'}
+            case={'sources':[{'key':'contract','pdf':'contract.pdf'}]}
+            with patch.object(cli,'command') as command:
+                with self.assertRaisesRegex(ValueError,'Production extraction uses Gemini'):
+                    cli.execute_stage('extract',Path(tmp),case,config)
+                command.assert_not_called()

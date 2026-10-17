@@ -8,7 +8,7 @@ def prepare_regroup(run, source, read, write_json, sha):
         raise ValueError('Reconciliation already started; use a fresh run for source changes')
     folder=run/'extraction'/source
     if not (folder/'pages.json').exists():raise ValueError('No page transcription to regroup')
-    if read(folder/'pages.json').get('schema_version')!=5:raise ValueError('Legacy extraction needs a fresh run')
+    if read(folder/'pages.json').get('schema_version') not in (5,6):raise ValueError('Legacy extraction needs a fresh run')
     audit=run/'regrouping-previous'/uuid.uuid4().hex[:12];audit.mkdir(parents=True)
     preserved={}
     for name in ('documents.json','quality-report.json','source-review.html','complete.json'):

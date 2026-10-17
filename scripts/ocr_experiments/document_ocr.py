@@ -8,9 +8,9 @@ import time
 from pathlib import Path
 
 DEFAULT_PROCESSOR = 'projects/222393655295/locations/eu/processors/6a00c6691fb66daa/processorVersions/pretrained-ocr-v2.1-2024-08-07'
-VERSION = 'document-ai-image-ocr-v1'
-OPTIONS = {'ocrConfig': {'enableNativePdfParsing': False, 'hints': {'languageHints': ['de', 'en']},
-                        'premiumFeatures': {'enableSelectionMarkDetection': True, 'computeStyleInfo': True}}}
+VERSION = 'document-ai-image-ocr-v2'
+OPTIONS = {'ocrConfig': {'enableNativePdfParsing': False, 'enableSymbol': True, 'hints': {'languageHints': ['de', 'en']},
+                        'premiumFeatures': {'enableSelectionMarkDetection': True, 'computeStyleInfo': True, 'enableMathOcr': False}}}
 
 
 def digest(value):
@@ -127,11 +127,17 @@ def normalize(response, page_number, image_sha256, raw_file, min_confidence=.98)
     page = pages[0]
     dimension = page.get('dimension', {})
     tokens = page.get('tokens', [])
-    words=[];paragraphs=[]
-    for field,prefix,target in (('tokens','W',words),('paragraphs','P',paragraphs)):
+    words=[];paragraphs=[];symbols=[]
+    for field,prefix,target in (('tokens','W',words),('paragraphs','P',paragraphs),('symbols','Y',symbols)):
         for index,item in enumerate(page.get(field,[]),1):
             layout=item.get('layout',{});anchors=segments(layout,text)
-            bbox,polygon=geometry(layout,dimension)
+            try:
+                bbox,polygon=geometry(layout,dimension)
+            except ValueError:
+                if field != 'symbols':raise
+                # Document AI can emit formula-symbol text without character boxes.
+                # Retain the evidence explicitly, never invent glyph coordinates.
+                bbox,polygon=None,None
             target.append({'id':f'{prefix}{page_number:04}_{index:05}',
                 'text':''.join(text[a:b] for a,b in anchors).rstrip('\r\n'),
                 'bbox':bbox,'polygon':polygon,'confidence':confidence(layout),
@@ -195,4 +201,4 @@ def normalize(response, page_number, image_sha256, raw_file, min_confidence=.98)
                       'detected_state': detected, 'bbox': bbox, 'polygon': polygon, 'confidence': score, 'source': 'google-document-ai'})
     return {'ocr_schema_version': 5, 'text':text, 'text_sha256':hashlib.sha256(text.encode()).hexdigest(), 'pdf_page': page_number, 'ocr_provider': 'google-document-ai',
             'image_sha256': image_sha256, 'raw_ocr_file': raw_file, 'lines': lines, 'checkboxes': marks,
-            'unassigned_text': unassigned, 'min_confidence': min_confidence, 'tokens':words, 'paragraphs':paragraphs}
+            'unassigned_text': unassigned, 'min_confidence': min_confidence, 'tokens':words, 'paragraphs':paragraphs, 'symbols':symbols}
