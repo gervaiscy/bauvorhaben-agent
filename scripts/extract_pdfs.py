@@ -27,7 +27,7 @@ def main():
     p.add_argument('--project',required=True)
     p.add_argument('--staging',help='Legacy option; no staging upload is needed')
     p.add_argument('--location',default='global')
-    p.add_argument('--model',default='gemini-2.5-flash',help='Model for optional document-boundary proposals')
+    p.add_argument('--document-boundary-model','--model',dest='model',default='gemini-3.5-flash',help='Model for optional document-boundary proposals')
     p.add_argument('--ocr-model',default='gemini-3.5-flash')
     p.add_argument('--resume',action='store_true',help='Skip contracts whose local quality-report.json already exists')
     args=p.parse_args()

@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Cached transport for document-boundary proposals ."""
+"""Cached transport for document-boundary proposals."""
 import hashlib
 import json
 import time
 from pathlib import Path
+
+
+DEFAULT_MODEL = 'gemini-3.5-flash'
+GENERATION = {'max_output_tokens':32768, 'response_mime_type':'application/json',
+              'thinking_config':{'thinking_level':'MINIMAL'}}
 
 
 def save_json(path,data):
@@ -21,8 +26,7 @@ def gemini_sdk(project, location, model, parts):
     for attempt in range(4):
         try:
             response=client.models.generate_content(model=model,contents=converted,
-                config=types.GenerateContentConfig(temperature=0,max_output_tokens=32768,
-                    response_mime_type='application/json',response_json_schema=RESPONSE_SCHEMA,thinking_config=types.ThinkingConfig(thinking_budget=1024)))
+                config=types.GenerateContentConfig(**GENERATION,response_json_schema=RESPONSE_SCHEMA))
             if response.candidates and str(response.candidates[0].finish_reason).split('.')[-1]!='STOP':
                 raise RuntimeError('Incomplete PDF model response: '+str(response.candidates[0].finish_reason))
             return json.loads(response.text)
@@ -35,7 +39,7 @@ def cached_group_call(args, parts, output, invoke):
     """Cache complete grouping answers by request; retain invalid boundary answers for repair."""
     from document_grouping import VERSION, RESPONSE_SCHEMA
     request={'project':args.project,'location':args.location,'model':args.model,
-             'protocol':VERSION,'response_schema':RESPONSE_SCHEMA,'parts':parts}
+             'protocol':VERSION,'generation':GENERATION,'response_schema':RESPONSE_SCHEMA,'parts':parts}
     digest=hashlib.sha256(json.dumps(request,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     output.mkdir(parents=True,exist_ok=True);path=output/(digest+'.json')
     def response_digest(response):return hashlib.sha256(json.dumps(response,sort_keys=True,ensure_ascii=False).encode()).hexdigest()

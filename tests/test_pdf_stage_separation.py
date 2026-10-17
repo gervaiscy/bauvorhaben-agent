@@ -55,7 +55,7 @@ ocr_pipeline.run()
             self.assertEqual(Path(calls[0][1]).name,'ocr_pipeline.py')
             self.assertNotIn('--model',calls[0]);self.assertNotIn('--document-boundaries',calls[0])
             self.assertEqual(Path(calls[1][1]).name,'document_pipeline.py')
-            self.assertEqual(calls[1][calls[1].index('--document-boundary-model')+1],'gemini-2.5-flash')
+            self.assertEqual(calls[1][calls[1].index('--document-boundary-model')+1],'gemini-3.5-flash')
 
     def test_batch_wrapper_does_not_process_documents_after_transcription_failure(self):
         with tempfile.TemporaryDirectory() as tmp:

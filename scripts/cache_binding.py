@@ -4,7 +4,7 @@ import json
 
 # Bump the affected protocol when orchestration changes a stage's input/output meaning.
 PROTOCOL={stage:1 for stage in ('extract','units','reconcile','review','timing','report')}
-PROTOCOL['extract']=11
+PROTOCOL['extract']=12
 PROTOCOL['units']=5
 for stage in ('reconcile','review','timing','report'):PROTOCOL[stage]=2
 FILES={

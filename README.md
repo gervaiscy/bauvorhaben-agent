@@ -29,7 +29,9 @@ always uses minimal reasoning. Each request contains only a fixed literal-transc
 prompt and one rendered PNG. Native/hidden PDF text, neighboring pages, previous OCR
 and project interpretation are not sent.
 
-`BAUVO_MODEL` independently selects the model for document proposals and later analysis.
+`BAUVO_DOCUMENT_BOUNDARY_MODEL` independently selects the boundary model, defaulting
+to `gemini-3.5-flash` with minimal reasoning. `BAUVO_MODEL` selects later analysis
+models; existing settings for it do not override document-boundary detection.
 `BAUVO_DOCUMENT_BOUNDARIES=auto` enables separate document proposals in windows of
 at most five physical pages; set it to `off` for transcription only. Production
 extraction uses Gemini. Google Document AI and Tesseract remain isolated experiments
@@ -263,7 +265,7 @@ Then run the separate document-processing module when needed:
 
 Both CLIs use the existing Google ADC credentials. The PDF CLI defaults to Gemini
 3.5 Flash with minimal reasoning. Document processing has its own explicit
-`--document-boundary-model` option, defaulting to Gemini 2.5 Flash as before, and
+`--document-boundary-model` option, defaulting to Gemini 3.5 Flash with minimal reasoning, and
 never renders pages, invokes OCR or rewrites `pages.json`.
 
 `make fresh-extract CASE=sample` and the batch wrapper continue to run both modules

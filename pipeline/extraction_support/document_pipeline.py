@@ -49,7 +49,7 @@ def run():
     parser.add_argument('--output', help='Extraction folder containing source images; defaults to input folder')
     parser.add_argument('--project', required=True)
     parser.add_argument('--location', default='global')
-    parser.add_argument('--document-boundary-model', dest='model', default='gemini-2.5-flash')
+    parser.add_argument('--document-boundary-model', dest='model', default=grouping_client.DEFAULT_MODEL)
     parser.add_argument('--document-boundaries', choices=['auto','off'], default='auto')
     parser.add_argument('--reuse-grouping-cache', action='append', default=[])
     process(parser.parse_args())

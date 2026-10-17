@@ -32,7 +32,7 @@ def slug(value):
 
 def load_environment():
     file=ROOT/'.env'
-    allowed={'GOOGLE_APPLICATION_CREDENTIALS','GOOGLE_CLOUD_PROJECT','BAUVO_LOCATION','BAUVO_MODEL','BAUVO_WORKERS','BAUVO_BATCH_SIZE','BAUVO_THINKING_BUDGET','OPENAI_API_KEY','BAUVO_OCR_PROVIDER','BAUVO_OCR_MODEL','BAUVO_OCR_PROCESSOR','BAUVO_OCR_MIN_CONFIDENCE','BAUVO_OCR_RECHECK_PER_PAGE','BAUVO_OCR_RECHECK_LIMIT','BAUVO_DOCUMENT_BOUNDARIES'}
+    allowed={'GOOGLE_APPLICATION_CREDENTIALS','GOOGLE_CLOUD_PROJECT','BAUVO_LOCATION','BAUVO_MODEL','BAUVO_WORKERS','BAUVO_BATCH_SIZE','BAUVO_THINKING_BUDGET','OPENAI_API_KEY','BAUVO_OCR_PROVIDER','BAUVO_OCR_MODEL','BAUVO_OCR_PROCESSOR','BAUVO_OCR_MIN_CONFIDENCE','BAUVO_OCR_RECHECK_PER_PAGE','BAUVO_OCR_RECHECK_LIMIT','BAUVO_DOCUMENT_BOUNDARIES','BAUVO_DOCUMENT_BOUNDARY_MODEL'}
     if file.exists():
         for line in file.read_text().splitlines():
             line=line.strip()
@@ -51,6 +51,7 @@ def load_environment():
             'model':os.environ.get('BAUVO_MODEL','gemini-2.5-flash'),
             'ocr_provider':os.environ.get('BAUVO_OCR_PROVIDER','gemini'),
             'ocr_model':os.environ.get('BAUVO_OCR_MODEL','gemini-3.5-flash'),
+            'document_boundary_model':os.environ.get('BAUVO_DOCUMENT_BOUNDARY_MODEL','gemini-3.5-flash'),
             'document_boundaries':os.environ.get('BAUVO_DOCUMENT_BOUNDARIES','auto'),
             'workers':int(os.environ.get('BAUVO_WORKERS','2')),
             'batch_size':int(os.environ.get('BAUVO_BATCH_SIZE','6')),
@@ -147,7 +148,7 @@ def execute_stage(stage,run,case,config):
                   '--ocr-provider','gemini','--ocr-model',config.get('ocr_model','gemini-3.5-flash')]
             document_args=[ROOT/'pipeline/extraction_support/document_pipeline.py',
                   '--input',out/'pages.json','--output',out,'--project',config['project'],
-                  '--location',config['location'],'--document-boundary-model',config['model'],
+                  '--location',config['location'],'--document-boundary-model',config.get('document_boundary_model','gemini-3.5-flash'),
                   '--document-boundaries',config.get('document_boundaries','auto')]
             for previous in sorted(run.parent.glob('*/extraction/'+source['key']+'/ocr-cache'),reverse=True):
                 if previous!=out/'ocr-cache':
@@ -213,6 +214,7 @@ def doctor(config,live=False):
     if config.get('ocr_provider','gemini') != 'gemini':
         raise ValueError('Production extraction uses Gemini; set BAUVO_OCR_PROVIDER=gemini.')
     print('PDF transcription: Gemini | Model:',config.get('ocr_model','gemini-3.5-flash'),'| Reasoning: minimal')
+    print('Document boundaries: Model:',config.get('document_boundary_model','gemini-3.5-flash'),'| Reasoning: minimal | Window: 5 pages')
     import google.auth
     credentials,_=google.auth.default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
     print('Google credentials: loadable (contents never logged)')

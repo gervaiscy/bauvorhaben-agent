@@ -68,6 +68,7 @@ class LocalPipelineTests(unittest.TestCase):
             self.assertEqual(config['ocr_provider'],'gemini')
             self.assertEqual(config['ocr_model'],'gemini-3.5-flash')
             self.assertEqual(config['model'],'gemini-2.5-flash')
+            self.assertEqual(config['document_boundary_model'],'gemini-3.5-flash')
             (Path(d)/'.env').write_text('BAUVO_OCR_PROVIDER=google-document-ai\nBAUVO_OCR_MODEL=custom-model\n')
             config=cli.load_environment()
             self.assertEqual(config['ocr_provider'],'google-document-ai')
@@ -97,6 +98,9 @@ class LocalPipelineTests(unittest.TestCase):
         from document_grouping import RESPONSE_SCHEMA
         self.assertEqual(seen['request']['config'].response_json_schema,RESPONSE_SCHEMA)
         self.assertFalse(RESPONSE_SCHEMA['additionalProperties'])
+        self.assertEqual(seen['request']['config'].thinking_config.thinking_level,'MINIMAL')
+        self.assertIsNone(seen['request']['config'].thinking_config.thinking_budget)
+        self.assertIsNone(seen['request']['config'].temperature)
 
     def test_grouping_checkpoint_reuse_and_tamper_detection(self):
         import grouping_client as extract
@@ -224,7 +228,7 @@ class PageOrchestrationTests(unittest.TestCase):
                     self.assertEqual(Path(args[0]).name,'document_pipeline.py')
                     self.assertEqual(Path(args[args.index('--input')+1]),out/'pages.json')
                     self.assertTrue((out/'pages.json').exists())
-                    self.assertEqual(args[args.index('--document-boundary-model')+1],'m')
+                    self.assertEqual(args[args.index('--document-boundary-model')+1],'gemini-3.5-flash')
                     self.assertEqual(args[args.index('--document-boundaries')+1],'off')
                     names=('documents.json','quality-report.json','duplicate-pages.json')
                     (out/'source-review.html').write_text('review')
