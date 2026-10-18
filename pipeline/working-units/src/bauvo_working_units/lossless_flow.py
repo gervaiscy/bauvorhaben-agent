@@ -143,9 +143,13 @@ def _resolve_dependencies(units: list[dict[str, Any]]) -> None:
 
 
 def extract_project_units(documents: list[Document], model: Model,
-                          whole_document_max_chars: int = 80000, chunk_pages: int = 3,
+                          whole_document_max_chars: int = 80000, chunk_pages: int = 5,
                           overlap_pages: int = 1, language: str = "de") -> dict[str, Any]:
     """Retain every proposal and every later Gemini result without semantic edits."""
+    if any(d.schema_version==6 for d in documents):
+        if any(d.schema_version!=6 for d in documents):raise ValueError('Cannot mix page and line source schemas')
+        from .page_flow import extract_page_units
+        return extract_page_units(documents,model,whole_document_max_chars,chunk_pages,overlap_pages,language)
     if language not in ("de", "en"):
         raise ValueError(f"Unsupported output language: {language}")
     units: list[dict[str, Any]] = []

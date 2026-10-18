@@ -62,14 +62,40 @@ class GeminiOCRTests(unittest.TestCase):
         docs = {'documents':[{'document_id':'D0001','pdf_pages':[1]}], 'page_assignments':[{'pdf_page':1,'document_id':'D0001'}]}
         self.assertEqual(report([clean],docs,1)['status'], 'awaiting_source_review')
 
-    def test_empty_normal_finish_is_preserved_for_explicit_blank_page_review(self):
-        page = ocr.normalize(response(''),2,'image','ocr-cache/raw.json')
+    def test_empty_normal_finish_is_valid_without_suppressing_coverage_failures(self):
+        page = ocr.normalize(response(''),1,'image','ocr-cache/raw.json')
         self.assertNotIn('lines',page);self.assertEqual(page['text'], '')
-        self.assertIn('empty_ocr_page', [f['code'] for f in report([page],{'documents':[]},2)['findings']])
+        docs = {'documents':[], 'page_assignments':[{'pdf_page':1,'document_id':None}]}
+        quality = report([page],docs,1)
+        self.assertEqual(quality['findings'], [])
+        self.assertEqual(quality['status'], 'awaiting_source_review')
+        self.assertIn('incomplete_page_coverage', [f['code'] for f in report([page],docs,2)['findings']])
         with self.assertRaisesRegex(ValueError,'Incomplete'):
             ocr.transcription({'candidates':[]})
         with self.assertRaisesRegex(ValueError,'text-only'):
             ocr.transcription({'candidates':[{'finish_reason':'STOP','content':{'parts':[{'function_call':{}}]}}]})
+
+    def test_textless_pages_preserve_evidence_and_other_review_findings(self):
+        pages = [ocr.normalize(response(text),n,'image','ocr-cache/raw.json')
+                 for n,text in enumerate(['', '  \n', '[illegible]', '[uncertain checkbox]'],1)]
+        docs = {'documents':[{'document_id':'D1','pdf_pages':[1,2,3,4]}],
+                'page_assignments':[{'pdf_page':n,'document_id':'D1'} for n in range(1,5)]}
+        quality = report(pages,docs,4)
+        self.assertEqual([(f['code'],f['pdf_page']) for f in quality['findings']],
+                         [('uncertain_transcription',3),('checkbox_needs_review',4)])
+        self.assertEqual(pages[1]['text'], '  \n')
+        self.assertEqual(pages[0]['raw_ocr_file'],'ocr-cache/raw.json')
+
+    def test_prompt_change_invalidates_prior_cached_transcription(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            provider = ocr.GeminiImageOCR('p');provider.process = Mock(return_value=response('[image]'))
+            provider.identity['protocol'] = 'gemini-visible-page-transcription-v1'
+            provider.identity['prompt'] = 'Prior prompt'
+            ocr.cached_transcription(provider,b'pixels',Path(tmp))
+            current = ocr.GeminiImageOCR('p');current.process = Mock(return_value=response(''))
+            raw,_ = ocr.cached_transcription(current,b'pixels',Path(tmp))
+            self.assertEqual(ocr.transcription(raw),'')
+            current.process.assert_called_once()
 
     def test_cache_is_pixel_model_settings_bound_and_tampering_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -123,6 +149,33 @@ class GeminiPageWorkflowTests(unittest.TestCase):
                 close.assert_called_once();boundary.assert_not_called()
             self.assertFalse((out/'pages.json').exists())
             self.assertTrue(list((out/'ocr-cache').glob('*-attempt-1.json')))
+
+    def test_textless_pdf_round_trip_keeps_pages_and_evidence_without_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source=root/'icons.pdf';out=root/'out'
+            with pymupdf.open() as pdf:
+                page=pdf.new_page()
+                page.draw_rect(pymupdf.Rect(30,30,100,100),fill=(0,0,1))
+                pdf.new_page()
+                pdf.save(source)
+            argv=['extract','--input',str(source),'--output',str(out),'--project','p']
+            with patch.object(sys,'argv',argv),patch.object(ocr.GeminiImageOCR,'process',return_value=response('')):
+                extract.run()
+            before=(out/'pages.json').read_bytes()
+            argv=['documents','--input',str(out/'pages.json'),'--project','p','--document-boundaries','off']
+            with patch.object(sys,'argv',argv),patch.object(grouping_client,'gemini_sdk') as api:
+                document_pipeline.run();api.assert_not_called()
+            self.assertEqual((out/'pages.json').read_bytes(),before)
+            pages=json.loads(before)['pages']
+            self.assertEqual([p['pdf_page'] for p in pages],[1,2])
+            self.assertEqual([p['text'] for p in pages],['',''])
+            for page in pages:
+                self.assertTrue((out/page['image_file']).is_file())
+                raw=json.loads((out/page['raw_ocr_file']).read_text())
+                self.assertEqual(ocr.transcription(raw['response']),'')
+            quality=json.loads((out/'quality-report.json').read_text())
+            self.assertEqual(quality['findings'],[])
+            self.assertEqual(quality['status'],'awaiting_source_review')
 
     def test_optional_document_boundaries_are_separate_text_only_requests(self):
         from test_document_grouping import payload,decision

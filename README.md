@@ -70,10 +70,10 @@ are preserved, and matching Gemini transcription caches remain reusable.
   snapshot. Gemini decides which pages start a document and cites exact quotations from page text;
   application code assigns every physical page to complete spans in stored
   order. Includes page decisions/assignments, raw responses and failed attempts.
-  Requests contain at most five new pages and the active literal title, sender,
-  represented organization, document type, primary reference and source evidence,
-  plus the full previous-page text/page number as context. Identity fields remain
-  `null` when unknown. Context pages receive no new boundary decision.
+  Requests contain at most five new pages, the active literal title/start page,
+  and the full previous-page text/page number as context. The response contains
+  boundary decisions, literal titles and short source quotations only; detailed
+  identity metadata is not extracted. Context pages receive no new decision.
   The SDK enforces a JSON response schema; local checks enforce exact page coverage
   and valid evidence. Empty pages are retained without invented text.
   Ambiguous or within-page boundaries require review; failed windows keep the whole
@@ -118,7 +118,9 @@ failure also falls back to the whole file; OCR remains available for review.
 ## Review and analysis
 
 Compare every rendered page against the complete text, numbers, negations,
-checkboxes and document proposals. Genuinely blank pages can be acknowledged after named source review. Wrong text,
+checkboxes and document proposals. Pages with no visible text legitimately have empty
+transcriptions and do not trigger warnings solely for being empty. Source images
+and raw responses remain available for review. Wrong text,
 missing pages and uncertain checkbox states need correction, not acknowledgment.
 For Gemini, `uncertain_transcription` and `possible_nonliteral_transcription` are
 also source-review diagnostics. A reviewer may acknowledge genuine illegibility
@@ -126,7 +128,7 @@ or a false alarm after inspecting the image; this never repairs wrong text or
 turns unknown values into verified values.
 
 ```bash
-make resolve-extraction CASE=sample SOURCE=blb PAGE=1 FINDING=empty_ocr_page REVIEWER="your name" NOTE="specific completed source comparison" CONFIRM=reviewed
+make resolve-extraction CASE=sample SOURCE=blb PAGE=1 FINDING=uncertain_transcription REVIEWER="your name" NOTE="specific completed source comparison" CONFIRM=reviewed
 make approve-extraction CASE=sample SOURCE=contract REVIEWER="your name" NOTE="completed source review" CONFIRM=reviewed
 make approve-extraction CASE=sample SOURCE=blb REVIEWER="your name" NOTE="completed source review" CONFIRM=reviewed
 make run CASE=sample
@@ -268,15 +270,15 @@ Then run the separate document-processing module when needed:
 ```
 
 Both CLIs use the existing Google ADC credentials. The PDF CLI defaults to Gemini
-3.5 Flash with minimal reasoning. Document processing carries sender, represented organization, document type,
-primary reference and the full previous-page text between five-page windows. New
-identity assignments should have field-specific source quotations. Structural errors
-and non-exact source quotes are rejected for repair. Interpretation conflicts,
-missing justification and insufficient identity support produce page-specific
-`review_flags` and `needs_review` status, without retrying or discarding the proposed
-document boundaries. Raw responses remain unchanged in `attempts`. Document processing has its own explicit
-`--document-boundary-model` option, defaulting to Gemini 3.5 Flash with minimal reasoning, and
-never renders pages, invokes OCR or rewrites `pages.json`.
+3.5 Flash with minimal reasoning. Document processing carries only the active
+title/start page and complete previous-page text between five-page windows.
+Its response has five fields per page: page number, new-document decision, visible
+title (null on continuations), a short exact evidence quote, and uncertainty.
+Raw replies remain in `attempts` and request-bound caches. Structural retries send
+only the original source and concise validation error, never the rejected reply.
+Interpretation concerns remain review flags. The response budget is 4096 tokens.
+The separate `--document-boundary-model` option defaults to Gemini 3.5 Flash;
+this command never renders pages, invokes OCR or rewrites `pages.json`.
 
 `make fresh-extract CASE=sample` and the batch wrapper continue to run both modules
 in order, preserving document proposals, duplicate reports, quality findings and
@@ -296,31 +298,11 @@ This change is limited to extraction. Existing working-unit readers still expect
 schema 5 and line references; they need a separate migration before consuming
 schema 6 output. Extraction review/approval accepts both schema 5 and 6.
 
-Document identity separates `sender` from `represented_organization`; the old
-combined `issuer` field is replaced. `document_type` classifies the complete
-document, independently of its literal title. Covering letters stay separate from
-enclosed quotations even when they share a reference or sender. Continuing
-quotation pages stay together based on reference, numbering, item sequence and
-carried totals. A company logo, sales contact or cooperation mention alone does
-not establish sender or representation. Unknown identity fields remain `null`.
-
-`entity_roles` records issuers, correspondence senders, signers/declarants,
-recipients, cooperation partners and represented organizations with exact quotes
-and explanations. Application decisions select the sender from the appropriate
-role, and select `document_reference` only from this document's identifier.
-`references` separately retains related identifiers, dates and other number types.
-Ambiguous classifications or conflicts with the reported identity remain review
-findings, with raw Gemini assignments preserved in `attempts`. These classifications
-travel with the active document and full previous page between five-page windows.
-
-`title_quote` is the exact visible title passage returned by Gemini. The application
-derives `document_title` from this passage with whitespace normalization only,
-recording its source page in `title_evidence`. A generated description cannot
-override the quoted title; disagreements produce review flags. Missing title
-quotes leave the title unknown, and attachment captions do not rename the active
-document. This runs automatically whenever boundary detection is executed.
-
-`identity_evidence` records field-specific exact source quotations and explanations with their PDF
-page numbers. All recorded evidence is retained in the output; continuation
-context carries at most one supporting quotation per known identity field to
-avoid sending the growing document history with each request.
+Boundary protocol v33 deliberately omits detailed sender, representation, alias,
+type and reference classification. `metadata_extraction` is `not_performed` in
+`documents.json`; missing identity fields must not be treated as verified unknowns.
+Detailed metadata extraction within detected documents is a separate future stage.
+Titles use visible source wording, with whitespace normalization and exact source
+passages stored in `title_evidence`. Covering letters remain separate from enclosed
+quotations; continuing quotations and integral attachments stay together. Standalone
+consent forms for distinct organizations remain separate despite matching titles.

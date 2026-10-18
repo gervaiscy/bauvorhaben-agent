@@ -20,7 +20,7 @@ def report(pages,documents,page_count):
     for p in pages:
         n=p['pdf_page']
         if hashlib.sha256(p['text'].encode()).hexdigest()!=p['text_sha256']:flag('page_text_changed',n)
-        if not p['text'].strip():flag('empty_ocr_page',n)
+        # A completed empty transcription is valid for pages without visible text.
         for finding in p.get('transcription_findings',[]):flag(finding['code'],n,reason=finding['reason'])
         for c in p['checkboxes']:
             if c['state']=='uncertain':flag('checkbox_needs_review',n,checkbox_id=c['id'])

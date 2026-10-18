@@ -17,9 +17,12 @@ class Document:
     id: str
     title: str | None
     source: str | None
-    lines: tuple[SourceLine, ...]
+    lines: tuple[SourceLine, ...] = ()
     pages: tuple[dict[str, Any], ...] = ()
     boundary_uncertain: bool = False
+    schema_version: int = 5
+    source_key: str = ""
+    source_snapshot: str = ""
 
 
 @dataclass(frozen=True)
@@ -32,6 +35,17 @@ class PageChunk:
 def load_documents(pages_path: str | Path, documents_path: str | Path | None = None) -> list[Document]:
     """All source text comes from pages.json; boundary proposals only partition IDs."""
     payload=read_pages(pages_path);docs=read_boundaries(documents_path,payload);result=[]
+    if payload['schema_version']==6:
+        from .core import digest
+        source=payload.get('source') or str(Path(pages_path).resolve())
+        source_key=digest({'source':source,'pdf_sha256':payload.get('sha256')})[:16]
+        for doc in docs:
+            selected=set(doc['pdf_pages'])
+            pages=tuple({'pdf_page':p['pdf_page'],'text':p['text'],'checkboxes':p.get('checkboxes',[])}
+                        for p in payload['pages'] if p['pdf_page'] in selected)
+            result.append(Document(doc['document_id'],doc.get('document_title'),source,pages=pages,
+                                   schema_version=6,source_key=source_key,source_snapshot=digest(payload['pages'])))
+        return result
     for doc in docs:
         selected=set(doc['line_ids']);lines=[];pages=[]
         occupied=[p['pdf_page'] for p in payload['pages'] if any(l['id'] in selected for l in p['lines'])]
@@ -49,15 +63,15 @@ def load_documents(pages_path: str | Path, documents_path: str | Path | None = N
 
 
 def make_page_chunks(document: Document, whole_document_max_chars: int = 80000,
-                     chunk_pages: int = 3, overlap_pages: int = 1) -> list[PageChunk]:
-    """At most three physical pages TOTAL, including overlap; no text truncation."""
-    if whole_document_max_chars<1 or not 1<=chunk_pages<=3 or not 0<=overlap_pages<chunk_pages:
-        raise ValueError('Require 1–3 total pages including overlap')
+                     chunk_pages: int = 5, overlap_pages: int = 1) -> list[PageChunk]:
+    """At most five physical pages TOTAL, including overlap; no text truncation."""
+    if whole_document_max_chars<1 or not 1<=chunk_pages<=5 or not 0<=overlap_pages<chunk_pages:
+        raise ValueError('Require 1–5 total pages including overlap')
     pages=[p['pdf_page'] for p in document.pages] if document.pages else list(dict.fromkeys(line.page for line in document.lines));chunks=[];start=0
     while start<len(pages):
-        context=pages[max(0,start-overlap_pages):start];primary=[];size=0
+        context=pages[max(0,start-overlap_pages):start];primary=[];size=sum(len(p['text']) for p in document.pages if p['pdf_page'] in context) if document.schema_version==6 else 0
         while start+len(primary)<len(pages) and len(context)+len(primary)<chunk_pages:
-            n=pages[start+len(primary)];cost=sum(len(l.text)+len(l.id)+30 for l in document.lines if l.page==n)
+            n=pages[start+len(primary)];cost=next((len(p['text']) for p in document.pages if p['pdf_page']==n),0) if document.schema_version==6 else sum(len(l.text)+len(l.id)+30 for l in document.lines if l.page==n)
             if primary and size+cost>whole_document_max_chars:break
             primary.append(n);size+=cost
         included=set(context+primary)

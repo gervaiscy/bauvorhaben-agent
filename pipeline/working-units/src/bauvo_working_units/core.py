@@ -22,6 +22,8 @@ def digest(value):
 
 def read_pages(path):
     payload=json.loads(Path(path).read_text())
+    if isinstance(payload,dict) and payload.get('schema_version')==6:
+        return _read_page_source(payload)
     if not isinstance(payload,dict) or payload.get('schema_version')!=5 or not isinstance(payload.get('pages'),list):
         raise ValueError('Expected page-source schema 5; start a fresh extraction')
     seen=set();numbers=[]
@@ -50,6 +52,7 @@ def read_pages(path):
 
 
 def read_boundaries(path,pages):
+    if pages.get('schema_version')==6:return _read_page_boundaries(path,pages)
     lines=[l for p in pages['pages'] for l in p['lines']];ids=[l['id'] for l in lines]
     if path is None:
         return [{'document_id':'D0001','document_title':'','line_ids':ids,'uncertain':True}] if ids else []
@@ -66,4 +69,39 @@ def read_boundaries(path,pages):
     # whole bundle conservatively until the proposals have been corrected.
     if any(d['uncertain'] for d in docs):
         return [{'document_id':'D0001','document_title':'','line_ids':ids,'uncertain':True}]
+    return docs
+
+
+def _read_page_source(payload):
+    pages=payload.get('pages');count=payload.get('page_count')
+    if not isinstance(pages,list) or type(count) is not int or count<1:raise ValueError('Invalid schema-6 page inventory')
+    for n,page in enumerate(pages,1):
+        if not isinstance(page,dict) or type(page.get('pdf_page')) is not int or page['pdf_page']!=n or not isinstance(page.get('text'),str):
+            raise ValueError('Complete ordered physical pages are required')
+        if hashlib.sha256(page['text'].encode()).hexdigest()!=page.get('text_sha256'):raise ValueError('Page text checksum changed')
+    if len(pages)!=count:raise ValueError('Complete PDF page coverage is required for analysis')
+    return payload
+
+
+def _read_page_boundaries(path,pages):
+    if path is None:raise ValueError('Schema 6 requires documents.json with verified document boundaries')
+    result=json.loads(Path(path).read_text())
+    if result.get('schema_version')!=6 or result.get('pages_sha256')!=digest(pages['pages']):
+        raise ValueError('Document boundaries belong to a different pages snapshot')
+    if result.get('status') not in ('proposed','needs_review','empty'):
+        raise ValueError('Document boundaries are unverified; review boundaries before extracting units')
+    docs=result.get('documents');seen=set();covered=[]
+    if not isinstance(docs,list):raise ValueError('Invalid document proposals')
+    for doc in docs:
+        if (not isinstance(doc,dict) or not isinstance(doc.get('document_id'),str) or not doc['document_id']
+                or doc['document_id'] in seen or not isinstance(doc.get('pdf_pages'),list) or not doc['pdf_pages']
+                or any(type(n) is not int for n in doc['pdf_pages']) or type(doc.get('uncertain')) is not bool):
+            raise ValueError('Invalid document proposal')
+        if doc['uncertain']:raise ValueError('Uncertain document boundary requires review; windows cannot cross documents')
+        seen.add(doc['document_id']);covered.extend(doc['pdf_pages'])
+    numbers=[p['pdf_page'] for p in pages['pages']]
+    if not docs and result.get('status')=='empty' and not any(p['text'].strip() for p in pages['pages']):return []
+    if covered!=numbers:raise ValueError('Document boundaries must cover all physical pages exactly once in order')
+    expected=[{'pdf_page':n,'document_id':d['document_id']} for d in docs for n in d['pdf_pages']]
+    if result.get('page_assignments')!=expected:raise ValueError('Document page assignments disagree with spans')
     return docs

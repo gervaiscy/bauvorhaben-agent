@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 DEFAULT_MODEL = 'gemini-3.5-flash'
-GENERATION = {'max_output_tokens':32768, 'response_mime_type':'application/json',
+GENERATION = {'max_output_tokens':4096, 'response_mime_type':'application/json',
               'thinking_config':{'thinking_level':'MINIMAL'}}
 
 
