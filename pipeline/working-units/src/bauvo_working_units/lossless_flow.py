@@ -143,13 +143,52 @@ def _resolve_dependencies(units: list[dict[str, Any]]) -> None:
 
 
 def extract_project_units(documents: list[Document], model: Model,
-                          whole_document_max_chars: int = 80000, chunk_pages: int = 5,
-                          overlap_pages: int = 1, language: str = "de") -> dict[str, Any]:
+                          whole_document_max_chars: int = 80000, chunk_pages: int = 3,
+                          overlap_pages: int = 1, language: str = "de", supported_anchors=None, context_documents=(), on_pass=None,
+                          project_facts=None, stop_after='PAGE_APPLICABILITY') -> dict[str, Any]:
     """Retain every proposal and every later Gemini result without semantic edits."""
-    if any(d.schema_version==6 for d in documents):
+    if not documents or any(d.schema_version==6 for d in documents):
         if any(d.schema_version!=6 for d in documents):raise ValueError('Cannot mix page and line source schemas')
         from .page_flow import extract_page_units
-        return extract_page_units(documents,model,whole_document_max_chars,chunk_pages,overlap_pages,language)
+        from .project_facts import collect_project_facts
+        from .date_calculation import validate_anchors
+        from .pass_snapshots import PASS_NAMES
+        if stop_after not in PASS_NAMES:raise ValueError('Unknown stop-after pass')
+        if language not in ('de', 'en'):raise ValueError('Unsupported output language')
+        if len({d.id for d in documents}) != len(documents):raise ValueError('Duplicate document IDs')
+        validate_anchors([] if supported_anchors is None else supported_anchors, documents)
+        reused = project_facts is not None
+        if reused:
+            from .fact_artifact import validate_facts
+            facts = validate_facts(project_facts, [*documents, *context_documents])
+        else:
+            facts = collect_project_facts([*documents, *context_documents], model,
+                                          whole_document_max_chars, chunk_pages, overlap_pages, language)
+        if on_pass is not None:on_pass('PAGE_PROJECT_FACTS', copy.deepcopy(facts))
+        if stop_after == 'PAGE_PROJECT_FACTS':return facts
+
+        def with_facts(result):
+            # Reused responses belong to the input artifact, not this run's raw log.
+            if not reused:
+                result['gemini_responses'] = copy.deepcopy(facts['gemini_responses']) + result['gemini_responses']
+            result['review_findings'] = copy.deepcopy(facts['review_findings']) + result['review_findings']
+            result['status'] = ('request_failed' if any(f['code']=='model_request_failed' for f in result['review_findings'])
+                                else 'needs_review' if result['review_findings'] else 'recorded')
+            return result
+
+        def save_pass(name, result):
+            on_pass(name, with_facts(result))
+
+        result = extract_page_units(documents,model,whole_document_max_chars,chunk_pages,overlap_pages,
+                                    language,supported_anchors,context_documents,facts,save_pass if on_pass else None,
+                                    stop_after=stop_after)
+        return with_facts(result)
+    if project_facts is not None or stop_after != 'PAGE_APPLICABILITY':
+        raise ValueError('Saved facts and separate passes require schema-6 page sources')
+    if context_documents:
+        raise ValueError("Project context requires schema-6 page sources")
+    if supported_anchors:
+        raise ValueError('Supported date anchors require schema-6 page sources')
     if language not in ("de", "en"):
         raise ValueError(f"Unsupported output language: {language}")
     units: list[dict[str, Any]] = []

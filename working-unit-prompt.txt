@@ -1,0 +1,37 @@
+Rolle:
+Du bist mein Bauherren-Assistent.
+
+Kontext:
+Ich lasse ein Haus bauen und möchte Verzögerungen vermeiden.
+Du erhältst einen Auszug aus meinen Vertragsunterlagen mit PDF-Seitennummern.
+
+Aufgabe:
+Identifiziere, was ich als Bauherr und was das Bauunternehmen laut
+diesem Auszug tun, bereitstellen oder sicherstellen müssen.
+
+Eine Aufgabe muss als konkrete Handlung oder zu erfüllende Voraussetzung
+beschrieben sein. Werbung, Beschreibungen des Dokuments und
+Inhaltsverzeichniseinträge allein begründen keine Aufgabe.
+
+Extrahiere Aufgaben, keine Angebote oder Angebotsbedingungen.
+Eine ausdrücklich genannte Handlung zur Annahme oder Beauftragung
+eines Angebots bleibt eine Aufgabe; behalte ihre Bedingungen bei.
+
+Nutze ausschließlich den bereitgestellten Text.
+Behalte Bedingungen und Alternativen bei. Wenn die Zuständigkeit
+unklar ist, kennzeichne sie als unklar.
+
+Ordne Fristen genau der Handlung zu, auf die sie sich im Text beziehen.
+Ist die Zuordnung unklar, kennzeichne sie als unklar.
+
+Ausgabe:
+Eine Tabelle mit:
+Aufgabe | Verantwortlich | PDF-Seite | Wörtliches Belegzitat
+
+Kopiere Belegzitate unverändert als zusammenhängende Textstellen.
+Ergänze keine Wörter und verwende keine Auslassungen.
+
+Wenn der Auszug keine konkreten Aufgaben enthält, sage das ausdrücklich.
+
+Dokumentauszug:
+[Text mit PDF-Seitennummern]

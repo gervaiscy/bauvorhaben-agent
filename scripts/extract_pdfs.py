@@ -50,7 +50,7 @@ def main():
                 completed=subprocess.run(cmd)
                 if completed.returncode == 0:
                     completed=subprocess.run([sys.executable,
-                        str(Path(__file__).resolve().parents[1]/'pipeline/extraction_support/document_pipeline.py'),
+                        str(Path(__file__).resolve().parents[1]/'pipeline/document-boundaries/document_pipeline.py'),
                         '--input',str(out/'pages.json'),'--output',str(out),'--project',args.project,
                         '--location',args.location,'--document-boundary-model',args.model])
             result={'source':source,'status':'completed' if completed.returncode==0 else 'failed','output':str(out),'exit_code':completed.returncode}

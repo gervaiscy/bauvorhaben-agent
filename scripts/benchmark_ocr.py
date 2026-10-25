@@ -16,7 +16,7 @@ import time
 import unicodedata
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT/'scripts/ocr_experiments'), str(ROOT/'pipeline/extraction_support')]
+sys.path[:0] = [str(ROOT/'scripts/ocr_experiments'), str(ROOT/'pipeline/document-boundaries')]
 from document_ocr import GoogleDocumentOCR, OPTIONS, cached_ocr, digest, normalize, save
 from ocr_repairs import repair_order
 

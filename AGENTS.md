@@ -16,3 +16,8 @@ or model validation pass.
 
 When orchestration changes a stage’s input/output meaning, bump its protocol in
 `scripts/cache_binding.py`; keep its dependency list complete.
+
+When changing working-unit extraction prompts or reviewing action classification,
+read [.agents/skills/bauvo-working-unit-prompts/SKILL.md](.agents/skills/bauvo-working-unit-prompts/SKILL.md).
+Keep its agreed distinctions backed by generic regression cases rather than exact
+prompt wording or document-specific exceptions.

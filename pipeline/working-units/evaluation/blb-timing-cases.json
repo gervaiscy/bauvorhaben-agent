@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "origin": "Source-backed regression specifications. Customer source text stays in ignored local runs, never in this file.",
+  "cases": [
+    {"id":"blb-water-alternative-scope","window_pages":[1,2,3,4,5],"mode":"TIMING","focus_suffix":"R0001:working_unit:003","check":"water-alternative","expectations":["Retain twelve- and six-week alternatives for connection availability/installation.","Six-week installation requires supplier confirmation; it is not a deadline for submitting the confirmation."]},
+    {"id":"blb-component-trigger","window_pages":[5,6,7,8,9],"mode":"TIMING","focus_suffix":"R0003:working_unit:003","check":"component-trigger","expectations":["Retain the summer heat protection calculation AFTER final planning draft, scoped within the broader energy calculation."]},
+    {"id":"blb-service-performance","window_pages":[9,10,11,12,13],"mode":"TIMING","focus_suffix":"R0004:working_unit:001","check":"service-performance","expectations":["Time performance of the final survey after project completion; do not impose that timing on commissioning it."]},
+    {"id":"blb-process-durations","window_pages":[49,50,51,52,53],"mode":"TIMING","focus_suffix":"R0015:working_unit:005","check":"process-durations","expectations":["Readiness precedes floor tiling, with no extra four-week wait after readiness.","Separate approximate four-week readiness/drying and two-week heating durations; no sum or inferred sequential order.","Retain seasonal variability and the underfloor-heating condition."]},
+    {"id":"blb-checklist-coverage-and-timing","window_pages":[57,58,59,60,61],"mode":"EXTRACTION_AND_TIMING","check":"checklist","checklist_pages":[59,60,61],"checklist_numbers":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],"expectations":["Every numbered readiness/proof requirement has a source-cited action, even when related work appeared earlier.","No individual ten-week offset from the parenthetical phase duration.","Retain the four-to-eight-week planning duration separately.","Do not merge trade coordination and construction start into one anchor event."]}
+  ]
+}

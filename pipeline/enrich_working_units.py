@@ -139,6 +139,8 @@ def load_manifest(path: Path) -> tuple[date, list[Source]]:
         from bauvo_working_units.core import read_pages
         pages_path=_resolve(base,config['pages'])
         page_data=read_pages(pages_path)
+        if page_data['schema_version']==6:
+            raise ValueError('Schema-6 working-unit extraction is supported; this line-based report stage still requires a page-citation migration')
         documents=load_documents(pages_path,_resolve(base,config['documents']) if config.get('documents') else None)
         lines_data=[l for page in page_data['pages'] for l in page['lines']]
         line_map={line['id']:line for line in lines_data}

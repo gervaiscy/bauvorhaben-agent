@@ -1,0 +1,10 @@
+{
+  "pipeline/document-boundaries/prompt.txt": "c185bcf00a99b5172a5a8493643bd1390b95c07019997b9c732d21847761748b",
+  "pipeline/pdf-extractor/prompt.txt": "6891cfb44c1229acef4b07dbce61886d92bf30883d2167bdf74ac3c5bfad9e60",
+  "pipeline/working-units/src/bauvo_working_units/phases/applicability/prompt.txt": "24a9e99f3ce207819f247a979bb8734da10791d7c5933261ae28877ad6aa417d",
+  "pipeline/working-units/src/bauvo_working_units/phases/aufgaben/prompt.txt": "c27765c6846b68ca5c70e2a079c540250fe6b8882fb91e56c57f244ab6bdbd29",
+  "pipeline/working-units/src/bauvo_working_units/phases/consequences/prompt.txt": "68a6e802f14716c54488c824095d88c7deab04d119e219d98e8cc1992f3fec2f",
+  "pipeline/working-units/src/bauvo_working_units/phases/offers/prompt.txt": "544206e277326b599d0e122243d5f272a8ecc6add2d76299c5ffaf822ae3affe",
+  "pipeline/working-units/src/bauvo_working_units/phases/project_facts/prompt.txt": "bc891fdf8e2a66fdce4719ab479504a5c748d3770f8d6811839f8db3cb0c7f11",
+  "pipeline/working-units/src/bauvo_working_units/phases/timing/prompt.txt": "a9c906a4894dfe62af311d29feb18d3389f2b904c82d05884db4483648c080d4"
+}

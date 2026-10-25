@@ -17,10 +17,10 @@ import extract_pdfs as batch
 
 
 class PDFStageSeparationTests(unittest.TestCase):
-    def test_two_file_extractor_runs_without_any_application_modules(self):
+    def test_ocr_phase_runs_with_local_prompt_without_other_application_modules(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);module=root/'pdf-extractor';module.mkdir()
-            for name in ('ocr_pipeline.py','gemini_ocr.py'):
+            for name in ('ocr_pipeline.py','gemini_ocr.py','prompt.txt'):
                 shutil.copy2(ROOT/'pipeline/pdf-extractor'/name,module/name)
             source=root/'source.pdf'
             with pymupdf.open() as pdf:

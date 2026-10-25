@@ -63,13 +63,21 @@ class RawRunTests(unittest.TestCase):
             saved = json.loads(path.read_text())
             self.assertEqual(saved, ["{bad json"])
 
+    def test_cli_does_not_destroy_prior_raw_evidence_when_an_attempt_already_exists(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'units.json';raw=Path(directory)/'units.gemini-raw.json'
+            raw.write_text('[{"original":"keep"}]');before=raw.read_bytes()
+            argv=['units','--pages','pages.json','--documents','documents.json','--project','p','--output',str(output)]
+            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel') as model, self.assertRaises(SystemExit):main()
+            model.assert_not_called();self.assertEqual(raw.read_bytes(),before)
+
     def test_cli_writes_separate_raw_and_processed_files(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "units.json"
             argv = ["bauvo-working-units", "--pages", "pages.json", "--documents",
                     "documents.json", "--project", "test-project", "--output", str(output)]
 
-            def fake_pipeline(_documents, model, *_args):
+            def fake_pipeline(_documents, model, *_args, **_kwargs):
                 response = model.extract("FIRST_PASS. text")
                 response["working_units"].clear()
                 return {"schema_version": 9, "working_units": [], "offers": [],
@@ -86,6 +94,20 @@ class RawRunTests(unittest.TestCase):
             self.assertEqual(raw[0]["working_units"],
                              [{"name": "unchanged"}])
             self.assertEqual(processed["working_units"], [])
+
+    def test_cli_preserves_partial_output_and_exits_unsuccessfully(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'units.json'
+            argv=['units','--pages','pages.json','--documents','documents.json','--project','p','--output',str(output)]
+            partial={'schema_version':12,'status':'request_failed','working_units':[], 'offers':[],
+                     'gemini_responses':[], 'review_findings':[{'code':'model_request_failed'}]}
+            with (patch.object(sys,'argv',argv), patch('bauvo_working_units.cli.load_documents',return_value=[]),
+                  patch('bauvo_working_units.cli.GeminiModel',FakeGemini),
+                  patch('bauvo_working_units.cli.extract_project_units',return_value=partial), self.assertRaises(SystemExit)):
+                main()
+            self.assertEqual(json.loads(output.read_text()),partial)
+            self.assertTrue((Path(directory)/'units.gemini-raw.json').exists())
+            self.assertTrue((Path(directory)/'units.gemini-raw.attempts.json').exists())
 
 
 if __name__ == "__main__":

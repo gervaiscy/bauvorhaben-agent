@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "origin": "Synthetic generic clauses. Expected interpretations never enter model prompts.",
+  "cases": [
+    {
+      "id": "unknown-material-exclusion",
+      "text": "Die Wände erhalten einen Innenputz. Bei Fertigteilwänden wird nicht verputzt. Die Wandmaterialien dieses Hauses sind hier nicht angegeben.",
+      "action": "Innenputz der Wände herstellen",
+      "expected": "CONDITIONAL",
+      "check": "unknown-material"
+    },
+    {
+      "id": "known-material-exception-false",
+      "text": "Die Wände erhalten einen Innenputz. Bei Fertigteilwänden wird nicht verputzt. Für dieses Haus werden ausschließlich Ziegelwände verwendet; Fertigteilwände sind nicht vorgesehen.",
+      "action": "Innenputz der Wände herstellen",
+      "expected": "APPLIES",
+      "check": "known-material"
+    },
+    {
+      "id": "known-partial-cost-exception",
+      "text": "Der Auftraggeber trägt Prüfgebühren und Verbrauchskosten. Verbrauchskosten trägt er nicht, wenn er das Versorgungspaket bis zur Planungsfreigabe schriftlich angenommen hat. Für dieses Projekt wurde das Versorgungspaket schriftlich vor der Planungsfreigabe angenommen. Die Prüfgebühren bleiben vom Auftraggeber zu tragen.",
+      "action": "Prüfgebühren und Verbrauchskosten tragen",
+      "expected": "PARTIALLY_APPLIES",
+      "check": "partial-cost"
+    },
+    {
+      "id": "unknown-space-replacement",
+      "text": "Der Auftragnehmer installiert das vorgesehene Gerät. Falls die Stellfläche zu klein ist, vereinbaren Auftragnehmer und Auftraggeber ein passendes Ersatzgerät. Die verfügbare Stellfläche ist hier nicht angegeben.",
+      "action": "Vorgesehenes Gerät installieren",
+      "expected": "CONDITIONAL",
+      "check": "replacement"
+    },
+    {
+      "id": "unknown-owner-work-choice",
+      "text": "Falls der Auftraggeber Arbeiten selbst ausführt, übernimmt er deren zeitliche und organisatorische Einordnung in den Bauablauf. Ob er Arbeiten selbst ausführen wird, ist noch nicht entschieden.",
+      "action": "Eigene Arbeiten zeitlich und organisatorisch koordinieren",
+      "expected": "CONDITIONAL",
+      "check": "owner-work"
+    },
+    {
+      "id": "known-whole-unit-exclusion",
+      "text": "Leitungen im Keller werden nicht verkleidet. Sämtliche Leitungen dieses Hauses liegen im Keller.",
+      "action": "Leitungen dieses Hauses verkleiden",
+      "expected": "DOES_NOT_APPLY",
+      "check": "whole-exclusion"
+    },
+    {
+      "id": "ambiguous-exception-scope",
+      "text": "Der Auftraggeber trägt die Kosten der vereinbarten Leistungen. Eine Sonderregelung nimmt einen Teil davon aus. Welche Leistungen die Sonderregelung betrifft, wird in diesem Auszug nicht angegeben.",
+      "action": "Kosten der vereinbarten Leistungen tragen",
+      "expected": "UNKNOWN",
+      "check": "unknown-scope"
+    },
+    {
+      "id": "negative-predicate-inclusion",
+      "text": "Der Auftraggeber trägt die Lieferkosten nur, wenn er das Servicepaket nicht schriftlich bis zur Freigabe des Entwurfs angenommen hat. Ob das Servicepaket angenommen wurde, ist aus diesem Auszug nicht ersichtlich.",
+      "action": "Lieferkosten tragen",
+      "expected": "CONDITIONAL",
+      "check": "negative-inclusion"
+    },
+    {
+      "id": "secondary-component-condition",
+      "text": "Der Auftragnehmer verkleidet vorhandene Leitungen. Eine zusätzliche Oberflächenbeschichtung wird ausgeführt, sofern die anderen Raumwände ebenfalls beschichtet werden. Ob diese Wandbeschichtung gewählt wurde, ist noch offen.",
+      "action": "Leitungen verkleiden und gegebenenfalls zusätzlich beschichten",
+      "expected": "CONDITIONAL",
+      "check": "secondary-component",
+      "expectations": [
+        "Cited unconditional enclosure rule: APPLIES_WHEN, condition null.",
+        "Separate coating rule with the wall-coating condition; do not apply it to enclosure."
+      ]
+    },
+    {
+      "id": "misleading-title-combined-components",
+      "text": "Der Auftraggeber trägt Prüfgebühren, Lagerkosten und Verbrauchskosten. Lagerkosten fallen nur an, wenn Bauteile zwischengelagert werden. Verbrauchskosten trägt er nur, sofern er das Versorgungspaket nicht bis zur Planungsfreigabe angenommen hat. Ob eine Zwischenlagerung erforderlich ist und ob das Versorgungspaket angenommen wurde, ist aus diesem Auszug nicht bekannt.",
+      "name": "Prüfgebühren tragen",
+      "action": "Prüfgebühren, Lagerkosten und Verbrauchskosten tragen",
+      "expected": "CONDITIONAL",
+      "check": "combined-components"
+    },
+    {
+      "id": "conditional-need-noun-phrase",
+      "text": "Die Kosten einer gegebenenfalls nötigen Sondermaßnahme trägt der Auftraggeber, ebenso die Prüfgebühren. Ob die Sondermaßnahme erforderlich ist, ist hier nicht festgestellt.",
+      "action": "Kosten einer gegebenenfalls nötigen Sondermaßnahme und Prüfgebühren tragen",
+      "expected": "CONDITIONAL",
+      "check": "conditional-need-phrase",
+      "expectations": [
+        "Cited inspection-fee rule with condition null.",
+        "Only special-measure costs depend on the measure being necessary."
+      ]
+    },
+    {
+      "id": "neighbor-party-excluded-duties",
+      "text": "Wenn der Kunde eigene Arbeiten ausführt, hat der Anbieter keine Prüfpflichten für diese Arbeiten. Der Kunde koordiniert die eigenen Arbeiten zeitlich und organisatorisch im Gesamtplan. Ob der Kunde eigene Arbeiten ausführt, ist noch offen.",
+      "action": "Eigene Arbeiten zeitlich und organisatorisch koordinieren",
+      "expected": "CONDITIONAL",
+      "check": "neighbor-party-exclusion"
+    },
+    {
+      "id": "collection-location-exclusion",
+      "text": "Die Leitungen werden verkleidet. Leitungen in Abstellräumen bleiben unverkleidet. Welche Leitungen in Abstellräumen liegen, ist hier nicht angegeben.",
+      "action": "Leitungen des Hauses verkleiden",
+      "expected": "CONDITIONAL",
+      "check": "collection-exclusion"
+    },
+    {
+      "id": "owner-duty-outside-provider-scope",
+      "text": "Die Auswahl und Montage der Leuchten übernimmt der Auftraggeber. Diese Arbeiten gehören nicht zum Leistungsumfang des Anbieters.",
+      "action": "Leuchten auswählen und montieren",
+      "actor": "Auftraggeber",
+      "performed_by": "Auftraggeber",
+      "expected": "APPLIES",
+      "expectations": [
+        "The owner action remains applicable even though excluded from provider services."
+      ],
+      "forbidden": [
+        "DOES_NOT_APPLY solely because it is owner work"
+      ]
+    },
+    {
+      "id": "neighbor-exclusion-not-waterproofing",
+      "text": "Der Anbieter dichtet die Duschfläche nach Herstellerrichtlinien ab. Abtrennungen sind nicht enthalten und können gesondert vereinbart werden.",
+      "action": "Duschfläche abdichten",
+      "actor": "Anbieter",
+      "performed_by": "Anbieter",
+      "expected": "APPLIES",
+      "expectations": [
+        "Assess waterproofing only; do not add the separate partition exclusion to this action."
+      ],
+      "forbidden": [
+        "An exclusion rule about partitions attached to the waterproofing unit"
+      ]
+    },
+    {
+      "id": "unperformed-not-inapplicable",
+      "text": "Der Eigentümer muss die Versicherungsnachweise vor Baubeginn vorlegen. Ob er dies bereits getan hat, ist hier nicht bekannt.",
+      "action": "Versicherungsnachweise vorlegen",
+      "actor": "Eigentümer",
+      "performed_by": "Eigentümer",
+      "expected": "APPLIES",
+      "expectations": [
+        "The obligation applies; unknown completion progress is not an applicability condition."
+      ],
+      "forbidden": [
+        "CONDITIONAL solely because completion is unknown"
+      ]
+    },
+    {
+      "id": "scope-after-completion",
+      "text": "Der Bauherr beauftragt die Schlussvermessung nach Fertigstellung des gesamten Bauvorhabens. Ob das Bauvorhaben bereits fertiggestellt ist, ist hier nicht bekannt.",
+      "action": "Schlussvermessung beauftragen",
+      "expected": "APPLIES",
+      "expectations": [
+        "Completion affects timing only; no completion applicability rule or missing scope evidence."
+      ]
+    },
+    {
+      "id": "scope-before-unknown-start",
+      "text": "Der Eigentümer muss den Bauwasseranschluss zwölf Wochen vor Baubeginn bereitstellen. Der Baubeginn ist noch nicht festgelegt.",
+      "action": "Bauwasseranschluss bereitstellen",
+      "expected": "APPLIES",
+      "expectations": [
+        "Unknown construction date does not make scope conditional; no timing applicability rule."
+      ]
+    },
+    {
+      "id": "scope-already-performed",
+      "text": "Der Eigentümer legt die Versicherungsnachweise vor. Die Nachweise hat er bereits vorgelegt.",
+      "action": "Versicherungsnachweise vorlegen",
+      "expected": "APPLIES",
+      "expectations": [
+        "Already performed remains contractual scope; progress is not a scope rule."
+      ]
+    },
+    {
+      "id": "known-sufficient-space",
+      "text": "Der Auftragnehmer installiert den vorgesehenen Heizkörper. Reicht die verfügbare Wandfläche nicht aus, vereinbaren die Parteien eine andere Wärmequelle. Für dieses Haus ist nachgewiesen, dass die Wandfläche ausreicht.",
+      "action": "Vorgesehenen Heizkörper installieren",
+      "expected": "APPLIES",
+      "expectations": [
+        "Retain replacement agreement; adequate space resolves its condition in reason, not a new inclusion rule."
+      ]
+    },
+    {
+      "id": "known-insufficient-space",
+      "text": "Der Auftragnehmer installiert den vorgesehenen Heizkörper. Reicht die verfügbare Wandfläche nicht aus, vereinbaren die Parteien eine andere Wärmequelle. Für dieses Haus ist nachgewiesen, dass die Wandfläche nicht ausreicht.",
+      "action": "Vorgesehenen Heizkörper installieren",
+      "expected": "DOES_NOT_APPLY",
+      "expectations": [
+        "Original radiator is replaced; preserve agreement on another heat source without inventing installation or selection."
+      ]
+    },
+    {
+      "id": "scope-room-fact-with-timing",
+      "text": "Der Auftragnehmer verkleidet die Leitungen vor der Abnahme. Im Keller bleiben Leitungen unverkleidet. Sämtliche Leitungen dieses Hauses liegen im Keller. Der Abnahmetermin ist nicht bekannt.",
+      "action": "Leitungen dieses Hauses verkleiden",
+      "expected": "DOES_NOT_APPLY",
+      "expectations": [
+        "Cellar exclusion governs this action; house fact resolves it in reason, not APPLIES_WHEN; acceptance date irrelevant."
+      ]
+    },
+    {
+      "id": "coverage-base-and-option",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer verkleidet die Leitungen."
+        },
+        {
+          "pdf_page": 2,
+          "text": "Eine zusätzliche Beschichtung wird nur ausgeführt, wenn der Auftraggeber sie auswählt."
+        },
+        {
+          "pdf_page": 3,
+          "text": "Die Wahl der Beschichtung ist noch offen."
+        },
+        {
+          "pdf_page": 4,
+          "text": "Die Arbeiten erfolgen nach der Rohinstallation."
+        },
+        {
+          "pdf_page": 5,
+          "text": "Der Termin der Rohinstallation ist noch unbekannt."
+        }
+      ],
+      "action": "Leitungen verkleiden und gegebenenfalls zusätzlich beschichten",
+      "actor": "Auftragnehmer",
+      "expected": "CONDITIONAL",
+      "expectations": [
+        "One cited APPLIES_WHEN rule for pipe enclosure, condition null and replacement_action null.",
+        "Separate conditional inclusion rule for additional coating, scoped only to coating.",
+        "Unknown installation date does not become a scope condition."
+      ],
+      "required_rules": [
+        {
+          "scope": "Leitungen verkleiden",
+          "effect": "APPLIES_WHEN",
+          "condition": null
+        },
+        {
+          "scope": "Zusätzliche Beschichtung",
+          "effect": "APPLIES_WHEN",
+          "condition": "Auswahl durch Auftraggeber"
+        }
+      ]
+    },
+    {
+      "id": "coverage-unconditional-and-excluded-cost",
+      "text": "Der Auftraggeber trägt die Prüfgebühren und die Lieferkosten. Lieferkosten entfallen, wenn er das Lieferpaket angenommen hat. Für dieses Haus wurde das Lieferpaket angenommen.",
+      "action": "Prüfgebühren und Lieferkosten tragen",
+      "actor": "Auftraggeber",
+      "expected": "PARTIALLY_APPLIES",
+      "expectations": [
+        "Inspection fees have a cited APPLIES_WHEN rule with condition null.",
+        "Only delivery costs have an EXCLUDED_WHEN rule with the contractual acceptance condition.",
+        "Known package acceptance resolves the exclusion in the explanation, not an invented inclusion rule."
+      ],
+      "required_rules": [
+        {
+          "scope": "Prüfgebühren",
+          "effect": "APPLIES_WHEN",
+          "condition": null
+        },
+        {
+          "scope": "Lieferkosten",
+          "effect": "EXCLUDED_WHEN",
+          "condition": "Lieferpaket angenommen"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "origin": "Synthetic clauses; no private project text.",
+  "cases": [
+    {
+      "id": "known-true-condition",
+      "source_text": "Bei vereinbarter Fußbodenheizung liefert und montiert der Auftragnehmer die Raumthermostate.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Raumthermostate liefern und montieren"
+        }
+      ],
+      "contract_facts": [
+        {
+          "quote": "Für dieses Bauvorhaben ist eine Fußbodenheizung vereinbart.",
+          "statement": "Die vereinbarte Heizungsart ist eine Fußbodenheizung."
+        }
+      ],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "APPLIES",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "Retain the source condition, but resolve it as satisfied using the contract evidence."
+        ]
+      }
+    },
+    {
+      "id": "known-false-condition",
+      "source_text": "Nur beim Haustyp Gartenhaus werden zwei Waschbecken eingebaut.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Zwei Waschbecken für den Haustyp Gartenhaus einbauen"
+        }
+      ],
+      "contract_facts": [
+        {
+          "quote": "Vereinbarter Haustyp: Stadthaus.",
+          "statement": "Das vereinbarte Modell heißt Stadthaus."
+        }
+      ],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "DOES_NOT_APPLY",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "A known different house type resolves the condition as false; do not leave it CONDITIONAL."
+        ]
+      }
+    },
+    {
+      "id": "unknown-house-feature",
+      "source_text": "Der Auftragnehmer baut einen Handtuchheizkörper ein. Bei unzureichendem Platz im Bad vereinbaren die Parteien stattdessen eine geeignete Zusatzheizung.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Handtuchheizkörper einbauen"
+        }
+      ],
+      "contract_facts": [],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "CONDITIONAL",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "Retain the replacement alternative and identify missing space information without inventing dimensions."
+        ]
+      }
+    },
+    {
+      "id": "prerequisite-not-scope",
+      "source_text": "Nach Bestätigung der Vorplanung erstellt der Auftragnehmer die Genehmigungsplanung. Die Bestätigung steht noch aus.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Genehmigungsplanung erstellen"
+        }
+      ],
+      "contract_facts": [
+        {
+          "quote": "Die Genehmigungsplanung gehört zum vereinbarten Leistungsumfang.",
+          "statement": "Die Planung ist eine zugesagte Leistung."
+        }
+      ],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "APPLIES",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "Pending approval affects execution, not whether the agreed planning service is in scope."
+        ]
+      }
+    },
+    {
+      "id": "required-work-choice-of-performer",
+      "source_text": "Ein nach dem Bodengutachten erforderlicher Bodenaustausch ist vom Bauherrn zu veranlassen. Er kann damit den Auftragnehmer oder einen anderen Erdbauer beauftragen oder ihn selbst ausführen.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Erforderlichen Bodenaustausch veranlassen"
+        }
+      ],
+      "contract_facts": [
+        {
+          "quote": "Das Bodengutachten für dieses Bauvorhaben stellt fest: Ein Bodenaustausch ist erforderlich.",
+          "statement": "Für das Projekt ist Bodenaustausch notwendig."
+        }
+      ],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "APPLIES",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "Choice of performer does not make required work OPTIONAL."
+        ]
+      }
+    },
+    {
+      "id": "optional-feature-usage",
+      "source_text": "Die Fernsteuerung der Heizung ist freiwillig. Der Bauherr kann sie nutzen. Wenn er sie nutzt, muss er dafür einen Internetanschluss bereitstellen und ein Benutzerkonto einrichten.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Fernsteuerung der Heizung nutzen"
+        },
+        {
+          "id": "U2",
+          "action": "Internetanschluss für die Fernsteuerung bereitstellen und Benutzerkonto einrichten"
+        }
+      ],
+      "contract_facts": [],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "APPLIES",
+            "modality": "OPTIONAL"
+          },
+          {
+            "id": "U2",
+            "applicability": "CONDITIONAL",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "The available choice applies as OPTIONAL. Setup is required only if voluntary use is chosen, never an unconditional duty."
+        ]
+      }
+    },
+    {
+      "id": "combined-unconditional-and-conditional",
+      "source_text": "Der Bauherr trägt die Prüfgebühren. Lieferkosten trägt er nur bei gewünschter Anlieferung; bei Selbstabholung entfallen sie.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Prüfgebühren und gegebenenfalls Lieferkosten tragen"
+        }
+      ],
+      "contract_facts": [],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "PARTIALLY_APPLIES",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "Include a separate inspection-fee rule with condition null and a scoped delivery-cost rule. Do not attach delivery conditions to inspection fees."
+        ]
+      }
+    },
+    {
+      "id": "same-page-different-source",
+      "source_text": "Bei vereinbarter Fußbodenheizung ist der Estrich aufzuheizen. Diese Baubeschreibung nennt keine konkrete Projektwahl.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Estrich bei Fußbodenheizung aufheizen"
+        }
+      ],
+      "contract_facts": [
+        {
+          "quote": "Die Parteien vereinbaren für das Bauvorhaben eine Fußbodenheizung.",
+          "statement": "Eine Fußbodenheizung gehört zur vereinbarten Ausstattung."
+        }
+      ],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "APPLIES",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "Both BLB and contract use PDF page 1 and document ID D1 but different source keys. Cite the original contract quote with its contract source key, never the fact summary or BLB source identity."
+        ]
+      }
+    },
+    {
+      "id": "contradictory-project-facts",
+      "source_text": "Bei vereinbarter Fußbodenheizung werden Raumthermostate installiert.",
+      "tasks": [
+        {
+          "id": "U1",
+          "action": "Raumthermostate installieren"
+        }
+      ],
+      "contract_facts": [
+        {
+          "quote": "Die Parteien vereinbaren eine Fußbodenheizung.",
+          "statement": "Eine Fußbodenheizung ist vereinbart."
+        },
+        {
+          "quote": "Für dieses Vorhaben ist keine Fußbodenheizung vereinbart.",
+          "statement": "Eine Fußbodenheizung ist ausgeschlossen."
+        }
+      ],
+      "expectations": {
+        "units": [
+          {
+            "id": "U1",
+            "applicability": "UNKNOWN",
+            "modality": "REQUIRED"
+          }
+        ],
+        "review": [
+          "Preserve contradictory evidence and missing resolution; do not infer precedence from ordering."
+        ]
+      }
+    }
+  ]
+}

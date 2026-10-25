@@ -1,0 +1,1058 @@
+{
+  "schema_version": 1,
+  "origin": "Independently authored synthetic German clauses; no private customer material.",
+  "purpose": "Small semantic evaluation set, not evidence of production accuracy.",
+  "cases": [
+    {
+      "id": "roles-and-relative-deadline",
+      "purpose": "Responsibility differs from execution; explicit trigger and consequence.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftraggeber beauftragt einen Installateur mit der Herstellung des Bauwasseranschlusses. Der Anschluss muss zwölf Wochen vor Baubeginn vorhanden sein. Fehlt er zu diesem Zeitpunkt, verschiebt sich der Baubeginn."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Vertragsklauseln",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "water",
+          "document_id": "D1",
+          "action": "Herstellung des Bauwasseranschlusses beauftragen und sicherstellen",
+          "actor": "Auftraggeber",
+          "performed_by": "Installateur",
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "expression": "zwölf Wochen vor Baubeginn",
+            "anchor_event": "Baubeginn",
+            "offset": "zwölf Wochen vorher",
+            "date": null
+          },
+          "consequences": {
+            "status": "EXPLICIT",
+            "items": [
+              "Der Baubeginn verschiebt sich."
+            ]
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber beauftragt einen Installateur mit der Herstellung des Bauwasseranschlusses. Der Anschluss muss zwölf Wochen vor Baubeginn vorhanden sein. Fehlt er zu diesem Zeitpunkt, verschiebt sich der Baubeginn."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not calculate a calendar date or assign execution to the client."
+      ]
+    },
+    {
+      "id": "optional-offer-decision",
+      "purpose": "Optional offer has an explicit conditional client action.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Das Unternehmen bietet optional die Übernahme der Verbrauchskosten an. Wenn der Auftraggeber dieses Angebot nutzen möchte, muss er seine Entscheidung spätestens zur Freigabe der Planung schriftlich mitteilen. Eine Annahme liegt noch nicht vor."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Vertragsklauseln",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "notify-choice",
+          "document_id": "D1",
+          "action": "Entscheidung über die Nutzung des Angebots schriftlich mitteilen",
+          "actor": "Auftraggeber",
+          "performed_by": null,
+          "applicability": "CONDITIONAL",
+          "conditions": [
+            "Wenn der Auftraggeber das Angebot nutzen möchte"
+          ],
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "expression": "spätestens zur Freigabe der Planung",
+            "anchor_event": "Freigabe der Planung",
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Das Unternehmen bietet optional die Übernahme der Verbrauchskosten an. Wenn der Auftraggeber dieses Angebot nutzen möchte, muss er seine Entscheidung spätestens zur Freigabe der Planung schriftlich mitteilen. Eine Annahme liegt noch nicht vor."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not assume acceptance or turn the offered service into an unconditional duty."
+      ]
+    },
+    {
+      "id": "conditional-scope",
+      "purpose": "A scope/pricing condition creates no timing dependency.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Wenn die Berechnung eine stärkere Dämmung erfordert, liefert und montiert das Bauunternehmen diese ohne Aufpreis. Die Berechnung für das konkrete Haus liegt nicht vor."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Vertragsklauseln",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "insulation",
+          "document_id": "D1",
+          "action": "Stärkere Dämmung liefern und montieren",
+          "actor": "Bauunternehmen",
+          "performed_by": "Bauunternehmen",
+          "applicability": "CONDITIONAL",
+          "conditions": [
+            "Wenn die Berechnung eine stärkere Dämmung erfordert"
+          ],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Wenn die Berechnung eine stärkere Dämmung erfordert, liefert und montiert das Bauunternehmen diese ohne Aufpreis. Die Berechnung für das konkrete Haus liegt nicht vor."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not conclude that stronger insulation applies to this house.",
+        "Do not invent a deadline or treat no-extra-charge wording as a lateness consequence."
+      ]
+    },
+    {
+      "id": "operation-versus-installation",
+      "purpose": "An operational prerequisite does not date physical mounting.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Bauherr stellt den Elektroanschluss für die Inbetriebnahme der Anlage bereit. Der Lieferant montiert die Anlage auf einem Sockel. Ein Termin für die Montage ist nicht angegeben."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Vertragsklauseln",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "electricity",
+          "document_id": "D1",
+          "action": "Elektroanschluss für die Inbetriebnahme bereitstellen",
+          "actor": "Bauherr",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "expression": "für die Inbetriebnahme der Anlage",
+            "anchor_event": "Inbetriebnahme der Anlage",
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr stellt den Elektroanschluss für die Inbetriebnahme der Anlage bereit. Der Lieferant montiert die Anlage auf einem Sockel. Ein Termin für die Montage ist nicht angegeben."
+            }
+          ]
+        },
+        {
+          "key": "mount",
+          "document_id": "D1",
+          "action": "Anlage auf einem Sockel montieren",
+          "actor": "Lieferant",
+          "performed_by": "Lieferant",
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr stellt den Elektroanschluss für die Inbetriebnahme der Anlage bereit. Der Lieferant montiert die Anlage auf einem Sockel. Ein Termin für die Montage ist nicht angegeben."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not use mounting as the deadline anchor for the electrical connection.",
+        "Do not invent a commissioning or mounting date."
+      ]
+    },
+    {
+      "id": "whole-project-completion",
+      "purpose": "Project completion remains a named event without a unit graph.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Bauherr beauftragt die Schlussvermessung nach Fertigstellung des gesamten Bauvorhabens. Er lässt außerdem das Grundstück einzäunen. Ein zeitlicher Zusammenhang zwischen Einzäunung und Vermessung ist nicht vereinbart."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Vertragsklauseln",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "survey",
+          "document_id": "D1",
+          "action": "Schlussvermessung beauftragen",
+          "actor": "Bauherr",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "expression": "nach Fertigstellung des gesamten Bauvorhabens",
+            "anchor_event": "Fertigstellung des gesamten Bauvorhabens",
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr beauftragt die Schlussvermessung nach Fertigstellung des gesamten Bauvorhabens. Er lässt außerdem das Grundstück einzäunen. Ein zeitlicher Zusammenhang zwischen Einzäunung und Vermessung ist nicht vereinbart."
+            }
+          ]
+        },
+        {
+          "key": "fence",
+          "document_id": "D1",
+          "action": "Grundstück einzäunen lassen",
+          "actor": "Bauherr",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr beauftragt die Schlussvermessung nach Fertigstellung des gesamten Bauvorhabens. Er lässt außerdem das Grundstück einzäunen. Ein zeitlicher Zusammenhang zwischen Einzäunung und Vermessung ist nicht vereinbart."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not make fencing a prerequisite for surveying."
+      ]
+    },
+    {
+      "id": "negative-dependency",
+      "purpose": "Negation must survive all focused assessments.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Auf Wunsch des Auftraggebers stellt das Unternehmen Herstellerbescheinigungen innerhalb von sechs Wochen nach schriftlicher Abnahme zu. Die Abnahme hängt nicht von der Zustellung dieser Unterlagen ab."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Vertragsklauseln",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "certificates",
+          "document_id": "D1",
+          "action": "Herstellerbescheinigungen zustellen",
+          "actor": "Unternehmen",
+          "performed_by": "Unternehmen",
+          "applicability": "CONDITIONAL",
+          "conditions": [
+            "Auf Wunsch des Auftraggebers"
+          ],
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "expression": "innerhalb von sechs Wochen nach schriftlicher Abnahme",
+            "anchor_event": "schriftliche Abnahme",
+            "offset": "innerhalb von sechs Wochen danach",
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Auf Wunsch des Auftraggebers stellt das Unternehmen Herstellerbescheinigungen innerhalb von sechs Wochen nach schriftlicher Abnahme zu. Die Abnahme hängt nicht von der Zustellung dieser Unterlagen ab."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not make document delivery a prerequisite for acceptance.",
+        "Do not infer an explicitly unstated consequence of late delivery."
+      ]
+    },
+    {
+      "id": "deadline-across-window-overlap",
+      "purpose": "Action begins on page 5 and deadline continues on page 6.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": ""
+        },
+        {
+          "pdf_page": 2,
+          "text": ""
+        },
+        {
+          "pdf_page": 3,
+          "text": ""
+        },
+        {
+          "pdf_page": 4,
+          "text": ""
+        },
+        {
+          "pdf_page": 5,
+          "text": "Der Auftraggeber gibt den Ausführungsplan schriftlich frei. Die Freigabe muss"
+        },
+        {
+          "pdf_page": 6,
+          "text": "spätestens drei Wochen vor Baubeginn vorliegen. Ohne Freigabe beginnt das Unternehmen nicht mit den Bauarbeiten."
+        },
+        {
+          "pdf_page": 7,
+          "text": ""
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Vertragsklauseln",
+          "pdf_pages": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "plan-approval",
+          "document_id": "D1",
+          "action": "Ausführungsplan schriftlich freigeben",
+          "actor": "Auftraggeber",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "expression": "spätestens drei Wochen vor Baubeginn",
+            "anchor_event": "Baubeginn",
+            "offset": "spätestens drei Wochen vorher",
+            "date": null
+          },
+          "consequences": {
+            "status": "EXPLICIT",
+            "items": [
+              "Das Unternehmen beginnt ohne Freigabe nicht mit den Bauarbeiten."
+            ]
+          },
+          "evidence": [
+            {
+              "pdf_page": 5,
+              "quote": "Der Auftraggeber gibt den Ausführungsplan schriftlich frei. Die Freigabe muss"
+            },
+            {
+              "pdf_page": 6,
+              "quote": "spätestens drei Wochen vor Baubeginn vorliegen. Ohne Freigabe beginnt das Unternehmen nicht mit den Bauarbeiten."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not truncate either page or lose the deadline because the unit was first found in the preceding window.",
+        "Raw repeated occurrences may remain; count logical task coverage separately from duplicate occurrences."
+      ]
+    },
+    {
+      "id": "separate-document-context",
+      "purpose": "A deadline in one document must not be inherited by another.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftraggeber sendet die Pläne spätestens eine Woche vor Baubeginn an Unternehmen A."
+        },
+        {
+          "pdf_page": 2,
+          "text": "Der Auftraggeber sendet die Pläne an Unternehmen B. Ein Termin ist hier nicht vereinbart."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Vereinbarung A",
+          "pdf_pages": [
+            1
+          ]
+        },
+        {
+          "document_id": "D2",
+          "document_title": "Vereinbarung B",
+          "pdf_pages": [
+            2
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "send-a",
+          "document_id": "D1",
+          "action": "Pläne an Unternehmen A senden",
+          "actor": "Auftraggeber",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "expression": "spätestens eine Woche vor Baubeginn",
+            "anchor_event": "Baubeginn",
+            "offset": "spätestens eine Woche vorher",
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber sendet die Pläne spätestens eine Woche vor Baubeginn an Unternehmen A."
+            }
+          ]
+        },
+        {
+          "key": "send-b",
+          "document_id": "D2",
+          "action": "Pläne an Unternehmen B senden",
+          "actor": "Auftraggeber",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 2,
+              "quote": "Der Auftraggeber sendet die Pläne an Unternehmen B. Ein Termin ist hier nicht vereinbart."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not reuse the first document deadline for the second document."
+      ]
+    },
+    {
+      "id": "actions-versus-status-and-consequence",
+      "purpose": "Missing evidence and a delay consequence must not become independent actions.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Kunde legt den geprüften Lageplan vor. Der Lageplan liegt derzeit nicht vor. Fehlt der Plan, verschiebt sich der Arbeitsbeginn."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Vereinbarung",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "plan",
+          "document_id": "D1",
+          "action": "Geprüften Lageplan vorlegen",
+          "actor": "Kunde",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "EXPLICIT",
+            "items": [
+              "Fehlt der Plan, verschiebt sich der Arbeitsbeginn."
+            ]
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt den geprüften Lageplan vor."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Fehlt der Plan, verschiebt sich der Arbeitsbeginn."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "No independent task for missing information.",
+        "No independent task to delay work.",
+        "No inferred deadline for plan submission."
+      ],
+      "expected_consequence": "Fehlt der Plan, verschiebt sich der Arbeitsbeginn."
+    },
+    {
+      "id": "checklist-heading-across-pages",
+      "purpose": "Continuing checklist inherits shared prerequisites without phase-duration offsets.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Voraussetzungen für die Einsatzplanung (acht Wochen) und den Arbeitsbeginn\n1. Der Kunde legt den Finanzierungsnachweis vor.\n2. Der Kunde legt die Genehmigung vor."
+        },
+        {
+          "pdf_page": 2,
+          "text": "3. Der Kunde stellt die befestigte Zufahrt bereit.\n4. Der Anbieter legt die bestätigte Ausführungsplanung vor. Die Ausführungsplanung dauert vier bis sieben Wochen."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Voraussetzungen",
+          "pdf_pages": [
+            1,
+            2
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "finance",
+          "document_id": "D1",
+          "action": "Finanzierungsnachweis vorlegen",
+          "actor": "Kunde",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "PREREQUISITE",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt den Finanzierungsnachweis vor."
+            }
+          ]
+        },
+        {
+          "key": "permit",
+          "document_id": "D1",
+          "action": "Genehmigung vorlegen",
+          "actor": "Kunde",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "PREREQUISITE",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt die Genehmigung vor."
+            }
+          ]
+        },
+        {
+          "key": "access",
+          "document_id": "D1",
+          "action": "Befestigte Zufahrt bereitstellen",
+          "actor": "Kunde",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "PREREQUISITE",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 2,
+              "quote": "Der Kunde stellt die befestigte Zufahrt bereit."
+            }
+          ]
+        },
+        {
+          "key": "planning",
+          "document_id": "D1",
+          "action": "Bestätigte Ausführungsplanung vorlegen",
+          "actor": "Anbieter",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "PREREQUISITE",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 2,
+              "quote": "Der Anbieter legt die bestätigte Ausführungsplanung vor."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "No eight-week offset on any checklist item.",
+        "Do not merge deployment planning and work start into one anchor.",
+        "No standalone duty to spend eight weeks."
+      ],
+      "expected_timing": [
+        "All four checklist requirements precede both Einsatzplanung and Arbeitsbeginn.",
+        "Four-to-seven-week duration scoped to Ausführungsplanung, separate from submission timing."
+      ]
+    },
+    {
+      "id": "negated-wording-real-obligations",
+      "purpose": "Negated wording can establish a real required state and positive ordering constraint.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Kunde muss die Zufahrt frei halten und darf sie nicht mit Material blockieren. Der Lieferant montiert das Gerät. Die Montage darf nicht vor der schriftlichen Freigabe beginnen."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Vereinbarung",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "access",
+          "document_id": "D1",
+          "action": "Zufahrt frei halten und nicht mit Material blockieren",
+          "actor": "Kunde",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde muss die Zufahrt frei halten und darf sie nicht mit Material blockieren."
+            }
+          ]
+        },
+        {
+          "key": "mount",
+          "document_id": "D1",
+          "action": "Gerät montieren",
+          "actor": "Lieferant",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "PREREQUISITE",
+            "expression": "nicht vor der schriftlichen Freigabe",
+            "anchor_event": "schriftliche Freigabe",
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Lieferant montiert das Gerät. Die Montage darf nicht vor der schriftlichen Freigabe beginnen."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not drop a real duty merely because it contains nicht.",
+        "Do not give the access duty the separate mounting prerequisite.",
+        "No calendar date or unsupported extra wait."
+      ]
+    },
+    {
+      "id": "denied-dependency-and-real-submission",
+      "purpose": "A denied evidence prerequisite must not hide a different explicitly required submission.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Anbieter liefert das Gerät. Die Lieferung ist nicht von der Vorlage einer Versicherungsbescheinigung abhängig. Der Kunde muss jedoch die unterschriebene Empfangsbestätigung zurücksenden. Dafür ist keine Frist vereinbart."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Vereinbarung",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "delivery",
+          "document_id": "D1",
+          "action": "Gerät liefern",
+          "actor": "Anbieter",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Anbieter liefert das Gerät."
+            }
+          ]
+        },
+        {
+          "key": "receipt",
+          "document_id": "D1",
+          "action": "Unterschriebene Empfangsbestätigung zurücksenden",
+          "actor": "Kunde",
+          "performed_by": null,
+          "applicability": "APPLIES",
+          "conditions": [],
+          "timing": {
+            "kind": "UNKNOWN",
+            "expression": null,
+            "anchor_event": null,
+            "offset": null,
+            "date": null
+          },
+          "consequences": {
+            "status": "NOT_STATED",
+            "items": []
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde muss jedoch die unterschriebene Empfangsbestätigung zurücksenden."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "No insurance-certificate submission task.",
+        "No independent duty or prohibition from the dependency denial.",
+        "No deadline from keine Frist vereinbart.",
+        "Do not discard the genuine receipt-return action."
+      ]
+    },
+    {
+      "id": "promotion-and-capability-only",
+      "purpose": "Distinguish promotion/capability from assigned work and explicit optional activities.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Mit unserer Erfahrung begleiten wir Sie auf dem Weg zum Eigenheim. Unser Team kann Sie bei Planung und Ausführung unterstützen."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Leistungsbeschreibung",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [],
+      "forbidden_inferences": [
+        "Do not turn promotional promises or capabilities into work or selectable offers."
+      ],
+      "expectations": [
+        "Preserve explicitly assigned work and selectable actions even when surrounded by advertising."
+      ]
+    },
+    {
+      "id": "promotion-with-specific-work",
+      "purpose": "Distinguish promotion/capability from assigned work and explicit optional activities.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Wir machen Wohnträume wahr. Der Auftragnehmer erstellt die statische Berechnung."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Leistungsbeschreibung",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "specific-action",
+          "document_id": "D1",
+          "action": "Statische Berechnung erstellen",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Wir machen Wohnträume wahr. Der Auftragnehmer erstellt die statische Berechnung."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not turn promotional promises or capabilities into work or selectable offers."
+      ],
+      "expectations": [
+        "Preserve explicitly assigned work and selectable actions even when surrounded by advertising."
+      ]
+    },
+    {
+      "id": "explicit-optional-commission",
+      "purpose": "Distinguish promotion/capability from assigned work and explicit optional activities.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftraggeber kann auf Wunsch einen Beleuchtungsplan beim Auftragnehmer gesondert beauftragen."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Leistungsbeschreibung",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "specific-action",
+          "document_id": "D1",
+          "action": "Beleuchtungsplan gesondert beauftragen",
+          "actor": "Auftraggeber",
+          "modality": "OPTIONAL",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber kann auf Wunsch einen Beleuchtungsplan beim Auftragnehmer gesondert beauftragen."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not turn promotional promises or capabilities into work or selectable offers."
+      ],
+      "expectations": [
+        "Preserve explicitly assigned work and selectable actions even when surrounded by advertising."
+      ]
+    },
+    {
+      "id": "quotation-described-construction-work",
+      "purpose": "Extract described construction work despite a quotation heading; scope acceptance belongs to later applicability.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Angebot\nDer Auftragnehmer liefert und montiert eine Außentür und eine Solaranlage."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Angebot",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "described-construction",
+          "document_id": "D1",
+          "action": "Außentür und Solaranlage liefern und montieren",
+          "actor": "Auftragnehmer",
+          "modality": "UNCLEAR",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer liefert und montiert eine Außentür und eine Solaranlage."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not omit described work merely because the document title is Angebot.",
+        "Do not infer acceptance or an unconditional duty from the heading."
+      ],
+      "expectations": [
+        "Both construction activities must be covered, grouped or separate. Applicability remains separate from task discovery."
+      ]
+    }
+  ]
+}

@@ -11,6 +11,10 @@ dependencies = ["google-genai>=1.0"]
 
 [project.scripts]
 bauvo-working-units = "bauvo_working_units.cli:main"
+bauvo-pipeline = "bauvo_working_units.pipeline:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["prompt.txt"]

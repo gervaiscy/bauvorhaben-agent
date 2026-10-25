@@ -23,6 +23,7 @@ class Document:
     schema_version: int = 5
     source_key: str = ""
     source_snapshot: str = ""
+    source_type: str = "project"
 
 
 @dataclass(frozen=True)
@@ -44,7 +45,8 @@ def load_documents(pages_path: str | Path, documents_path: str | Path | None = N
             pages=tuple({'pdf_page':p['pdf_page'],'text':p['text'],'checkboxes':p.get('checkboxes',[])}
                         for p in payload['pages'] if p['pdf_page'] in selected)
             result.append(Document(doc['document_id'],doc.get('document_title'),source,pages=pages,
-                                   schema_version=6,source_key=source_key,source_snapshot=digest(payload['pages'])))
+                                   schema_version=6,source_key=source_key,source_snapshot=digest(payload['pages']),
+                                   boundary_uncertain=doc['uncertain']))
         return result
     for doc in docs:
         selected=set(doc['line_ids']);lines=[];pages=[]
@@ -63,7 +65,7 @@ def load_documents(pages_path: str | Path, documents_path: str | Path | None = N
 
 
 def make_page_chunks(document: Document, whole_document_max_chars: int = 80000,
-                     chunk_pages: int = 5, overlap_pages: int = 1) -> list[PageChunk]:
+                     chunk_pages: int = 3, overlap_pages: int = 1) -> list[PageChunk]:
     """At most five physical pages TOTAL, including overlap; no text truncation."""
     if whole_document_max_chars<1 or not 1<=chunk_pages<=5 or not 0<=overlap_pages<chunk_pages:
         raise ValueError('Require 1–5 total pages including overlap')

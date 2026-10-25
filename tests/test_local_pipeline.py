@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
-sys.path[:0]=[str(ROOT/'pipeline'),str(ROOT/'pipeline/pdf-extractor'),str(ROOT/'pipeline/extraction_support')]
+sys.path[:0]=[str(ROOT/'pipeline'),str(ROOT/'pipeline/pdf-extractor'),str(ROOT/'pipeline/document-boundaries')]
 spec=importlib.util.spec_from_file_location('bauvo_cli',ROOT/'scripts/bauvo.py')
 cli=importlib.util.module_from_spec(spec);spec.loader.exec_module(cli)
 from customer_report import fingerprint
@@ -141,25 +141,26 @@ class WorkingUnitRuntimeTests(unittest.TestCase):
             CachedModel(Model(),d,{'model':'another'}).extract('prompt');self.assertEqual(len(calls),2)
 
     def test_rate_limit_retries_are_bounded_and_nonretryable_errors_propagate(self):
-        from bauvo_working_units.gemini import GeminiModel
+        from bauvo_working_units.gemini import GeminiModel, IncompleteResponse
+        from bauvo_working_units.trace import RetryingModel, ModelRequestFailed
         from types import SimpleNamespace
         class Limit(Exception):code=429
         calls=[]
         def generate(**kwargs):
             calls.append(1)
-            if len(calls)<3:raise Limit('capacity')
+            if len(calls)<2:raise Limit('capacity')
             return SimpleNamespace(text='{}',candidates=[SimpleNamespace(finish_reason='STOP')])
         model=GeminiModel.__new__(GeminiModel);model._model='test'
         model._client=SimpleNamespace(models=SimpleNamespace(generate_content=generate))
         model._types=SimpleNamespace(GenerateContentConfig=lambda **kwargs:kwargs)
-        with patch('bauvo_working_units.gemini.time.sleep') as sleep:
-            self.assertEqual(model.extract('prompt'),{});self.assertEqual([x.args[0] for x in sleep.call_args_list],[15,30])
+        with patch('bauvo_working_units.trace.time.sleep') as sleep:
+            self.assertEqual(RetryingModel(model).extract('prompt'),{});self.assertEqual(len(calls),2);self.assertEqual([x.args[0] for x in sleep.call_args_list],[1])
         model._client.models.generate_content=lambda **kwargs:(_ for _ in ()).throw(Limit('capacity'))
-        with patch('bauvo_working_units.gemini.time.sleep') as sleep:
-            with self.assertRaises(Limit):model.extract('prompt')
-            self.assertEqual(sleep.call_count,4)
+        with patch('bauvo_working_units.trace.time.sleep') as sleep:
+            with self.assertRaises(ModelRequestFailed) as failure:RetryingModel(model).extract('prompt')
+            self.assertEqual(sleep.call_count,1);self.assertEqual(len(failure.exception.attempts),2)
         model._client.models.generate_content=lambda **kwargs:SimpleNamespace(text='{}',candidates=[SimpleNamespace(finish_reason='MAX_TOKENS')])
-        with self.assertRaisesRegex(ValueError,'Incomplete'):model.extract('prompt')
+        with self.assertRaises(IncompleteResponse):model.extract('prompt')
 
     def test_stage_fingerprint_ignores_unrelated_stage_edits(self):
         from cache_binding import stage_binding

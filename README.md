@@ -1,12 +1,14 @@
 # Bauvo Agent
 
+For the current modular PDF-to-applicability workflow, see [phases and sequential pipeline](pipeline/working-units/PHASES.md).
+
 Local, reviewable construction-document workflow:
 
 ```
 PDF (including scanned PDF) → one 300-DPI PNG per page
     → Gemini 3.5 Flash / minimal → pages.json
     → optional document-boundary proposals → source review
-    → overlapping windows of up to 3 pages → Gemini working units
+    → three-page windows with one-page overlap → five Gemini passes
     → reconciliation, review, timing and draft report
 ```
 
@@ -139,17 +141,18 @@ automatically fabricated. The HTML is the initial snapshot; review the updated
 quality report after resolving findings. This workflow does not certify 99% OCR
 accuracy; that requires independently reviewed reference transcriptions.
 
-Working-unit extraction and its page-based review/relationship passes use at most
-three total pages per window, including overlap: 1–3, 3–5, 5–7, etc. Confirmed
-proposals keep separate documents apart; uncertain proposals use the complete
-bundle. The existing schema-5 reader uses page text and line IDs from historical
-`pages.json` files. It has not yet been migrated to schema 6. Long pages are
-never silently truncated. Later consolidation combines cited results and relevant
-context across documents, because contractual dependencies may be far apart.
+Schema-6 working-unit extraction uses five focused passes (actions/roles,
+applicability, offers, structured timing, consequences) in three-page windows with one-page overlap:
+1–3, 3–5, 5–7, etc. Windows stay within confirmed document boundaries;
+unverified or uncertain boundaries stop analysis. Page-and-quote citations are checked against the source window and flagged without rewriting or repair. Five focused passes
+replace semantic correction and relationship discovery. Named deadline events remain on unit reviews.
+Long source pages are never silently truncated.
 
-The standalone working-unit CLI accepts `--pages /path/pages.json` and optionally
-`--documents /path/documents.json`, alongside project/model/output arguments.
-There are no section or line-file arguments.
+The standalone CLI accepts `--pages /path/pages.json` and
+`--documents /path/documents.json` alongside project/model/output arguments.
+There are no section or line-file arguments. The legacy schema-5 path remains
+available for old evidence. See the focused workflow and small evaluation set in
+[pipeline/working-units/README-related-obligations.md](pipeline/working-units/README-related-obligations.md).
 
 Use `make status CASE=sample` for checkpoints and `make open CASE=sample` for the
 draft report. Resume uses `make run`; code/input changes require a fresh run.
@@ -294,9 +297,27 @@ array. `documents.json` references physical `pdf_pages` and exact
 with `make fresh-extract CASE=sample`. Prior runs are preserved; exact matching
 Gemini transcription caches can be reused without new transcription requests.
 
-This change is limited to extraction. Existing working-unit readers still expect
-schema 5 and line references; they need a separate migration before consuming
-schema 6 output. Extraction review/approval accepts both schema 5 and 6.
+Working-unit extraction now consumes schema 6 with exact page-and-quote citations.
+It uses three total pages, including one overlap, within each source document.
+`BAUVO_WORKING_UNIT_MODEL` defaults to Gemini 3.5 Flash with minimal reasoning,
+independently of `BAUVO_MODEL`. Output schema 17 records raw proposals and assessments with page-and-quote review flags.
+Assessments use batches of up to five units. Applicability runs last, assesses modality,
+and receives the complete cited project-facts collection. A separate preparatory pass
+reads supplied non-BLB sources for agreements and obligations of both parties; it replaces
+word-overlap retrieval. It returns `verpflichtung` and page/text `zitate` without
+classification or acceptance status. Facts and raw responses
+are saved separately for review. Cumulative files after each pass are written to
+`<output-stem>.passes/`; earlier files are never overwritten. Mark standalone BLB
+input with `--source-type blb` (the case pipeline does this automatically).
+Use `--project-facts /path/working-units.project-facts.json` to reuse a saved
+collection (with its original sources supplied as context), and `--stop-after
+aufgaben` to write only the next task stage. `--stop-after project-facts` runs
+only fact collection. Earlier artifacts are preserved; reused facts make no new
+model requests.
+The status `recorded` does not mean the response has been validated.
+The later line-based reconciliation/timing/report stages still need a separate
+page-citation migration. Extraction review/approval accepts schemas 5 and 6.
+See `pipeline/working-units/README-related-obligations.md` for the standalone command.
 
 Boundary protocol v33 deliberately omits detailed sender, representation, alias,
 type and reference classification. `metadata_extraction` is `not_performed` in

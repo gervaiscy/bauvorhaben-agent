@@ -1,0 +1,9 @@
+{
+ "schema_version":1,
+ "origin":"Source-backed regression specifications only; private source text stays in ignored local runs.",
+ "windows":[
+  {"id":"blb-plaster","pages":[13,14,15,16,17],"checks":[{"id":"plaster-exclusions","focus_suffix":"R0004:working_unit:006","check":"plaster"}]},
+  {"id":"blb-sanitary","pages":[41,42,43,44,45],"checks":[{"id":"pipe-location-exclusions","focus_suffix":"R0011:working_unit:004","check":"pipes"},{"id":"radiator-replacement","focus_suffix":"R0011:working_unit:007","check":"radiator"}]},
+  {"id":"blb-owner-work-and-costs","pages":[53,54,55,56,57],"checks":[{"id":"owner-work-choice","focus_suffix":"R0014:working_unit:011","check":"owner-work"},{"id":"utility-cost-scope","focus_suffix":"R0014:working_unit:015","check":"utility-cost"}]}
+ ]
+}

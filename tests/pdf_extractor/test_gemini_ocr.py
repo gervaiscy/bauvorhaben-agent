@@ -257,10 +257,10 @@ class GeminiPageWorkflowTests(unittest.TestCase):
 
 
 class ExtractorCleanupTests(unittest.TestCase):
-    def test_production_directory_contains_only_two_source_files(self):
+    def test_production_directory_contains_only_ocr_code_and_its_prompt(self):
         root = Path(__file__).resolve().parents[2]
         files = {p.name for p in (root/'pipeline/pdf-extractor').iterdir() if p.is_file()}
-        self.assertEqual(files, {'ocr_pipeline.py', 'gemini_ocr.py'})
+        self.assertEqual(files, {'ocr_pipeline.py', 'gemini_ocr.py', 'prompt.txt'})
 
     def test_production_entry_point_imports_without_experimental_ocr_modules(self):
         import subprocess
@@ -289,7 +289,7 @@ assert ocr_pipeline.DEFAULT_MODEL == 'gemini-3.5-flash'
         from cache_binding import stage_binding
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            support = root/'pipeline/extraction_support/document_grouping.py'
+            support = root/'pipeline/document-boundaries/document_grouping.py'
             support.parent.mkdir(parents=True);support.write_text('boundary implementation')
             before = stage_binding(root, 'extract')
             experiment = root/'scripts/ocr_experiments/document_ocr.py'

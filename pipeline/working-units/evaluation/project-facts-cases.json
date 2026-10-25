@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "id": "price-binding-with-included-scheduling",
+      "text": "Bauvertrag – Vergütung\nDer Pauschalfestpreis beträgt 410.000 Euro. Der Preis wird für die vereinbarte Bauzeit garantiert, wenn die Bauarbeiten innerhalb von elf Monaten nach Vertragsschluss beginnen können. Die siebenwöchige Eintaktungszeit ist in diesen elf Monaten enthalten. Nach Ablauf ist eine Anpassung entsprechend dem vereinbarten Baupreisindex auf schriftliches Verlangen einer Vertragspartei möglich.",
+      "expectations": [
+        "Retain the agreed price and the conditional price guarantee, not just the amount.",
+        "Retain eleven months from contract conclusion as the construction-start condition.",
+        "Retain the seven-week scheduling period as included within eleven months, not additional.",
+        "Retain the post-expiry index adjustment and its written-request condition."
+      ]
+    },
+    {
+      "id": "independent-offered-table-positions",
+      "text": "Angebot für das Bauvorhaben\nDieses Angebot wurde noch nicht angenommen.\nPos. | Beschreibung\n1 | Außenwand: 18 cm Mauerwerk, 16 cm Dämmung, 1,5 cm Außenputz.\n2 | EG: Diele, Technikraum, Arbeitszimmer, offener Wohn-/Essraum und WC mit Waschtisch.\n3 | OG: zwei Kinderzimmer, Schlafzimmer und Bad mit Wanne und Dusche.\n4 | Zusätzliche einflügelige Schiebetür vor der Wand laufend.\n5 | Fenster und Hauseingangstür bleiben in Standardausführung.",
+      "expectations": [
+        "Retain all five offered positions, including wall layers and room/fixture lists.",
+        "Retain the additional sliding door and standard windows and entrance door.",
+        "Preserve that the listed specifications are offered, without asserting accepted contractor obligations."
+      ]
+    },
+    {
+      "id": "permissions-versus-included-services",
+      "text": "Unterzeichneter Bauvertrag\nDer Auftragnehmer liefert und montiert eine Wärmepumpe; diese Leistung ist im Pauschalfestpreis enthalten.\nDer Bauherr erlaubt dem Auftragnehmer, bis sechs Monate nach Fertigstellung ein Werbeschild aufzustellen. Besichtigungen durch Interessenten sind nur nach vorheriger Terminvereinbarung erlaubt.\nDer Bauherr willigt in die Verarbeitung seiner Kontaktdaten zur Vertragsdurchführung ein.",
+      "expectations": [
+        "Retain the contractor commitment to supply and install a heat pump, with its inclusion in the fixed price.",
+        "Do not turn owner permissions for advertising, visits or data processing into contractor performance owed to the owner.",
+        "Retain the owner permissions as agreements, preserving time and appointment restrictions; do not turn them into contractor performance owed to the owner."
+      ]
+    },
+    {
+      "id": "condition-in-following-sentence",
+      "text": "Unterzeichneter Nachtrag\nDer Bauherr erhält nach Abschluss eine Gutschrift von 3.200 Euro. Voraussetzung ist, dass sämtliche Abschlagsrechnungen innerhalb von zwölf Tagen nach Zugang bezahlt wurden. Die Auszahlung erfolgt innerhalb von drei Wochen nach Eingang der Schlusszahlung und Rückgabe der Vertragserfüllungsbürgschaft. Eine vorherige Verrechnung mit Abschlagsrechnungen ist ausgeschlossen.",
+      "expectations": [
+        "Retain the agreed credit amount with the punctual-payment condition from the following sentence.",
+        "Retain the three-week payout period after both final payment receipt and guarantee return.",
+        "Retain the prohibition on early offsetting.",
+        "Citations must support the conditions as well as the credit amount."
+      ]
+    },
+    {
+      "id": "contract-attachment-labelled-offer",
+      "text": "Anlage zum Bauvertrag\nAngebot – Leistungsaufstellung\n1. Außenwand: 20 cm Mauerwerk und 12 cm Dämmung.\n2. Lieferung und Montage einer zusätzlichen Schiebetür.\n3. Im Obergeschoss: Schlafzimmer, zwei Kinderzimmer und Bad mit Dusche.",
+      "expectations": [
+        "Describe all three service positions using the supplied signed-contract-package context.",
+        "Do not replace the service extraction with a conclusion that no obligations exist merely because the attachment is titled Angebot.",
+        "Preserve source-stated dimensions, room list and quotations; do not invent further agreement or legal-enforceability judgments."
+      ]
+    },
+    {
+      "id": "both-parties-and-general-payment-rule",
+      "text": "Unterzeichneter Bauvertrag\nDer Auftragnehmer liefert und montiert eine Wärmepumpe. Der Bauherr stellt vor Baubeginn Bauwasser bereit. Sämtliche Abschlagszahlungen sind innerhalb von neun Tagen nach Zugang der jeweiligen Fertigstellungsmitteilung zu leisten. Der Bauherr erhält eine Gutschrift von 2.000 Euro, wenn alle Rechnungsbeträge innerhalb von dreizehn Tagen nach Rechnungsstellung auf dem Konto des Auftragnehmers eingehen. Der Festpreis gilt, wenn innerhalb von zehn Monaten nach Vertragsschluss mit dem Bau begonnen werden kann.",
+      "expectations": [
+        "Retain the contractor obligation to supply and install the heat pump.",
+        "Retain the owner obligation to provide construction water before construction starts.",
+        "Retain the general nine-day payment deadline after receipt of the relevant completion notice.",
+        "Retain the conditional credit and its separate thirteen-day receipt requirement after invoice issuance; do not replace the general payment deadline.",
+        "Retain the ten-month construction-start condition for the price guarantee.",
+        "Identify each party within the statement and support every agreement with literal citations."
+      ]
+    }
+  ]
+}

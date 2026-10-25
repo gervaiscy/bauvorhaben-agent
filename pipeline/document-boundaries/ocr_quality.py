@@ -30,13 +30,13 @@ def report(pages,documents,page_count):
         'snapshot_sha256':digest({'pages':pages,'documents':documents})}
 
 
-def review_html(pages,documents,quality):
+def review_html(pages,documents,quality,image_directory="page-images"):
     e=html.escape
     output=['<!doctype html><meta charset="utf-8"><title>OCR page review</title><style>body{font:16px system-ui;margin:28px;line-height:1.5}article{display:grid;grid-template-columns:1fr 1fr;gap:24px}img{max-width:100%}pre{white-space:pre-wrap}details{border:1px solid #ddd;padding:10px}</style><h1>OCR source review</h1><p>Compare every rendered page with the complete page text and checkboxes. Document boundaries are proposals and never filter text. Uncertain boundaries keep the bundle together for analysis.</p>']
     for title,data in (('Quality findings',quality),('Document boundary proposals',documents)):
         output.append('<details><summary>'+title+'</summary><pre>'+e(json.dumps(data,ensure_ascii=False,indent=2))+'</pre></details>')
     for p in pages:
-        output.append('<h2>PDF page '+str(p['pdf_page'])+'</h2><article><div><img src="page-images/page-'+str(p['pdf_page']).zfill(4)+'.png" alt="Rendered source page"></div><div><h3>Complete OCR text</h3><pre>'+e(p['text'])+'</pre>')
+        output.append('<h2>PDF page '+str(p['pdf_page'])+'</h2><article><div><img src="'+e(image_directory,quote=True)+'/page-'+str(p['pdf_page']).zfill(4)+'.png" alt="Rendered source page"></div><div><h3>Complete OCR text</h3><pre>'+e(p['text'])+'</pre>')
         if p.get('coordinates_available') is False:
             output.append('<p>Gemini visible-text transcription: coordinates and confidence scores are unavailable. Checkbox states are transcribed marks, not independently measured detections.</p>')
         output.append('<h3>Checkboxes</h3><pre>'+e(json.dumps(p['checkboxes'],ensure_ascii=False,indent=2))+'</pre>')

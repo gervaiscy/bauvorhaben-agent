@@ -1,10 +1,17 @@
-"""Small Google Gen AI / Vertex AI adapter."""
-
+"""Small Google Gen AI / Vertex AI adapter; one provider request per call."""
 from __future__ import annotations
 
 import json
-import time
 from typing import Any
+from .schemas import generation_for, RESPONSE_SCHEMAS
+
+
+class IncompleteResponse(ValueError):
+    """Generation was unfinished, empty or not parseable JSON; never a semantic repair."""
+    def __init__(self, reason, finish_reason=None):
+        self.reason = reason
+        self.finish_reason = finish_reason
+        super().__init__(f'{reason}; finish_reason={finish_reason}')
 
 
 class GeminiModel:
@@ -13,36 +20,31 @@ class GeminiModel:
         from google.genai import types
 
         self._client = genai.Client(vertexai=True, project=project, location=location,
-                                    http_options=types.HttpOptions(api_version="v1", timeout=600_000))
+                                    http_options=types.HttpOptions(api_version="v1", timeout=180_000,
+                                        retry_options=types.HttpRetryOptions(attempts=1)))
         self._types = types
         self._model = model
         self.last_raw_response: str | None = None
+        self.last_finish_reason: str | None = None
 
     def extract(self, prompt: str) -> Any:
         self.last_raw_response = None
-        for attempt in range(5):
-            try:
-                response = self._client.models.generate_content(
-                    model=self._model,
-                    contents=prompt,
-                    config=self._types.GenerateContentConfig(
-                        temperature=0,
-                        response_mime_type="application/json",
-                    ),
-                )
-                break
-            except Exception as exc:
-                if getattr(exc,"code",None) not in (429,500,502,503,504) or attempt==4:raise
-                delay=min(60,15*(2**attempt))
-                print(f"Vertex capacity/server limit; retrying in {delay}s (attempt {attempt+2}/5)",flush=True)
-                time.sleep(delay)
+        self.last_finish_reason = None
+        response = self._client.models.generate_content(
+            model=self._model, contents=prompt,
+            config=self._types.GenerateContentConfig(**generation_for(prompt.split('.', 1)[0]),
+                **({'response_json_schema': RESPONSE_SCHEMAS[prompt.split('.', 1)[0]]}
+                   if prompt.split('.', 1)[0] in RESPONSE_SCHEMAS else {})))
         self.last_raw_response = response.text
-        candidates=getattr(response,"candidates",None)
-        if candidates and str(candidates[0].finish_reason).split(".")[-1]!="STOP":
-            raise ValueError("Incomplete working-unit response: "+str(candidates[0].finish_reason))
+        candidates = getattr(response, 'candidates', None)
+        if candidates:
+            reason = getattr(candidates[0], 'finish_reason', None)
+            self.last_finish_reason = str(reason).split('.')[-1] if reason is not None else None
+        if self.last_finish_reason not in (None, 'STOP'):
+            raise IncompleteResponse('unfinished_generation', self.last_finish_reason)
         if not response.text:
-            return None
+            raise IncompleteResponse('empty_response', self.last_finish_reason)
         try:
             return json.loads(response.text)
-        except json.JSONDecodeError:
-            return response.text
+        except json.JSONDecodeError as exc:
+            raise IncompleteResponse('invalid_json', self.last_finish_reason) from exc

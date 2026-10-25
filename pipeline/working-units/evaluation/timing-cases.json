@@ -1,0 +1,679 @@
+{
+  "schema_version": 1,
+  "origin": "Synthetic generic clauses; expectations are not model input.",
+  "cases": [
+    {
+      "id": "conditional-alternatives",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Bauherr stellt den Bauwasseranschluss zwölf Wochen vor Baubeginn bereit. Alternativ genügt die Bereitstellung sechs Wochen vor Baubeginn, sofern eine verbindliche Bestätigung des Versorgers vorliegt."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Bauwasseranschluss bereitstellen",
+          "action": "Bauwasseranschluss bereitstellen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr stellt den Bauwasseranschluss zwölf Wochen vor Baubeginn bereit. Alternativ genügt die Bereitstellung sechs Wochen vor Baubeginn, sofern eine verbindliche Bestätigung des Versorgers vorliegt."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Two alternative deadlines: twelve weeks and six weeks before construction start.",
+        "The six-week branch requires binding supplier confirmation.",
+        "Both branches have the same alternative_group."
+      ],
+      "forbidden": [
+        "Dropping either branch",
+        "Unconditional six-week deadline",
+        "Calculated calendar date"
+      ]
+    },
+    {
+      "id": "scoped-trigger",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Planer erstellt die energetischen Nachweise für das Gebäude. Dazu gehört der Nachweis zum sommerlichen Wärmeschutz."
+        },
+        {
+          "pdf_page": 2,
+          "text": "Die Berechnung zum sommerlichen Wärmeschutz erfolgt erst nach dem endgültigen Planungsentwurf."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Energetische Nachweise einschließlich sommerlichem Wärmeschutz erstellen",
+          "action": "Energetische Nachweise einschließlich sommerlichem Wärmeschutz erstellen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Planer erstellt die energetischen Nachweise für das Gebäude. Dazu gehört der Nachweis zum sommerlichen Wärmeschutz."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Summer heat protection calculation has AFTER-final-planning-draft timing.",
+        "The restriction is scoped to that calculation, not all energy evidence."
+      ],
+      "forbidden": [
+        "Unknown timing for the explicitly scoped calculation",
+        "Applying the restriction to every energy calculation"
+      ]
+    },
+    {
+      "id": "completion-trigger",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Vermesser erstellt die abschließende Einmessung nach Fertigstellung des gesamten Bauvorhabens."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Abschließende Einmessung erstellen",
+          "action": "Abschließende Einmessung erstellen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Vermesser erstellt die abschließende Einmessung nach Fertigstellung des gesamten Bauvorhabens."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "EVENT_RELATIVE AFTER completion of the entire project; calendar date remains unknown."
+      ],
+      "forbidden": [
+        "NOT_STATED timing",
+        "Replacing whole-project completion with completion of the survey"
+      ]
+    },
+    {
+      "id": "independent-durations",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Fliesenleger verlegt die Bodenfliesen erst nach Erreichen der Belegreife des Estrichs. Die Trocknung dauert je nach Witterung etwa vier Wochen. Bei einer Fußbodenheizung ist außerdem ein Aufheizen des Estrichs erforderlich; dies dauert etwa zwei Wochen."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Bodenfliesen verlegen",
+          "action": "Bodenfliesen verlegen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Fliesenleger verlegt die Bodenfliesen erst nach Erreichen der Belegreife des Estrichs. Die Trocknung dauert je nach Witterung etwa vier Wochen. Bei einer Fußbodenheizung ist außerdem ein Aufheizen des Estrichs erforderlich; dies dauert etwa zwei Wochen."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Prerequisite: screed ready for laying.",
+        "Separate drying duration about four weeks.",
+        "Separate heating duration about two weeks, conditional on underfloor heating."
+      ],
+      "forbidden": [
+        "Six-week combined duration",
+        "Sequential drying then heating asserted as established",
+        "Heating duration without its condition"
+      ]
+    },
+    {
+      "id": "phase-duration-prerequisites",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Voraussetzungen für die Koordination der Gewerke (zehn Wochen) und den Baubeginn\nDer Bauherr legt den bestätigten Finanzierungsnachweis vor."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Bestätigten Finanzierungsnachweis vorlegen",
+          "action": "Bestätigten Finanzierungsnachweis vorlegen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Voraussetzungen für die Koordination der Gewerke (zehn Wochen) und den Baubeginn\nDer Bauherr legt den bestätigten Finanzierungsnachweis vor."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Readiness prerequisite for trade coordination and construction start.",
+        "If phase duration is included, it is scoped to coordination and separate from the proof requirement.",
+        "No individual ten-week offset is established."
+      ],
+      "forbidden": [
+        "Ten weeks before a combined coordination-and-construction anchor",
+        "Phase duration assigned to obtaining financing evidence"
+      ]
+    },
+    {
+      "id": "ambiguous-anchor",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Bauherr legt den Nachweis rechtzeitig vor Beginn vor. Welcher Beginn gemeint ist, wird in diesem Auszug nicht angegeben."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Nachweis vorlegen",
+          "action": "Nachweis vorlegen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr legt den Nachweis rechtzeitig vor Beginn vor. Welcher Beginn gemeint ist, wird in diesem Auszug nicht angegeben."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Before-start wording is retained.",
+        "Ambiguous anchor is explicitly recorded as missing evidence and AMBIGUOUS status."
+      ],
+      "forbidden": [
+        "Confidently assuming construction start",
+        "Discarding the stated timing expression"
+      ]
+    },
+    {
+      "id": "performance-not-commissioning",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Kunde beauftragt einen Vermesser. Der Vermesser führt die abschließende Vermessung nach Fertigstellung des Gebäudes aus."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Vermesser beauftragen",
+          "action": "Vermesser beauftragen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde beauftragt einen Vermesser. Der Vermesser führt die abschließende Vermessung nach Fertigstellung des Gebäudes aus."
+            }
+          ]
+        },
+        {
+          "id": "U2",
+          "name": "Abschließende Vermessung ausführen",
+          "action": "Abschließende Vermessung ausführen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde beauftragt einen Vermesser. Der Vermesser führt die abschließende Vermessung nach Fertigstellung des Gebäudes aus."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "U1 commissioning: NOT_STATED, no timing rules.",
+        "U2 survey performance: AFTER completion of the building."
+      ],
+      "forbidden": [
+        "Transfer of performance timing to commissioning."
+      ]
+    },
+    {
+      "id": "confirmation-not-installation",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Kunde legt eine verbindliche Bestätigung des Versorgers vor, dass der Anschluss spätestens acht Wochen vor Arbeitsbeginn hergestellt wird."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Anschluss herstellen",
+          "action": "Anschluss herstellen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt eine verbindliche Bestätigung des Versorgers vor, dass der Anschluss spätestens acht Wochen vor Arbeitsbeginn hergestellt wird."
+            }
+          ]
+        },
+        {
+          "id": "U2",
+          "name": "Verbindliche Bestätigung des Versorgers vorlegen",
+          "action": "Verbindliche Bestätigung des Versorgers vorlegen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt eine verbindliche Bestätigung des Versorgers vor, dass der Anschluss spätestens acht Wochen vor Arbeitsbeginn hergestellt wird."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "U1 installation: eight weeks BEFORE work starts.",
+        "U2 confirmation submission: NOT_STATED, no submission deadline is established."
+      ],
+      "forbidden": [
+        "Eight-week deadline assigned to submitting the confirmation."
+      ]
+    },
+    {
+      "id": "negated-timing-statements",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Lieferant montiert das Gerät. Ein Montagetermin ist nicht vereinbart. Die Abnahme hängt nicht von der Zustellung der Bescheinigungen ab."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Gerät montieren",
+          "action": "Gerät montieren",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Lieferant montiert das Gerät. Ein Montagetermin ist nicht vereinbart. Die Abnahme hängt nicht von der Zustellung der Bescheinigungen ab."
+            }
+          ]
+        },
+        {
+          "id": "U2",
+          "name": "Abnahme durchführen",
+          "action": "Abnahme durchführen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Lieferant montiert das Gerät. Ein Montagetermin ist nicht vereinbart. Die Abnahme hängt nicht von der Zustellung der Bescheinigungen ab."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Both units: NOT_STATED with empty timing_rules."
+      ],
+      "forbidden": [
+        "No agreed date represented as a DEADLINE.",
+        "Document delivery represented as a prerequisite for acceptance."
+      ]
+    },
+    {
+      "id": "within-after-not-exact-offset",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Das Unternehmen sendet das Protokoll innerhalb von fünf Werktagen nach der Abnahme."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Protokoll senden",
+          "action": "Protokoll senden",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Das Unternehmen sendet das Protokoll innerhalb von fünf Werktagen nach der Abnahme."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Deadline WITHIN_AFTER acceptance, offset fünf Werktagen; no fixed fifth-day delivery."
+      ],
+      "forbidden": [
+        "Exact AFTER displacement represented as the only allowed delivery time.",
+        "Calculated calendar date."
+      ]
+    },
+    {
+      "id": "duration-without-start-event",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Die Trocknung dauert drei Wochen. Der Beginn der Trocknung ist in diesem Auszug nicht angegeben."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Trocknung durchführen",
+          "action": "Trocknung durchführen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Trocknung dauert drei Wochen. Der Beginn der Trocknung ist in diesem Auszug nicht angegeben."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "EXPLICIT DURATION drei Wochen, no anchor_events, relation/offset/date null."
+      ],
+      "forbidden": [
+        "Invented start event or completion date.",
+        "Known duration discarded because its start date is unknown."
+      ]
+    },
+    {
+      "id": "parenthetical-process-durations",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Belag wird erst nach Erreichen der Verlegereife des Untergrundes (nach ungefähr vier Wochen, abhängig von der Jahreszeit) aufgebracht. Bei einem beheizten Boden ist zusätzlich ein Aufheizen (etwa zwei Wochen) erforderlich."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Bodenbelag aufbringen",
+          "action": "Bodenbelag aufbringen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Belag wird erst nach Erreichen der Verlegereife des Untergrundes (nach ungefähr vier Wochen, abhängig von der Jahreszeit) aufgebracht. Bei einem beheizten Boden ist zusätzlich ein Aufheizen (etwa zwei Wochen) erforderlich."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "PREREQUISITE: floor laying AFTER substrate readiness, no offset.",
+        "Separate DURATION approximately four weeks for reaching readiness, seasonal condition retained.",
+        "Separate DURATION approximately two weeks for heating, conditional on heated floor."
+      ],
+      "forbidden": [
+        "Additional four-week wait after readiness.",
+        "Additional two-week wait after heating.",
+        "Summed six-week duration or invented sequential order."
+      ]
+    },
+    {
+      "id": "within-period-missing-reference",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Erforderlich ist eine Zuleitung oder die verbindliche Terminbestätigung des Versorgers über die Fertigstellung innerhalb von sechs Wochen."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Zuleitung bereitstellen",
+          "action": "Zuleitung bereitstellen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Erforderlich ist eine Zuleitung oder die verbindliche Terminbestätigung des Versorgers über die Fertigstellung innerhalb von sechs Wochen."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "AMBIGUOUS relative six-week completion period, empty anchor_events, stated expression/offset retained.",
+        "Starting event is listed in missing_evidence; no confirmation-based start is asserted."
+      ],
+      "forbidden": [
+        "AFTER the confirmed date, confirmation submission, contract signature or another invented starting event.",
+        "Discarding the stated six-week period."
+      ]
+    },
+    {
+      "id": "within-period-explicit-reference",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Die Bestätigung vom 12. März nennt die Fertigstellung der Zuleitung innerhalb von sechs Wochen ab Auftragserteilung."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Zuleitung fertigstellen",
+          "action": "Zuleitung fertigstellen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Bestätigung vom 12. März nennt die Fertigstellung der Zuleitung innerhalb von sechs Wochen ab Auftragserteilung."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "WITHIN_AFTER Auftragserteilung, six-week offset; no calculated calendar date."
+      ],
+      "forbidden": [
+        "Confirmation date used instead of stated Auftragserteilung.",
+        "Calendar date calculated from 12. März."
+      ]
+    },
+    {
+      "id": "not-before-positive-constraint",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Anbieter montiert das Bauteil. Die Montage darf nicht vor der schriftlichen Freigabe beginnen."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Bauteil montieren",
+          "action": "Bauteil montieren",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Anbieter montiert das Bauteil. Die Montage darf nicht vor der schriftlichen Freigabe beginnen."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "PREREQUISITE: mounting AFTER written approval, no offset or duration."
+      ],
+      "forbidden": [
+        "Do not classify a real not-before constraint as NOT_STATED because of negation."
+      ]
+    },
+    {
+      "id": "no-later-than-negative-wording",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Kunde muss die Freigabe nicht später als zwei Wochen vor Montagebeginn erteilen."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Freigabe erteilen",
+          "action": "Freigabe erteilen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde muss die Freigabe nicht später als zwei Wochen vor Montagebeginn erteilen."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Deadline two weeks BEFORE mounting starts, no calendar date."
+      ],
+      "forbidden": [
+        "Do not discard the deadline because its wording contains nicht."
+      ]
+    },
+    {
+      "id": "evidence-describes-delivery-deadline",
+      "text": "Der Kunde legt eine Bestätigung des Lieferanten vor, dass die Fenster spätestens vier Wochen vor Montagebeginn geliefert werden.",
+      "working_units": [
+        {
+          "id": "DELIVERY",
+          "name": "Fenster liefern",
+          "action": "Fenster liefern",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt eine Bestätigung des Lieferanten vor, dass die Fenster spätestens vier Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        },
+        {
+          "id": "EVIDENCE",
+          "name": "Lieferantenbestätigung vorlegen",
+          "action": "Lieferantenbestätigung vorlegen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt eine Bestätigung des Lieferanten vor, dass die Fenster spätestens vier Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "DELIVERY: four weeks BEFORE Montagebeginn, scoped to window delivery.",
+        "EVIDENCE: NOT_STATED with empty timing_rules; no submission deadline is stated."
+      ],
+      "forbidden": [
+        "Assigning the delivery date to evidence submission."
+      ]
+    },
+    {
+      "id": "evidence-and-delivery-separate-deadlines",
+      "text": "Der Kunde legt die Lieferantenbestätigung spätestens bei Planungsfreigabe vor. Die Bestätigung sagt zu, dass die Fenster spätestens vier Wochen vor Montagebeginn geliefert werden.",
+      "working_units": [
+        {
+          "id": "EVIDENCE",
+          "name": "Lieferantenbestätigung vorlegen",
+          "action": "Lieferantenbestätigung vorlegen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt die Lieferantenbestätigung spätestens bei Planungsfreigabe vor. Die Bestätigung sagt zu, dass die Fenster spätestens vier Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        },
+        {
+          "id": "DELIVERY",
+          "name": "Fenster liefern",
+          "action": "Fenster liefern",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Kunde legt die Lieferantenbestätigung spätestens bei Planungsfreigabe vor. Die Bestätigung sagt zu, dass die Fenster spätestens vier Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "EVIDENCE: BY Planungsfreigabe.",
+        "DELIVERY: four weeks BEFORE Montagebeginn.",
+        "Each date stays on its own activity; no copied deadline or invented offset."
+      ],
+      "forbidden": [
+        "Returning NOT_STATED for the explicitly dated submission.",
+        "Transferring one activity deadline to the other."
+      ]
+    },
+    {
+      "id": "evidence-backed-alternative-delivery",
+      "text": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens drei Wochen vor Montagebeginn geliefert werden.",
+      "working_units": [
+        {
+          "id": "DELIVERY",
+          "name": "Bauteile liefern",
+          "action": "Bauteile liefern",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens drei Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        },
+        {
+          "id": "EVIDENCE",
+          "name": "Verbindliche Lieferantenbestätigung vorlegen",
+          "action": "Verbindliche Lieferantenbestätigung vorlegen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens drei Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "DELIVERY: two alternative deadlines, eight and three weeks BEFORE Montagebeginn.",
+        "Both delivery rules share an alternative_group; the three-week branch requires binding confirmation.",
+        "EVIDENCE: NOT_STATED with empty timing_rules."
+      ],
+      "forbidden": [
+        "Keeping only the eight-week delivery deadline.",
+        "Moving the three-week delivery deadline to submission.",
+        "An unconditional three-week branch."
+      ]
+    }
+  ]
+}

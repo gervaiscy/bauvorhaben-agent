@@ -1,5 +1,7 @@
 # Bauvo: validated extraction and customer report pipeline
 
+For the current modular PDF-to-applicability workflow, see [phases and sequential pipeline](working-units/PHASES.md).
+
 ## Current MVP: documents only (12 October 2026)
 
 Use `document_report.py` for the customer view. It reports the contractual task,

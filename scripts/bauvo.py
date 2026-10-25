@@ -32,7 +32,7 @@ def slug(value):
 
 def load_environment():
     file=ROOT/'.env'
-    allowed={'GOOGLE_APPLICATION_CREDENTIALS','GOOGLE_CLOUD_PROJECT','BAUVO_LOCATION','BAUVO_MODEL','BAUVO_WORKERS','BAUVO_BATCH_SIZE','BAUVO_THINKING_BUDGET','OPENAI_API_KEY','BAUVO_OCR_PROVIDER','BAUVO_OCR_MODEL','BAUVO_OCR_PROCESSOR','BAUVO_OCR_MIN_CONFIDENCE','BAUVO_OCR_RECHECK_PER_PAGE','BAUVO_OCR_RECHECK_LIMIT','BAUVO_DOCUMENT_BOUNDARIES','BAUVO_DOCUMENT_BOUNDARY_MODEL'}
+    allowed={'GOOGLE_APPLICATION_CREDENTIALS','GOOGLE_CLOUD_PROJECT','BAUVO_LOCATION','BAUVO_MODEL','BAUVO_WORKERS','BAUVO_BATCH_SIZE','BAUVO_THINKING_BUDGET','OPENAI_API_KEY','BAUVO_OCR_PROVIDER','BAUVO_OCR_MODEL','BAUVO_OCR_PROCESSOR','BAUVO_OCR_MIN_CONFIDENCE','BAUVO_OCR_RECHECK_PER_PAGE','BAUVO_OCR_RECHECK_LIMIT','BAUVO_DOCUMENT_BOUNDARIES','BAUVO_DOCUMENT_BOUNDARY_MODEL','BAUVO_WORKING_UNIT_MODEL'}
     if file.exists():
         for line in file.read_text().splitlines():
             line=line.strip()
@@ -49,6 +49,7 @@ def load_environment():
     return {'project':os.environ.get('GOOGLE_CLOUD_PROJECT',''),
             'location':os.environ.get('BAUVO_LOCATION','global'),
             'model':os.environ.get('BAUVO_MODEL','gemini-2.5-flash'),
+            'working_unit_model':os.environ.get('BAUVO_WORKING_UNIT_MODEL','gemini-3.5-flash'),
             'ocr_provider':os.environ.get('BAUVO_OCR_PROVIDER','gemini'),
             'ocr_model':os.environ.get('BAUVO_OCR_MODEL','gemini-3.5-flash'),
             'document_boundary_model':os.environ.get('BAUVO_DOCUMENT_BOUNDARY_MODEL','gemini-3.5-flash'),
@@ -146,7 +147,7 @@ def execute_stage(stage,run,case,config):
             args=[ROOT/'pipeline/pdf-extractor/ocr_pipeline.py','--input',source['pdf'],'--output',out,
                   '--project',config['project'],'--location',config['location'],'--resume',
                   '--ocr-provider','gemini','--ocr-model',config.get('ocr_model','gemini-3.5-flash')]
-            document_args=[ROOT/'pipeline/extraction_support/document_pipeline.py',
+            document_args=[ROOT/'pipeline/document-boundaries/document_pipeline.py',
                   '--input',out/'pages.json','--output',out,'--project',config['project'],
                   '--location',config['location'],'--document-boundary-model',config.get('document_boundary_model','gemini-3.5-flash'),
                   '--document-boundaries',config.get('document_boundaries','auto')]
@@ -160,24 +161,46 @@ def execute_stage(stage,run,case,config):
             write_json(marker,{p.name:sha(p) for p in artifacts});files+=artifacts
     elif stage=='units':
         from extraction_acceptance import require_approved
+        from bauvo_working_units.schemas import PROTOCOL as working_unit_protocol
         require_approved(run,case['sources'])
         for source in case['sources']:
             extracted=run/'extraction'/source['key'];output=run/'working-units'/source['key']
             output.mkdir(parents=True,exist_ok=True);target=output/'working-units.json'
+            if target.exists() and read(extracted/'pages.json').get('schema_version')==6 and (read(target).get('schema_version')!=17 or read(target).get('protocol')!=working_unit_protocol):
+                raise ValueError('Existing working units use a different schema/protocol; start a fresh run to preserve evidence')
+            if target.exists() and read(target).get('status')=='request_failed':
+                raise ValueError('Existing working units contain unresolved model requests; preserve them and start a fresh run')
             # Do not overwrite incomplete evidence; attempts have distinct trace directories.
             if not target.exists():
                 attempt=output/('attempt-'+uuid.uuid4().hex[:8]);attempt.mkdir()
+                context_args=[]
+                if read(extracted/'pages.json').get('schema_version')==6:
+                    for other in case['sources']:
+                        if other['key']!=source['key']:
+                            context=run/'extraction'/other['key']
+                            context_args.extend(['--context-pages',context/'pages.json','--context-documents',context/'documents.json',
+                                                 '--context-type','blb' if other['key']=='blb' else 'project'])
                 command(['-m','bauvo_working_units.cli','--pages',extracted/'pages.json','--documents',extracted/'documents.json',
+                    '--source-type','blb' if source['key']=='blb' else 'project',
                     '--output',target,'--raw-output',attempt/'raw.json','--trace-dir',attempt/'trace','--cache-dir',output/'model-cache',
-                    '--project',config['project'],'--location',config['location'],'--model',config['model']],run/f'units-{source["key"]}.log')
+                    '--project',config['project'],'--location',config['location'],'--model',config['working_unit_model'],*context_args],run/f'units-{source["key"]}.log')
             files.append(target)
+            facts_target=target.with_name(f'{target.stem}.project-facts.json')
+            if facts_target.exists():files.append(facts_target)
+            files.extend(sorted(target.with_name(f'{target.stem}.passes').glob('*.json')))
         manifest={'contract_signed':case['contract_signed'],'report_settings':{'contract_signed_verified':True,'events':{},'selections':[]},
           'sources':[{'key':s['key'],'working_units':str(run/'working-units'/s['key']/'working-units.json'),
                       'pages':str(run/'extraction'/s['key']/'pages.json'),'documents':str(run/'extraction'/s['key']/'documents.json')} for s in case['sources']]}
         write_json(run/'input-manifest.json',manifest)
+        if any(read(run/'extraction'/source['key']/'pages.json').get('schema_version')==6 for source in case['sources']):
+            files.append(run/'input-manifest.json')
+            complete(run,stage,files)
+            return
         signed,sources=load_manifest(run/'input-manifest.json');payload=build_input(sources,signed,manifest['report_settings'])
         write_json(run/'input-snapshot.json',payload);files.extend([run/'input-manifest.json',run/'input-snapshot.json'])
     elif stage=='reconcile':
+        if not (run/'input-snapshot.json').exists():
+            raise ValueError('Working units are extracted; schema-6 page citations need a report-stage migration before reconciliation')
         from batched_report import run_batched
         p=read(run/'input-snapshot.json')
         q=run_batched(p,factory,run/'reconciliation',batch_size=config['batch_size'],workers=config['workers'],model_config=factory.identity)

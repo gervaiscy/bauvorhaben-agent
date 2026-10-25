@@ -29,7 +29,7 @@ class PageSourceTests(unittest.TestCase):
         return load_documents(root/'pages.json',root/'documents.json' if docs is not None else None)
     def test_overlapping_windows_have_at_most_three_total_pages_and_all_primary_pages(self):
         with tempfile.TemporaryDirectory() as tmp:
-            docs=self.write(Path(tmp),fixture());chunks=make_page_chunks(docs[0])
+            docs=self.write(Path(tmp),fixture());chunks=make_page_chunks(docs[0],chunk_pages=3)
             self.assertEqual([c.pages for c in chunks],[(1,2,3),(3,4,5),(5,6,7),(7,8)])
             self.assertEqual([n for c in chunks for n in c.primary_pages],list(range(1,9)))
             for c in chunks:
@@ -37,16 +37,16 @@ class PageSourceTests(unittest.TestCase):
                     payload=json.loads(prompt.split('\n')[-1]);self.assertLessEqual(len(payload['source_pages']),3)
                     self.assertEqual([p['text'] for p in payload['source_pages']],[fixture()['pages'][n-1]['text'] for n in c.pages])
                     self.assertNotIn('content_blocks',payload)
-            with self.assertRaises(ValueError):make_page_chunks(docs[0],chunk_pages=4)
+            with self.assertRaises(ValueError):make_page_chunks(docs[0],chunk_pages=6)
     def test_distinct_documents_are_separated_without_dropping_footer_or_logo_text(self):
         with tempfile.TemporaryDirectory() as tmp:
             data=fixture(4);docs=self.write(Path(tmp),data,boundaries(data))
             self.assertEqual([[l.id for l in d.lines] for d in docs],[['L1','L2'],['L3','L4']]);self.assertEqual(len(docs),2)
-            self.assertEqual([c.pages for d in docs for c in make_page_chunks(d)],[(1,2),(3,4)])
+            self.assertEqual([c.pages for d in docs for c in make_page_chunks(d,chunk_pages=3)],[(1,2),(3,4)])
     def test_uncertain_boundaries_conservatively_keep_cross_boundary_context(self):
         with tempfile.TemporaryDirectory() as tmp:
             data=fixture(4);docs=self.write(Path(tmp),data,boundaries(data,True))
-            self.assertEqual(len(docs),1);self.assertTrue(docs[0].boundary_uncertain);self.assertEqual(make_page_chunks(docs[0])[0].pages,(1,2,3))
+            self.assertEqual(len(docs),1);self.assertTrue(docs[0].boundary_uncertain);self.assertEqual(make_page_chunks(docs[0],chunk_pages=3)[0].pages,(1,2,3))
     def test_midpage_boundaries_send_only_each_documents_exact_text_slice(self):
         with tempfile.TemporaryDirectory() as tmp:
             data=fixture(1);p=data['pages'][0];p['text']='Form A\nForm B\n';p['text_sha256']=hashlib.sha256(p['text'].encode()).hexdigest();p['lines']=[{'id':'A','pdf_page':1,'text':'Form A','text_segments':[[0,7]]},{'id':'B','pdf_page':1,'text':'Form B','text_segments':[[7,14]]}]
@@ -69,6 +69,6 @@ class PageSourceTests(unittest.TestCase):
             data=fixture(6)
             for n in (2,3):
                 p=data['pages'][n-1];p['text']='';p['text_sha256']=hashlib.sha256(b'').hexdigest();p['lines']=[]
-            docs=self.write(Path(tmp),data);chunks=make_page_chunks(docs[0])
+            docs=self.write(Path(tmp),data);chunks=make_page_chunks(docs[0],chunk_pages=3)
             self.assertEqual([c.pages for c in chunks],[(1,2,3),(3,4,5),(5,6)])
             self.assertTrue(all(max(c.pages)-min(c.pages)<=2 for c in chunks))

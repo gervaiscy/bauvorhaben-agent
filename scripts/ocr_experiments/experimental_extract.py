@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
-sys.path[:0] = [str(ROOT/'pipeline/extraction_support'), str(ROOT/'pipeline/pdf-extractor')]
+sys.path[:0] = [str(ROOT/'pipeline/document-boundaries'), str(ROOT/'pipeline/pdf-extractor')]
 from legacy_grouping_client import gemini_sdk, cached_group_call, parse_pages
 
 

@@ -97,7 +97,6 @@ def _read_page_boundaries(path,pages):
                 or doc['document_id'] in seen or not isinstance(doc.get('pdf_pages'),list) or not doc['pdf_pages']
                 or any(type(n) is not int for n in doc['pdf_pages']) or type(doc.get('uncertain')) is not bool):
             raise ValueError('Invalid document proposal')
-        if doc['uncertain']:raise ValueError('Uncertain document boundary requires review; windows cannot cross documents')
         seen.add(doc['document_id']);covered.extend(doc['pdf_pages'])
     numbers=[p['pdf_page'] for p in pages['pages']]
     if not docs and result.get('status')=='empty' and not any(p['text'].strip() for p in pages['pages']):return []

@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
-sys.path[:0]=[str(ROOT/'pipeline/extraction_support'),str(ROOT/'scripts')]
+sys.path[:0]=[str(ROOT/'pipeline/document-boundaries'),str(ROOT/'scripts')]
 import document_pipeline
 import grouping_client
 import bauvo
