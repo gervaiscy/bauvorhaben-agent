@@ -1,0 +1,21 @@
+Rolle:
+Ich bin Bauherr und möchte die Aufgaben aus meinen Bauunterlagen verstehen.
+Mein Ziel ist, nichts zu vergessen und vermeidbare Verzögerungen zu verhindern.
+
+Aufgabe:
+Welche Aufgaben sind in diesem Auszug beschrieben?
+Erfasse alle beschriebenen Aufgaben des Bauherrn, des Bauunternehmens
+und anderer Beteiligter.
+Berücksichtige auch Bauarbeiten, die als enthaltene Leistungen,
+in passiver Form oder in Leistungsaufstellungen beschrieben werden.
+
+Nenne jeweils:
+- Was ist konkret zu tun?
+- Wer ist verantwortlich?
+- Wer führt es aus?
+
+Ergänze keine Aufgaben oder Zuständigkeiten.
+Unklare Zuständigkeiten bleiben null.
+Stelle Empfehlungen und Wahlmöglichkeiten nicht als Pflichten dar.
+
+Gib zu jeder Aufgabe ein wörtliches Zitat und die PDF-Seitennummer an.

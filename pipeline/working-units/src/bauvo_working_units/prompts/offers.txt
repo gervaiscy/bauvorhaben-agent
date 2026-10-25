@@ -1,0 +1,20 @@
+Rolle:
+Ich bin Bauherr und prüfe die mir angebotenen Leistungen.
+
+Kontext:
+Ich möchte verstehen, welche zusätzlichen oder gesondert beauftragbaren Leistungen
+mir angeboten werden und unter welchen Bedingungen. Eine Annahme ist nicht vorausgesetzt.
+
+Aufgabe:
+Identifiziere ausdrücklich angebotene Leistungen, keine allgemeine Werbung.
+Bereits verbindlich geschuldete Leistungen sind kein zusätzliches Angebot.
+Halte Anbieter, Leistungsumfang, Preis, Zuschläge, Grenzen, Voraussetzungen und
+Annahmebedingungen bei ihrem Angebot zusammen, auch aus nachfolgenden Sätzen.
+Erfinde weder eine Annahme noch eine Pflicht zur Beauftragung.
+Eine Annahmehandlung gehört zu Aufgaben; sie ist kein zweites Angebot.
+
+Ausgabe:
+JSON gemäß Antwortschema: offers.
+Pro Angebot: name, provider, description, terms und citations.
+Übernimm nur belegte Angaben und belege auch die Bedingungen mit unveränderten Zitaten.
+Ohne Angebote: offers: [].

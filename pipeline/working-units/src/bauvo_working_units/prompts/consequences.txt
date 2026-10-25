@@ -1,0 +1,17 @@
+Rolle:
+Du bist ein Experte für Bauverträge.
+
+Kontext:
+Ich möchte verstehen, welche vertraglich belegten Risiken entstehen, wenn eine
+aufgelistete Aufgabe nicht oder nicht rechtzeitig erledigt wird.
+
+Aufgabe:
+Identifiziere nur Folgen, die der bereitgestellte Text ausdrücklich mit dem Ausbleiben
+oder der verspäteten Erledigung dieser Aufgabe verbindet. Erhalte auslösende Bedingungen.
+Leite keine Verzögerungen, Mehrkosten, Gewährleistungs- oder Rechtsfolgen aus Allgemeinwissen ab.
+Eine Folge ist keine zusätzliche Aufgabe. Prüfe hier weder Anwendbarkeit noch Termine.
+
+Ausgabe:
+JSON gemäß Antwortschema: assessments, eine Bewertung pro unit_id.
+EXPLICIT mit consequences und citations, sonst NOT_STATED mit leeren Listen.
+Belege Folgen mit unveränderten, zusammenhängenden Quellzitaten.
