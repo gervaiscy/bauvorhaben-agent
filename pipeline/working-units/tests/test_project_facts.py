@@ -152,9 +152,9 @@ class ProjectFactsTests(unittest.TestCase):
             return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
         result=extract_page_units([source],SimpleNamespace(extract=extract),project_facts=facts)
         received=calls[0]['project_facts']
-        self.assertEqual([r['gemini']['verpflichtung'] for r in received['facts']],[d.pages[0]['text'] for d in docs])
-        self.assertEqual([r['source_key'] for r in received['facts']],[d.source_key for d in docs])
-        self.assertTrue(all(r['gemini']['zitate'] for r in received['facts']))
+        self.assertEqual([r['verpflichtung'] for r in received['facts']],[d.pages[0]['text'] for d in docs])
+        self.assertTrue(all(set(r)=={'verpflichtung','text'} for r in received['facts']))
+        self.assertTrue(all(r['text'] for r in received['facts']))
         self.assertNotIn('project_context',calls[0]);self.assertEqual(result['project_facts'],facts)
 
     def test_production_entrypoint_collects_facts_before_task_passes_and_retains_raw(self):

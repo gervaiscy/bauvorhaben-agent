@@ -25,11 +25,11 @@ TIMING_RULE = {'anyOf': [
          'relation': NULL, 'offset': NULL, 'duration': TEXT, 'date': NULL}),
 ]}
 
-TIMING = obj({'unit_id': TEXT, 'status': {'type': 'string', 'enum': ['EXPLICIT', 'NOT_STATED', 'AMBIGUOUS']},
+LEGACY_TIMING = obj({'unit_id': TEXT, 'status': {'type': 'string', 'enum': ['EXPLICIT', 'NOT_STATED', 'AMBIGUOUS']},
               'timing_rules': array(TIMING_RULE), 'missing_evidence': array(TEXT)})
 
 
-def timing_findings(response):
+def legacy_timing_findings(response):
     """Flag inconsistent timing fields only; no source interpretation or text correction."""
     findings = []
     rows = response.get('assessments') if isinstance(response, dict) else None
@@ -66,3 +66,30 @@ def timing_findings(response):
                 findings.append({'row': position, 'rule': index, 'code': 'unresolved_timing_reference'})
     return findings
 
+
+
+# Current timing contract: preserve the answer, without inferring a schedule.
+TIMING = obj({'unit_id': TEXT, 'answer': TEXT, 'citations': CITATIONS})
+
+
+def timing_findings(response):
+    rows = response.get('assessments') if isinstance(response, dict) else None
+    if not isinstance(rows, list):
+        return []
+    findings = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            continue  # Shared routing checks report malformed rows.
+        if 'answer' not in row and 'timing_rules' in row:
+            # Historical artifacts and legacy callers remain readable.
+            findings.extend({**issue, 'row': index}
+                for issue in legacy_timing_findings({'assessments': [row]}))
+            continue
+        if not isinstance(row.get('answer'), str) or not row['answer'].strip():
+            findings.append({'row': index, 'code': 'missing_or_invalid_timing_answer'})
+        citations = row.get('citations')
+        if not isinstance(citations, list):
+            findings.append({'row': index, 'code': 'missing_or_invalid_timing_citations'})
+        elif row.get('answer') not in ('NOT_STATED', 'AMBIGUOUS') and not citations:
+            findings.append({'row': index, 'code': 'timing_answer_without_citation'})
+    return findings

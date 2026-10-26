@@ -23,10 +23,24 @@ class TimingFactsContextTests(unittest.TestCase):
             if prompt.startswith('PAGE_EXTRACTION.'):
                 rows = [{'name':'Zweite Rate zahlen','action':'Zweite Rate zahlen','actor':'Bauherr',
                          'performed_by':None,'citations':[{'pdf_page':5,'quote':self.doc.pages[4]['text']}]}]
-                return {'working_units':rows if 5 in data['primary_pages'] else [],'carry_forward':''}
+                return {'working_units':rows if any(p['pdf_page']==5 and p['primary'] for p in data['source_pages']) else [],'carry_forward':''}
             return {'offers':[]}
         self.baseline = extract_page_units([self.doc], SimpleNamespace(extract=earlier),stop_after='PAGE_OFFERS')
         self.facts = collect_project_facts([self.doc],SimpleNamespace(extract=self.fact_response))
+
+    def test_batch_snapshot_has_assessments_without_claiming_phase_complete(self):
+        snapshots=[]
+        original=copy.deepcopy(self.baseline)
+        def timing(prompt):
+            return self.timing_response(json.loads(prompt.split('SOURCE DATA:\n')[1]))
+        result=extract_timing(self.baseline,[self.doc],SimpleNamespace(extract=timing),on_batch=snapshots.append)
+        self.assertEqual(len(snapshots),1)
+        self.assertNotIn('PAGE_TIMING',snapshots[0]['completed_passes'])
+        self.assertIn('PAGE_TIMING',result['completed_passes'])
+        self.assertTrue(any(r['kind']=='PAGE_TIMING' for r in snapshots[0]['working_units'][0]['reviews']))
+        snapshots[0]['working_units'].clear()
+        self.assertTrue(result['working_units'])
+        self.assertEqual(self.baseline,original)
 
     def fact_response(self, prompt):
         pages = json.loads(prompt.split('SOURCE DATA:\n')[1])['source_pages']
@@ -51,7 +65,7 @@ class TimingFactsContextTests(unittest.TestCase):
                     data = json.loads(prompt.split('SOURCE DATA:\n')[1])
                     self.assertEqual([p['pdf_page'] for p in data['source_pages']],[3,4,5])
                     self.assertEqual(len(data['project_facts']['facts']),1)
-                    self.assertEqual(data['project_facts']['facts'][0]['gemini']['verpflichtung'],self.quote)
+                    self.assertEqual(data['project_facts']['facts'][0]['verpflichtung'],self.quote)
                     citation = {'pdf_page':1,'quote':self.quote}
                     if qualified: citation.update(source_key='source-a',document_id='D1')
                     return self.timing_response(data,citation)
@@ -81,7 +95,7 @@ class TimingFactsContextTests(unittest.TestCase):
         self.facts['review_findings'].append(issue);self.facts['status']='needs_review'
         def timing(prompt):
             data=json.loads(prompt.split('SOURCE DATA:\n')[1])
-            self.assertIn(issue,data['project_facts']['facts'][0]['review_findings'])
+            self.assertNotIn('review_findings',data['project_facts']['facts'][0])
             return self.timing_response(data)
         result=extract_timing(self.baseline,[self.doc],SimpleNamespace(extract=timing),project_facts=self.facts)
         self.assertEqual(result['previous_project_facts'],self.baseline['project_facts'])
@@ -118,9 +132,8 @@ class TimingFactsContextTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 def timing(prompt):
                     data=json.loads(prompt.split('SOURCE DATA:\n')[1])
-                    self.assertEqual(data['project_facts']['scope'],'project_wide_contract_context')
                     fact=data['project_facts']['facts'][0]
-                    self.assertEqual((fact['source_key'],fact['document_id']),('source-a','D1'))
+                    self.assertEqual(set(fact),{'verpflichtung','text'})
                     self.assertEqual(data['source_pages'][0]['text'],blb.pages[0]['text'])
                     citation={'pdf_page':1,'quote':self.quote}
                     if mode!='unqualified':

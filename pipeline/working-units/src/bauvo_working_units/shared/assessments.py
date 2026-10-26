@@ -25,6 +25,7 @@ def run(ctx, phase):
                     extra = phase.request_data(ctx, doc, views)
                     rid, response = ctx.request(pass_name, doc, chunk, extra)
                     if response is None:
+                        ctx.save_batch()
                         continue
                     issues = assessment_findings(response, [u['id'] for u in batch], pass_name)
                     ctx.findings.extend({'response_id': rid, **issue} for issue in issues)
@@ -40,3 +41,4 @@ def run(ctx, phase):
                             target['reviews'].append({'id': f'{rid}:review:{position:03d}', 'response_id': rid,
                                 'kind': pass_name, 'response_position': position,
                                 'gemini': copy.deepcopy(row), 'derived': derived})
+                    ctx.save_batch()

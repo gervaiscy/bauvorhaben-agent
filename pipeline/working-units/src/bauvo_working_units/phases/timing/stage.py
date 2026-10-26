@@ -16,13 +16,13 @@ from ...fact_artifact import load_facts, validate_facts
 PRIOR_PASSES = ('PAGE_EXTRACTION', 'PAGE_OFFERS')
 
 
-def extract_timing(baseline, documents, model, chunk_pages=3, overlap_pages=1, anchors=None, project_facts=None, context_documents=()):
+def extract_timing(baseline, documents, model, chunk_pages=3, overlap_pages=1, anchors=None, project_facts=None, context_documents=(), on_batch=None):
     validate_input(baseline, documents, chunk_pages, overlap_pages, expected_passes=PRIOR_PASSES)
     anchors = validate_anchors(baseline.get('supported_anchors', []) if anchors is None else anchors, documents)
     facts = baseline['project_facts'] if project_facts is None else validate_facts(project_facts, [*documents, *context_documents])
     result = extract_page_units(documents, model, chunk_pages=chunk_pages, overlap_pages=overlap_pages,
                                 supported_anchors=anchors, project_facts=facts, context_documents=context_documents,
-                                stop_after='PAGE_TIMING', aufgaben_result=baseline)
+                                stop_after='PAGE_TIMING', aufgaben_result=baseline, on_batch=on_batch)
     if not context_documents:
         result['context_snapshots'] = copy.deepcopy(baseline.get('context_snapshots', []))
     if project_facts is not None:
@@ -42,6 +42,7 @@ def extract_timing(baseline, documents, model, chunk_pages=3, overlap_pages=1, a
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--resume-from', help='Previous timing run folder, output path or checkpoint directory; reuse verified requests in a new output')
     parser.add_argument('--working-units', required=True, help='Full cumulative Aufgaben-and-offers working-units.json')
     parser.add_argument('--pages', required=True)
     parser.add_argument('--documents', required=True)
@@ -64,7 +65,8 @@ def main():
     raw = output.with_name(output.stem + '.gemini-raw.json')
     compact = output.with_name(output.stem + '.timing-only.json')
     trace = output.with_name(output.stem + '.trace')
-    if any(p.exists() for p in (output, raw, compact, trace, raw.with_suffix('.attempts.json'))):
+    checkpoints = output.with_name(output.stem + '.checkpoints')
+    if any(p.exists() for p in (output, raw, compact, trace, checkpoints, raw.with_suffix('.attempts.json'))):
         parser.error('Outputs already exist; use a new output directory')
     baseline = json.loads(Path(args.working_units).read_text())
     kinds = {(s['source_key'], s['document_id']): s['source_type'] for s in baseline['source_snapshots']}
@@ -75,15 +77,27 @@ def main():
                                else baseline.get('supported_anchors', []), documents)
     facts = load_facts(args.project_facts, [*documents, *context_documents]) if args.project_facts else None
     from ...gemini import GeminiModel
-    from ...trace import RawRunRecorder, TracingModel, RetryingModel
-    model = RetryingModel(TracingModel(RawRunRecorder(
-        GeminiModel(args.project, args.location, args.model), raw), trace))
-    result = extract_timing(baseline, documents, model, args.chunk_pages, args.overlap_pages, anchors, facts, context_documents)
+    from ...trace import RawRunRecorder, TracingModel, RetryingModel, RequestCheckpoints
+    backend = RequestCheckpoints(GeminiModel(args.project, args.location, args.model),
+        checkpoints,
+        {'project':args.project, 'location':args.location, 'model':args.model}, args.resume_from,
+        trace_directory=trace)
+    model = RetryingModel(TracingModel(RawRunRecorder(backend, raw), trace))
+    partial = output.with_name(output.stem + '.partial.json')
+    def save_partial(result):
+        result['status'] = 'incomplete'
+        temp = partial.with_suffix('.tmp')
+        temp.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+        temp.replace(partial)
+    result = extract_timing(baseline, documents, model, args.chunk_pages, args.overlap_pages,
+                            anchors, facts, context_documents, on_batch=save_partial)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     compact.write_text(json.dumps({'assessments': [review['gemini'] for unit in result['working_units']
                       for review in unit['reviews'] if review['kind'] == 'PAGE_TIMING']},
                       ensure_ascii=False, indent=2) + '\n')
-    print(f"Wrote timing assessments for {len(result['working_units'])} tasks: {output}")
+    assessed = sum(any(r['kind'] == 'PAGE_TIMING' for r in unit['reviews'])
+                   for unit in result['working_units'])
+    print(f"Wrote timing assessments for {assessed}/{len(result['working_units'])} tasks: {output}")
     if result['status'] == 'request_failed':
         raise SystemExit('Unresolved timing requests; partial results and raw attempts preserved')
 

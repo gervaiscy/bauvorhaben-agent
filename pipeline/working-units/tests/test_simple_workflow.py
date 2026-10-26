@@ -102,6 +102,5 @@ class SimpleWorkflowTests(unittest.TestCase):
     def test_model_schema_keeps_applicability_simple_and_timing_separate(self):
         app=RESPONSE_SCHEMAS['PAGE_APPLICABILITY']['properties']['assessments']['items']['properties']
         self.assertEqual(set(app),{'unit_id','applicability','reason'})
-        timing=RESPONSE_SCHEMAS['PAGE_TIMING']['properties']['assessments']['items']['properties']['timing_rules']['items']['anyOf'][0]['properties']
-        self.assertNotIn('offset_evidence',timing);self.assertNotIn('anchor_status',timing)
-        self.assertIn('conditions',timing);self.assertIn('alternative_group',timing)
+        timing=RESPONSE_SCHEMAS['PAGE_TIMING']['properties']['assessments']['items']['properties']
+        self.assertEqual(set(timing),{'unit_id','answer','citations'})

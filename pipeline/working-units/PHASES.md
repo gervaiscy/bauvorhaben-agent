@@ -112,3 +112,24 @@ thinking-setting update, repeat its exact command/output with
 `--resume --accept-analysis-changes`. This explicit option preserves the previous
 binding in binding_history and reuses verified PDF outputs. It rejects changed
 PDF inputs/model/project settings and cannot be used once analysis has started.
+
+
+Timing recovery: pass `--resume-from <previous-timing-output-directory>` with a new
+`--output` path to the timing-stage command. Each output owns a sibling checkpoint
+folder, e.g. `custom.json` uses `custom.checkpoints/`, whose manifest records the
+actual trace directory and model/schema settings. If a folder contains multiple
+outputs, select the previous output path or its checkpoint directory explicitly.
+Only exact requests with hash-verified responses are reused. Failed, interrupted,
+null or changed requests go to the provider. A checksum mismatch stops recovery
+without rewriting evidence. Older entries without response hashes remain unchanged
+but are skipped with a warning; their requests must be made again. Cumulative batch
+progress is saved in `<output-stem>.partial.json`, marked incomplete, and the final
+output is written at phase end. Recovery is currently for the standalone timing command.
+
+
+Current timing responses contain only `unit_id`, `answer`, and `citations` inside
+`assessments`. `answer` contains the source-supported timing text, or NOT_STATED /
+AMBIGUOUS. New free-text timing answers do not generate calculated dates. Legacy
+structured artifacts remain readable, but their checkpoints are not reused for the
+new response schema. Downstream consequences and applicability extend the saved
+artifact without rewriting its timing reviews. Source citation checks still apply.

@@ -68,12 +68,12 @@ class AssessmentContextTests(unittest.TestCase):
             data = json.loads(prompt.split('SOURCE DATA:\n')[1]);kind = prompt.split('.',1)[0];calls.append((kind,data))
             if kind == 'PAGE_OFFERS':return {'offers': []}
             if kind == 'PAGE_EXTRACTION':
-                units = [{'action': 'Approve plan', 'citations': [{'pdf_page': 5, 'quote': 'Task on page 5.'}]}] if 5 in data['primary_pages'] else []
+                units = [{'action': 'Approve plan', 'citations': [{'pdf_page': 5, 'quote': 'Task on page 5.'}]}] if any(p['pdf_page']==5 and p['primary'] for p in data['source_pages']) else []
                 return {'working_units': units, 'offers': [], 'carry_forward': ''}
             self.assertEqual([p['pdf_page'] for p in data['source_pages']], [1,2,3,4,5] if kind=='PAGE_APPLICABILITY' else [5,6,7])
             return {'assessments': [{'unit_id': u['id'], 'status': 'NOT_STATED', 'citations': []} for u in data['working_units']]}
         result = extract_page_units([doc], SimpleNamespace(extract=extract), chunk_pages=5)
-        self.assertEqual([d['primary_pages'] for k,d in calls if k=='PAGE_EXTRACTION'], [[1,2,3,4,5],[6,7]])
+        self.assertEqual([[p['pdf_page'] for p in d['source_pages'] if p['primary']] for k,d in calls if k=='PAGE_EXTRACTION'], [[1,2,3,4,5],[6,7]])
         self.assertEqual([k for k,_ in calls if k not in ('PAGE_EXTRACTION','PAGE_OFFERS')], ['PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'])
         self.assertEqual(result['working_units'][0]['derived']['window_pages'], [1,2,3,4,5])
         self.assertEqual(result['working_units'][0]['derived']['assessment_window_pages'], [5,6,7])

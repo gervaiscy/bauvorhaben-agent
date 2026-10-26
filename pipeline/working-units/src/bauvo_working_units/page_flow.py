@@ -41,9 +41,19 @@ def _prompt(pass_name, payload, language):
     if pass_name == 'PAGE_APPLICABILITY':
         from .phases.applicability.service import model_payload
         payload = model_payload(payload)
+    if 'project_facts' in payload:
+        # Project bookkeeping stays in artifacts; the model sees only statements and quotes.
+        payload = copy.deepcopy(payload)
+        payload['project_facts'] = {'facts': [
+            {'verpflichtung': fact.get('gemini', {}).get('verpflichtung'),
+             'text': '\n'.join(quote['text'] for quote in fact.get('gemini', {}).get('zitate', [])
+                               if isinstance(quote.get('text'), str))}
+            for fact in payload['project_facts'].get('facts', [])]}
+    payload = {key: value for key, value in payload.items()
+               if key not in ('supported_anchors', 'source_snapshot', 'primary_pages')}
     language_rule = 'Write natural-language values in German.' if language == 'de' else 'Write natural-language values in English.'
     window_rule = ('Extract new occurrences on PRIMARY pages only; overlap/prior_context/known_items identify continuations. Do not repeat an occurrence already represented in known_items; preserve independently stated requirements. Return carry_forward when requested.\n' if pass_name in ('PAGE_EXTRACTION', 'PAGE_OFFERS') else '')
-    rules = RULES.replace(' and supported_anchors', '') if pass_name == 'PAGE_APPLICABILITY' else RULES
+    rules = RULES.replace(' and supported_anchors', '')
     return pass_name + '. ' + language_rule + '\n' + rules + '\n' + window_rule + PASS_RULES[pass_name] + '\nSOURCE DATA:\n' + json.dumps(payload, ensure_ascii=False)
 
 
@@ -92,7 +102,7 @@ def assessment_findings(response, expected_ids, pass_name=None):
     return findings
 
 
-def extract_page_units(documents, model, max_chars=80000, chunk_pages=3, overlap_pages=1, language='de', supported_anchors=None, context_documents=(), project_facts=None, on_pass=None, stop_after='PAGE_APPLICABILITY', aufgaben_result=None):
+def extract_page_units(documents, model, max_chars=80000, chunk_pages=3, overlap_pages=1, language='de', supported_anchors=None, context_documents=(), project_facts=None, on_pass=None, stop_after='PAGE_APPLICABILITY', aufgaben_result=None, on_batch=None):
     from .pass_snapshots import PASS_NAMES
     from .phases.registry import PHASES, BY_PASS
     from types import SimpleNamespace
@@ -177,7 +187,8 @@ def extract_page_units(documents, model, max_chars=80000, chunk_pages=3, overlap
                 extraction_context[(response['document_id'], tuple(response['pages']))] = response['gemini'].get('carry_forward', '')
     ctx = SimpleNamespace(documents=documents, chunks=chunks, units=units, offers=offers,
         windows=windows, findings=findings, anchors=anchors, project_facts=project_facts,
-        extraction_context=extraction_context, request=request, metadata=metadata)
+        extraction_context=extraction_context, request=request, metadata=metadata,
+        save_batch=lambda: on_batch(copy.deepcopy(current_result())) if on_batch is not None else None)
     for phase in PHASES:
         if phase.PASS in completed_passes:
             continue

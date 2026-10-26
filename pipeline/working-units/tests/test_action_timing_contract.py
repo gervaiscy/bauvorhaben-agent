@@ -75,17 +75,15 @@ class TimingContractTests(unittest.TestCase):
         self.assertEqual([r['gemini'] for r in out['gemini_responses']],answers)
         self.assertEqual(out['working_units'][0]['reviews'][1]['gemini'],answers[3]['assessments'][0])
 
-    def test_timing_schema_sent_to_provider_keeps_typed_branches(self):
+    def test_timing_schema_sent_to_provider_keeps_simple_answers(self):
         calls=[]
         def generate(**kwargs):calls.append(kwargs);return SimpleNamespace(text='{"assessments":[]}',candidates=[SimpleNamespace(finish_reason='STOP')])
         model=GeminiModel.__new__(GeminiModel);model._client=SimpleNamespace(models=SimpleNamespace(generate_content=generate))
         model._model='gemini-3.5-flash';model._types=SimpleNamespace(GenerateContentConfig=lambda **kw:kw)
         model.extract('PAGE_TIMING. source')
         schema=calls[0]['config']['response_json_schema'];self.assertEqual(schema,RESPONSE_SCHEMAS['PAGE_TIMING'])
-        variants=schema['properties']['assessments']['items']['properties']['timing_rules']['items']['anyOf']
-        self.assertEqual(variants[2]['properties']['offset'],{'type':'null'})
-        self.assertEqual(variants[2]['properties']['anchor_events']['maxItems'],0)
-        self.assertEqual(variants[1]['properties']['duration'],{'type':'null'})
+        self.assertEqual(set(schema['properties']['assessments']['items']['properties']),
+                         {'unit_id','answer','citations'})
         self.assertEqual(calls[0]['config']['thinking_config'],generation_for('PAGE_TIMING')['thinking_config'])
         self.assertEqual(set(RESPONSE_SCHEMAS),{'PAGE_PROJECT_FACTS','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'})
 

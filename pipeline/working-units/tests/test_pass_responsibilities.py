@@ -66,7 +66,7 @@ class PassResponsibilitiesTests(unittest.TestCase):
                     row={'unit_id':u['id']}
                     if kind=='PAGE_APPLICABILITY':
                         contexts=data['project_facts']['facts']
-                        self.assertTrue(any(r['source_key']=='contract' for r in contexts))
+                        self.assertTrue(any(r['text']==agreement.pages[0]['text'] for r in contexts))
                         c={'source_key':'contract','document_id':'D1','pdf_page':1,'quote':agreement.pages[0]['text']}
                         row.update(applicability='DOES_NOT_APPLY',reason='Not commissioned',modality='OPTIONAL',
                                    modality_citations=[citation],missing_evidence=[],applicability_rules=[{
@@ -204,7 +204,7 @@ class OverlapIdentityTests(unittest.TestCase):
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append((kind,data))
             if kind in ('PAGE_EXTRACTION','PAGE_OFFERS'):
-                page=data['primary_pages'][0]
+                page=next(p['pdf_page'] for p in data['source_pages'] if p['primary'])
                 c={'pdf_page':page,'quote':data['source_pages'][0]['text']}
                 if kind=='PAGE_EXTRACTION':return {'working_units':[{'name':'Planen','action':'Planen',
                     'actor':'Kunde','performed_by':'Kunde','citations':[c]}],'carry_forward':''}

@@ -5,7 +5,7 @@ import json
 # Bump the affected protocol when orchestration changes a stage's input/output meaning.
 PROTOCOL={stage:1 for stage in ('extract','units','reconcile','review','timing','report')}
 PROTOCOL['extract']=35
-PROTOCOL['units']=63
+PROTOCOL['units']=75
 for stage in ('reconcile','review','timing','report'):PROTOCOL[stage]=2
 FILES={
  'extract':['pipeline/pdf-extractor/*.py','pipeline/pdf-extractor/prompt.txt','pipeline/document-boundaries/*.py','pipeline/document-boundaries/prompt.txt','scripts/extraction_acceptance.py'],

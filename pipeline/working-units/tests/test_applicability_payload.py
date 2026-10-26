@@ -11,7 +11,7 @@ from bauvo_working_units.project_flow import Document
 
 
 class ApplicabilityPayloadTests(unittest.TestCase):
-    def test_metadata_is_removed_only_from_model_input_and_uncertainty_is_kept(self):
+    def test_fact_metadata_stays_in_artifacts_only(self):
         issue={'code':'citation_quote_not_found','fact_id':'F1'}
         fact={'id':'F1','source_key':'contract','document_id':'D1',
               'gemini':{'verpflichtung':'Uncertain agreement','zitate':[{'pdf_page':1,'text':'Original quote'}]},
@@ -29,11 +29,12 @@ class ApplicabilityPayloadTests(unittest.TestCase):
         self.assertEqual(set(actual),{'source_key','document','source_pages','working_units','project_facts'})
         self.assertEqual(actual['source_pages'],[{'pdf_page':1,'text':'Overlap text'},{'pdf_page':2,'text':'New text'}])
         self.assertEqual(actual['working_units'],data['working_units'])
-        self.assertEqual(actual['project_facts'],{'facts':[fact],'review_findings':[issue]})
+        self.assertEqual(actual['project_facts'],{'facts':[{'verpflichtung':'Uncertain agreement','text':'Original quote'}]})
         self.assertNotIn('supported_anchors',prompt)
         self.assertEqual(data,before)
         timing=json.loads(_prompt('PAGE_TIMING',data,'de').split('SOURCE DATA:\n')[1])
-        self.assertEqual(timing,data)
+        self.assertEqual(timing['project_facts'],actual['project_facts'])
+        self.assertEqual(data,before)
 
     def test_all_window_units_are_sent_once_including_overlap_citations_without_crossing_documents(self):
         docs=[Document('D1','First','first.pdf',schema_version=6,source_key='source',

@@ -23,8 +23,10 @@ def request_data(ctx, document, units):
 
 
 def review_data(row, document, anchors):
+    if 'answer' in row:
+        return {}  # Free text is evidence, not a machine-calculable schedule.
     from .date_calculation import calculate_dates
-    return {'date_calculations': calculate_dates(row, document, anchors)}
+    return {'date_calculations': calculate_dates(row, document, anchors)}  # Legacy structured callers only.
 
 
 def citation_sources(ctx, document, local_pages):

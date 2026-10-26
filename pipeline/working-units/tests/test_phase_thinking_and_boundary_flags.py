@@ -15,7 +15,8 @@ from test_schema6_flow import fixture
 
 class PhaseThinkingTests(unittest.TestCase):
     def test_sdk_sends_requested_level_for_each_phase_without_mutating_defaults(self):
-        expected={'PAGE_PROJECT_FACTS':'MINIMAL','PAGE_EXTRACTION':'MEDIUM','PAGE_OFFERS':'MINIMAL',
+        from bauvo_working_units.phases.project_facts.schema import THINKING_LEVEL as facts_level
+        expected={'PAGE_PROJECT_FACTS':facts_level,'PAGE_EXTRACTION':'MEDIUM','PAGE_OFFERS':'MINIMAL',
                   'PAGE_TIMING':'MEDIUM','PAGE_CONSEQUENCES':'MEDIUM','PAGE_APPLICABILITY':'MEDIUM'}
         self.assertEqual(PHASE_THINKING_LEVELS,expected)
         defaults=copy.deepcopy(GENERATION);calls=[]
