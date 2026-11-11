@@ -36,8 +36,11 @@ def run(ctx, phase):
                     for position, row in enumerate(rows):
                         target = targets.get(row.get('unit_id')) if isinstance(row, dict) and isinstance(row.get('unit_id'), str) else None
                         if target is not None:
+                            resolved = ctx.resolved_response(rid)['assessments'][position]
                             derived = ctx.metadata(doc, chunk)
-                            derived.update(phase.review_data(row, doc, ctx.anchors))
+                            derived.update(phase.review_data(resolved, doc, ctx.anchors))
+                            if resolved != row:
+                                derived['resolved_evidence'] = copy.deepcopy(resolved)
                             target['reviews'].append({'id': f'{rid}:review:{position:03d}', 'response_id': rid,
                                 'kind': pass_name, 'response_position': position,
                                 'gemini': copy.deepcopy(row), 'derived': derived})

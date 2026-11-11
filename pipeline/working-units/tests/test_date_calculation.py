@@ -124,13 +124,13 @@ class DateCalculationTests(unittest.TestCase):
 
 
 class FivePassTests(unittest.TestCase):
-    def test_five_separate_prompts_and_three_page_document_local_windows(self):
+    def test_five_separate_prompts_and_ten_page_document_local_windows(self):
         self.assertEqual(len(PASS_FILES),5)
         self.assertEqual(len(set(PASS_FILES.values())),5)
         self.assertTrue(all((PROMPT_DIRECTORY/name).is_file() for name in PASS_FILES.values()))
         text='Der Kunde bestätigt die Planung. Eine Zusatzplanung wird für 100 Euro angeboten.'
-        docs=[Document('D1','A','a.pdf',schema_version=6,pages=tuple({'pdf_page':n,'text':text} for n in range(1,7))),
-              Document('D2','B','a.pdf',schema_version=6,pages=({'pdf_page':7,'text':text},))]
+        docs=[Document('D1','A','a.pdf',schema_version=6,pages=tuple({'pdf_page':n,'text':text} for n in range(1,21))),
+              Document('D2','B','a.pdf',schema_version=6,pages=({'pdf_page':21,'text':text},))]
         calls=[];answers=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append((kind,data))
@@ -144,14 +144,14 @@ class FivePassTests(unittest.TestCase):
                                       'consequences':[],'citations':[]} for u in data['working_units']]}
             answers.append(copy.deepcopy(out));return out
         result=extract_page_units(docs,SimpleNamespace(extract=extract))
-        self.assertEqual([w['pages'] for w in result['windows']],[[1,2,3],[3,4,5],[5,6],[7]])
+        self.assertEqual([w['pages'] for w in result['windows']],[list(range(1,11)),list(range(10,20)),[19,20],[21]])
         self.assertEqual(set(k for k,d in calls),set(PASS_FILES))
         self.assertEqual(len(result['offers']),4);self.assertEqual(len(result['working_units']),4)
         self.assertTrue(all(len(u['reviews'])==3 for u in result['working_units']))
         self.assertEqual([r['gemini'] for r in result['gemini_responses']],answers)
         for kind,data in calls:
-            self.assertLessEqual(len(data['source_pages']),3)
-            if data['document']['id']=='D2':self.assertEqual([p['pdf_page'] for p in data['source_pages']],[7])
+            self.assertLessEqual(len(data['source_pages']),10)
+            if data['document']['id']=='D2':self.assertEqual([p['pdf_page'] for p in data['source_pages']],[21])
             if kind in ('PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
                 self.assertTrue(all('reviews' not in u for u in data['working_units']))
 

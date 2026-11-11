@@ -1,0 +1,706 @@
+{
+  "schema_version": 1,
+  "origin": "Independent synthetic clauses; no private project material.",
+  "purpose": "Regression controls and review expectations, never instructions or proof of model accuracy.",
+  "cases": [
+    {
+      "id": "simple-any-of",
+      "sources": [
+        {
+          "source_key": "synthetic",
+          "documents": [
+            {
+              "document_id": "D1",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ],
+          "pages": [
+            {
+              "pdf_page": 1,
+              "text": "Für den Zugang genügt die Schlüsselübergabe oder ein vereinbarter Begleittermin. Eine Auswahl ist noch nicht dokumentiert."
+            }
+          ]
+        }
+      ],
+      "task_catalog": [
+        {
+          "unit_id": "KEY",
+          "task_label": "Schlüssel übergeben",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        },
+        {
+          "unit_id": "VISIT",
+          "task_label": "Begleittermin vereinbaren",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        }
+      ],
+      "target_unit_ids": [
+        "KEY"
+      ],
+      "expected_groups": [
+        {
+          "id": "G1",
+          "requirement": "Die vertragliche Anforderung erfüllen",
+          "target_unit_ids": [
+            "KEY"
+          ],
+          "operator": "ANY_OF",
+          "routes": [
+            {
+              "id": "A",
+              "label": "Schlüsselübergabe",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "A1",
+                  "unit_id": "KEY",
+                  "action": "Schlüssel übergeben",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg A gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 1,
+                      "quote": "Für den Zugang genügt die Schlüsselübergabe oder ein vereinbarter Begleittermin. Eine Auswahl ist noch nicht dokumentiert.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "NOT_STATED",
+                "evidence": []
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 1,
+                  "quote": "Für den Zugang genügt die Schlüsselübergabe oder ein vereinbarter Begleittermin. Eine Auswahl ist noch nicht dokumentiert.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            },
+            {
+              "id": "B",
+              "label": "Begleittermin",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "B1",
+                  "unit_id": "VISIT",
+                  "action": "Begleittermin vereinbaren",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg B gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 1,
+                      "quote": "Für den Zugang genügt die Schlüsselübergabe oder ein vereinbarter Begleittermin. Eine Auswahl ist noch nicht dokumentiert.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "NOT_STATED",
+                "evidence": []
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 1,
+                  "quote": "Für den Zugang genügt die Schlüsselübergabe oder ein vereinbarter Begleittermin. Eine Auswahl ist noch nicht dokumentiert.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            }
+          ],
+          "selection": {
+            "status": "NOT_ESTABLISHED",
+            "route_id": null,
+            "evidence": []
+          },
+          "evidence": [
+            {
+              "source_key": "synthetic",
+              "document_id": "D1",
+              "pdf_page": 1,
+              "quote": "Für den Zugang genügt die Schlüsselübergabe oder ein vereinbarter Begleittermin. Eine Auswahl ist noch nicht dokumentiert.",
+              "relation": "SUPPORTS"
+            }
+          ],
+          "uncertainties": []
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not require every alternative route or infer a selected route.",
+        "Do not treat source binding as semantic approval."
+      ]
+    },
+    {
+      "id": "all-of-within-any-of",
+      "sources": [
+        {
+          "source_key": "synthetic",
+          "documents": [
+            {
+              "document_id": "D1",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ],
+          "pages": [
+            {
+              "pdf_page": 1,
+              "text": "Der Auftraggeber sichert die Zahlung durch Abtretung und zugehörige Bankbestätigung oder alternativ durch eine Zahlungsgarantie. Welcher Weg gewählt wird, ist nicht festgelegt."
+            }
+          ]
+        }
+      ],
+      "task_catalog": [
+        {
+          "unit_id": "ASSIGN",
+          "task_label": "Mittel abtreten",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        },
+        {
+          "unit_id": "BANK",
+          "task_label": "Bankbestätigung vorlegen",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        },
+        {
+          "unit_id": "GUARANTEE",
+          "task_label": "Zahlungsgarantie stellen",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        }
+      ],
+      "target_unit_ids": [
+        "ASSIGN"
+      ],
+      "expected_groups": [
+        {
+          "id": "G1",
+          "requirement": "Die vertragliche Anforderung erfüllen",
+          "target_unit_ids": [
+            "ASSIGN"
+          ],
+          "operator": "ANY_OF",
+          "routes": [
+            {
+              "id": "A",
+              "label": "Abtretung und Bankbestätigung",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "A1",
+                  "unit_id": "ASSIGN",
+                  "action": "Mittel abtreten",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg A gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 1,
+                      "quote": "Der Auftraggeber sichert die Zahlung durch Abtretung und zugehörige Bankbestätigung oder alternativ durch eine Zahlungsgarantie. Welcher Weg gewählt wird, ist nicht festgelegt.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                },
+                {
+                  "id": "A2",
+                  "unit_id": "BANK",
+                  "action": "Bankbestätigung vorlegen",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg A gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 1,
+                      "quote": "Der Auftraggeber sichert die Zahlung durch Abtretung und zugehörige Bankbestätigung oder alternativ durch eine Zahlungsgarantie. Welcher Weg gewählt wird, ist nicht festgelegt.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "NOT_STATED",
+                "evidence": []
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 1,
+                  "quote": "Der Auftraggeber sichert die Zahlung durch Abtretung und zugehörige Bankbestätigung oder alternativ durch eine Zahlungsgarantie. Welcher Weg gewählt wird, ist nicht festgelegt.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            },
+            {
+              "id": "B",
+              "label": "Zahlungsgarantie",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "B1",
+                  "unit_id": "GUARANTEE",
+                  "action": "Zahlungsgarantie stellen",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg B gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 1,
+                      "quote": "Der Auftraggeber sichert die Zahlung durch Abtretung und zugehörige Bankbestätigung oder alternativ durch eine Zahlungsgarantie. Welcher Weg gewählt wird, ist nicht festgelegt.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "NOT_STATED",
+                "evidence": []
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 1,
+                  "quote": "Der Auftraggeber sichert die Zahlung durch Abtretung und zugehörige Bankbestätigung oder alternativ durch eine Zahlungsgarantie. Welcher Weg gewählt wird, ist nicht festgelegt.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            }
+          ],
+          "selection": {
+            "status": "NOT_ESTABLISHED",
+            "route_id": null,
+            "evidence": []
+          },
+          "evidence": [
+            {
+              "source_key": "synthetic",
+              "document_id": "D1",
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber sichert die Zahlung durch Abtretung und zugehörige Bankbestätigung oder alternativ durch eine Zahlungsgarantie. Welcher Weg gewählt wird, ist nicht festgelegt.",
+              "relation": "SUPPORTS"
+            }
+          ],
+          "uncertainties": []
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not require every alternative route or infer a selected route.",
+        "Do not treat source binding as semantic approval."
+      ]
+    },
+    {
+      "id": "route-specific-deadlines",
+      "sources": [
+        {
+          "source_key": "synthetic",
+          "documents": [
+            {
+              "document_id": "D1",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ],
+          "pages": [
+            {
+              "pdf_page": 1,
+              "text": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen."
+            }
+          ]
+        }
+      ],
+      "task_catalog": [
+        {
+          "unit_id": "DEPOSIT",
+          "task_label": "Sicherheit hinterlegen",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        },
+        {
+          "unit_id": "GUARANTEE",
+          "task_label": "Garantie vorlegen",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        }
+      ],
+      "target_unit_ids": [
+        "DEPOSIT"
+      ],
+      "expected_groups": [
+        {
+          "id": "G1",
+          "requirement": "Die vertragliche Anforderung erfüllen",
+          "target_unit_ids": [
+            "DEPOSIT"
+          ],
+          "operator": "ANY_OF",
+          "routes": [
+            {
+              "id": "A",
+              "label": "Hinterlegung",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "A1",
+                  "unit_id": "DEPOSIT",
+                  "action": "Sicherheit hinterlegen",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg A gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 1,
+                      "quote": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "Spätestens zwanzig Tage vor Montage.",
+                "evidence": [
+                  {
+                    "source_key": "synthetic",
+                    "document_id": "D1",
+                    "pdf_page": 1,
+                    "quote": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen.",
+                    "relation": "SUPPORTS"
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 1,
+                  "quote": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            },
+            {
+              "id": "B",
+              "label": "Garantie",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "B1",
+                  "unit_id": "GUARANTEE",
+                  "action": "Garantie vorlegen",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg B gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 1,
+                      "quote": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "Spätestens zwei Tage vor Montage.",
+                "evidence": [
+                  {
+                    "source_key": "synthetic",
+                    "document_id": "D1",
+                    "pdf_page": 1,
+                    "quote": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen.",
+                    "relation": "SUPPORTS"
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 1,
+                  "quote": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            }
+          ],
+          "selection": {
+            "status": "NOT_ESTABLISHED",
+            "route_id": null,
+            "evidence": []
+          },
+          "evidence": [
+            {
+              "source_key": "synthetic",
+              "document_id": "D1",
+              "pdf_page": 1,
+              "quote": "Die Sicherheit kann durch Hinterlegung spätestens zwanzig Tage vor Montage oder alternativ durch eine Garantie spätestens zwei Tage vor Montage erbracht werden. Eine Wahl ist noch offen.",
+              "relation": "SUPPORTS"
+            }
+          ],
+          "uncertainties": []
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not require every alternative route or infer a selected route.",
+        "Do not treat source binding as semantic approval."
+      ]
+    },
+    {
+      "id": "waived-duty-with-unknown-alternative",
+      "sources": [
+        {
+          "source_key": "synthetic",
+          "documents": [
+            {
+              "document_id": "D1",
+              "pdf_pages": [
+                1,
+                2
+              ]
+            }
+          ],
+          "pages": [
+            {
+              "pdf_page": 1,
+              "text": "Laut ursprünglichem Vertrag muss der Auftraggeber vor Leistungsbeginn eine Zahlungsgarantie stellen."
+            },
+            {
+              "pdf_page": 2,
+              "text": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert."
+            }
+          ]
+        }
+      ],
+      "task_catalog": [
+        {
+          "unit_id": "ASSIGN",
+          "task_label": "Abtretung vorlegen",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        },
+        {
+          "unit_id": "BANK",
+          "task_label": "Bankbestätigung vorlegen",
+          "source_key": "synthetic",
+          "document_id": "D1",
+          "pdf_pages": [
+            1
+          ],
+          "locator_status": "VALID"
+        }
+      ],
+      "target_unit_ids": [
+        "ASSIGN"
+      ],
+      "expected_groups": [
+        {
+          "id": "G1",
+          "requirement": "Die vertragliche Anforderung erfüllen",
+          "target_unit_ids": [
+            "ASSIGN"
+          ],
+          "operator": "ANY_OF",
+          "routes": [
+            {
+              "id": "A",
+              "label": "Abtretung und Bankbestätigung",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "A1",
+                  "unit_id": "ASSIGN",
+                  "action": "Mittel abtreten",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg A gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 2,
+                      "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                },
+                {
+                  "id": "A2",
+                  "unit_id": "BANK",
+                  "action": "Bankbestätigung vorlegen",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg A gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 2,
+                      "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "Spätestens acht Wochen vor Baubeginn.",
+                "evidence": [
+                  {
+                    "source_key": "synthetic",
+                    "document_id": "D1",
+                    "pdf_page": 2,
+                    "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+                    "relation": "SUPPORTS"
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 2,
+                  "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            },
+            {
+              "id": "B",
+              "label": "Weiterhin wählbare Garantie",
+              "operator": "ALL_OF",
+              "actions": [
+                {
+                  "id": "B1",
+                  "unit_id": null,
+                  "action": "Garantie bei Wahl dieses Weges stellen",
+                  "actor": "Auftraggeber",
+                  "performed_by": null,
+                  "applicability": "CONDITIONAL",
+                  "condition": "Wenn Weg B gewählt wird.",
+                  "evidence": [
+                    {
+                      "source_key": "synthetic",
+                      "document_id": "D1",
+                      "pdf_page": 2,
+                      "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+                      "relation": "SUPPORTS"
+                    }
+                  ]
+                }
+              ],
+              "timing": {
+                "answer": "Vor Baubeginn.",
+                "evidence": [
+                  {
+                    "source_key": "synthetic",
+                    "document_id": "D1",
+                    "pdf_page": 2,
+                    "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+                    "relation": "SUPPORTS"
+                  }
+                ]
+              },
+              "evidence": [
+                {
+                  "source_key": "synthetic",
+                  "document_id": "D1",
+                  "pdf_page": 2,
+                  "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+                  "relation": "SUPPORTS"
+                }
+              ]
+            }
+          ],
+          "selection": {
+            "status": "NOT_ESTABLISHED",
+            "route_id": null,
+            "evidence": []
+          },
+          "evidence": [
+            {
+              "source_key": "synthetic",
+              "document_id": "D1",
+              "pdf_page": 2,
+              "quote": "Nachtrag: Die bisherige Pflicht zur Garantie entfällt. Die Sicherheit ist durch Abtretung und Bankbestätigung spätestens acht Wochen vor Baubeginn oder wahlweise durch Garantie vor Baubeginn zu erbringen. Eine Auswahl ist nicht dokumentiert.",
+              "relation": "SUPPORTS"
+            }
+          ],
+          "uncertainties": []
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not require every alternative route or infer a selected route.",
+        "Do not treat source binding as semantic approval."
+      ]
+    }
+  ]
+}

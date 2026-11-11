@@ -19,7 +19,7 @@ def prior_passes(baseline):
     return with_consequences if completed == list(with_consequences) else PRIOR_PASSES
 
 
-def extract_applicability(baseline, documents, model, chunk_pages=3, overlap_pages=1,
+def extract_applicability(baseline, documents, model, chunk_pages=10, overlap_pages=1,
                           context_documents=()):
     validate_input(baseline, documents, chunk_pages, overlap_pages, expected_passes=prior_passes(baseline))
     facts = validate_facts(baseline['project_facts'], [*documents, *context_documents])
@@ -43,8 +43,10 @@ def main():
     parser.add_argument('--project', required=True)
     parser.add_argument('--model', default='gemini-3.5-flash')
     parser.add_argument('--location', default='global')
-    parser.add_argument('--chunk-pages', type=int, default=3)
+    parser.add_argument('--chunk-pages', type=int, default=10)
     parser.add_argument('--overlap-pages', type=int, default=1)
+    from ...call_budget import add_call_arguments, cached_backend
+    add_call_arguments(parser)
     args = parser.parse_args()
     if len(args.context_pages) != len(args.context_documents):
         parser.error('Each --context-pages requires matching --context-documents')
@@ -65,7 +67,7 @@ def main():
     from ...gemini import GeminiModel
     from ...trace import RawRunRecorder, TracingModel, RetryingModel
     model = RetryingModel(TracingModel(RawRunRecorder(
-        GeminiModel(args.project, args.location, args.model), raw), trace))
+        cached_backend(args, output, lambda: GeminiModel(args.project, args.location, args.model)), raw), trace))
     result = extract_applicability(baseline, documents, model, args.chunk_pages, args.overlap_pages, context)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')

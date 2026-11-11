@@ -17,4 +17,4 @@ bauvo-pipeline = "bauvo_working_units.pipeline:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"*" = ["prompt.txt"]
+"*" = ["*.txt", "recovery-bindings.json"]

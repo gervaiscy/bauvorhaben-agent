@@ -17,7 +17,7 @@ class PhaseThinkingTests(unittest.TestCase):
     def test_sdk_sends_requested_level_for_each_phase_without_mutating_defaults(self):
         from bauvo_working_units.phases.project_facts.schema import THINKING_LEVEL as facts_level
         expected={'PAGE_PROJECT_FACTS':facts_level,'PAGE_EXTRACTION':'MEDIUM','PAGE_OFFERS':'MINIMAL',
-                  'PAGE_TIMING':'MEDIUM','PAGE_CONSEQUENCES':'MEDIUM','PAGE_APPLICABILITY':'MEDIUM'}
+                  'PAGE_TIMING':'MEDIUM','PAGE_CONSEQUENCES':'MEDIUM','PAGE_APPLICABILITY':'MEDIUM','PAGE_CITATION_REPAIR':'MEDIUM'}
         self.assertEqual(PHASE_THINKING_LEVELS,expected)
         defaults=copy.deepcopy(GENERATION);calls=[]
         def generate(**kwargs):
@@ -30,7 +30,7 @@ class PhaseThinkingTests(unittest.TestCase):
         for name,level in expected.items():
             model.extract(name+'. source')
             self.assertEqual(calls[-1]['config']['thinking_config'],{'thinking_level':level})
-            self.assertEqual(calls[-1]['config']['max_output_tokens'],16384)
+            self.assertEqual(calls[-1]['config']['max_output_tokens'],65536)
         changed=generation_for('PAGE_TIMING');changed['thinking_config']['thinking_level']='HIGH'
         self.assertEqual(GENERATION,defaults)
         self.assertEqual(generation_for('PAGE_TIMING')['thinking_config']['thinking_level'],'MEDIUM')

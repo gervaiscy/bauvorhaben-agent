@@ -15,7 +15,8 @@ NULL_TEXT = {'anyOf': [TEXT, {'type': 'null'}]}
 CITATION = obj({'pdf_page': {'type': 'integer'}, 'quote': TEXT})
 
 CITATION['properties'].update(source_key=TEXT, document_id=TEXT)
-CITATIONS = array(CITATION)
+EVIDENCE_REFERENCE = obj({'evidence_id': TEXT})
+CITATIONS = array(EVIDENCE_REFERENCE)
 
 MODALITY = {'type': 'string', 'enum': ['REQUIRED', 'RECOMMENDED', 'OPTIONAL', 'PERMISSION', 'UNCLEAR']}
 

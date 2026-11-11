@@ -1,3 +1,5 @@
+from clause_fixtures import decode_prompt
+from clause_fixtures import index_answer, answer_for
 """Explicit BLB exclusion and cumulative snapshots are independently observable."""
 import copy
 import json
@@ -26,8 +28,8 @@ class Model:
     def __init__(self, fail_timing=False):
         self.calls=[];self.fail_timing=fail_timing
     def extract(self,prompt):
-        kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);self.calls.append((kind,data))
-        if kind=='PAGE_PROJECT_FACTS':return {'verpflichtungen':[]}
+        kind=prompt.split('.',1)[0];data=decode_prompt(prompt);self.calls.append((kind,data))
+        if kind=='PAGE_PROJECT_FACTS':return index_answer(data)
         c={'pdf_page':data['source_pages'][-1]['pdf_page'],'quote':data['source_pages'][-1]['text']}
         if kind=='PAGE_EXTRACTION':return {'working_units':[{'name':'Planung','action':'Planung bestätigen',
             'actor':'Kunde','performed_by':'Kunde','citations':[c]}],'carry_forward':''}
@@ -110,9 +112,10 @@ class CumulativeSnapshotTests(unittest.TestCase):
         source=document('source','Der Kunde bestätigt die Planung.');saved=[]
         def save(name,data):
             saved.append((name,copy.deepcopy(data)))
-            if name=='PAGE_EXTRACTION':data['gemini_responses'][0]['gemini']['verpflichtungen'].append({'invented':True})
+            if name=='PAGE_EXTRACTION':data['gemini_responses'][0]['gemini']['ansprueche'].append({'invented':True})
         result=extract_project_units([source],Model(),on_pass=save)
-        self.assertEqual(result['project_facts']['gemini_responses'][0]['gemini'],{'verpflichtungen':[]})
+        self.assertEqual(result['project_facts']['gemini_responses'][0]['gemini'],
+                         saved[0][1]['gemini_responses'][0]['gemini'])
         self.assertEqual(result,saved[-1][1])
 
     def test_failed_pass_retains_earlier_snapshots_and_visible_partial_results(self):
@@ -131,13 +134,13 @@ class CumulativeSnapshotTests(unittest.TestCase):
             model=Model()
             argv=['units','--pages',str(inputs/'pages.json'),'--documents',str(inputs/'documents.json'),
                   '--source-type','blb','--project','unused','--output',str(root/'working-units.json')]
-            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel',return_value=model):main()
+            with patch.object(sys,'argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.cli.GeminiModel',return_value=model):main()
             self.assertNotIn('PAGE_PROJECT_FACTS',[kind for kind,data in model.calls])
             folder=root/'working-units.passes'
             self.assertEqual((root/'working-units.json').read_bytes(),(folder/'05-applicability.json').read_bytes())
             self.assertEqual(len(list(folder.glob('*.json'))),6)
             self.assertEqual(json.loads((root/'working-units.project-facts.json').read_text())['status'],'no_project_sources')
-            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel') as provider:
+            with patch.object(sys,'argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.cli.GeminiModel') as provider:
                 with self.assertRaises(SystemExit):main()
                 provider.assert_not_called()
 
@@ -149,6 +152,6 @@ class CumulativeSnapshotTests(unittest.TestCase):
                   '--context-pages',str(b/'pages.json'),'--context-documents',str(b/'documents.json'),
                   '--context-type','blb','--project','unused','--output',str(root/'units.json')]
             # Same source identity with contradictory roles is rejected before requests.
-            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel',return_value=model):
+            with patch.object(sys,'argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.cli.GeminiModel',return_value=model):
                 with self.assertRaisesRegex(ValueError,'Conflicting source snapshots'):main()
             self.assertEqual(model.calls,[])

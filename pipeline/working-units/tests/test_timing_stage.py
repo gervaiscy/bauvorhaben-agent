@@ -82,6 +82,6 @@ class TimingStageTests(unittest.TestCase):
             output=Path(tmp)/'working-units.json';output.write_text('original evidence')
             argv=['timing-stage','--working-units','unused','--pages','unused','--documents','unused',
                   '--project','unused','--output',str(output)]
-            with patch('sys.argv',argv),patch('sys.stderr',new=io.StringIO()),self.assertRaises(SystemExit):
+            with patch('sys.argv',[*argv,'--max-new-calls','100']),patch('sys.stderr',new=io.StringIO()),self.assertRaises(SystemExit):
                 main()
             self.assertEqual(output.read_text(),'original evidence')

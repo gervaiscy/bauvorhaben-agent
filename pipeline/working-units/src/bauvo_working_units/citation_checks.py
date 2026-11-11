@@ -29,7 +29,8 @@ def text_findings(response):
     return findings
 
 
-def citation_findings(response, pages, project_pages=(), source_key=None, document_id=None):
+def citation_findings(response, pages, project_pages=(), source_key=None, document_id=None,
+                      require_qualified=False):
     """Check each citation list against this document-local source window.
 
     Empty lists are allowed for NOT_STATED/unknown assessments, but extracted
@@ -48,7 +49,13 @@ def citation_findings(response, pages, project_pages=(), source_key=None, docume
             return
         if not isinstance(value, dict):
             return
-        required = required or (value.get('status') == 'EXPLICIT' and 'consequences' in value)
+        claims = value.get('consequences')
+        legacy_consequences = isinstance(claims, list) and any(not isinstance(c, dict) for c in claims)
+        required = required or (value.get('status') in ('EXPLICIT', 'DERIVED', 'MIXED')
+            and 'consequences' in value and ('citations' in value or legacy_consequences))
+        required = required or (value.get('classification') in ('EXPLICIT', 'DERIVED') and 'claim' in value)
+        required = required or ('citations' in value and value.get('applicability') in
+                               ('APPLIES', 'DOES_NOT_APPLY', 'PARTIALLY_APPLIES', 'CONDITIONAL'))
         if required or 'citations' in value:
             citations = value.get('citations')
             if not isinstance(citations, list):
@@ -64,6 +71,9 @@ def citation_findings(response, pages, project_pages=(), source_key=None, docume
                         page, quote = citation.get('pdf_page'), citation.get('quote')
                         if type(page) is not int or not isinstance(quote, str) or not quote.strip():
                             code = 'invalid_citation'
+                        elif require_qualified and any(not isinstance(citation.get(key), str) or not citation[key]
+                                                       for key in ('source_key', 'document_id')):
+                            code = 'missing_citation_source'
                         else:
                             if 'source_key' in citation or 'document_id' in citation:
                                 key = (citation.get('source_key'), citation.get('document_id'), page)
@@ -83,7 +93,7 @@ def citation_findings(response, pages, project_pages=(), source_key=None, docume
                   value.get('modality') not in (None, 'UNCLEAR'))
         for key, item in value.items():
             if key not in ('citations', 'modality_citations'):
-                visit(item, f'{path}.{key}', key in ('working_units', 'offers', 'project_facts', 'applicability_rules', 'timing_rules'))
+                visit(item, f'{path}.{key}', key in ('working_units', 'offers', 'project_facts', 'applicability_rules', 'timing_rules', 'premises'))
 
     visit(response)
     return findings

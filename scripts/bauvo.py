@@ -50,6 +50,7 @@ def load_environment():
             'location':os.environ.get('BAUVO_LOCATION','global'),
             'model':os.environ.get('BAUVO_MODEL','gemini-2.5-flash'),
             'working_unit_model':os.environ.get('BAUVO_WORKING_UNIT_MODEL','gemini-3.5-flash'),
+            'working_unit_max_new_calls':int(os.environ.get('BAUVO_WORKING_UNIT_MAX_NEW_CALLS','0')),
             'ocr_provider':os.environ.get('BAUVO_OCR_PROVIDER','gemini'),
             'ocr_model':os.environ.get('BAUVO_OCR_MODEL','gemini-3.5-flash'),
             'document_boundary_model':os.environ.get('BAUVO_DOCUMENT_BOUNDARY_MODEL','gemini-3.5-flash'),
@@ -166,7 +167,7 @@ def execute_stage(stage,run,case,config):
         for source in case['sources']:
             extracted=run/'extraction'/source['key'];output=run/'working-units'/source['key']
             output.mkdir(parents=True,exist_ok=True);target=output/'working-units.json'
-            if target.exists() and read(extracted/'pages.json').get('schema_version')==6 and (read(target).get('schema_version')!=17 or read(target).get('protocol')!=working_unit_protocol):
+            if target.exists() and read(extracted/'pages.json').get('schema_version')==6 and (read(target).get('schema_version')!=18 or read(target).get('protocol')!=working_unit_protocol):
                 raise ValueError('Existing working units use a different schema/protocol; start a fresh run to preserve evidence')
             if target.exists() and read(target).get('status')=='request_failed':
                 raise ValueError('Existing working units contain unresolved model requests; preserve them and start a fresh run')
@@ -183,7 +184,8 @@ def execute_stage(stage,run,case,config):
                 command(['-m','bauvo_working_units.cli','--pages',extracted/'pages.json','--documents',extracted/'documents.json',
                     '--source-type','blb' if source['key']=='blb' else 'project',
                     '--output',target,'--raw-output',attempt/'raw.json','--trace-dir',attempt/'trace','--cache-dir',output/'model-cache',
-                    '--project',config['project'],'--location',config['location'],'--model',config['working_unit_model'],*context_args],run/f'units-{source["key"]}.log')
+                    '--project',config['project'],'--location',config['location'],'--model',config['working_unit_model'],
+                    '--max-new-calls',str(config.get('working_unit_max_new_calls',0)),*context_args],run/f'units-{source["key"]}.log')
             files.append(target)
             facts_target=target.with_name(f'{target.stem}.project-facts.json')
             if facts_target.exists():files.append(facts_target)

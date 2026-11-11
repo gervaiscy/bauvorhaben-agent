@@ -1,7 +1,7 @@
-"""Consequences phase: its own context, batching and derived output policy."""
+"""Consequences use all supplied source documents, independently of target windows."""
 import sys
 from ...page_flow import select_assessment_chunk, unit_batches
-from ...project_facts import facts_view, evidence_pages
+from ...shared.source_documents import citation_pages, full_source_documents
 
 PASS = 'PAGE_CONSEQUENCES'
 WINDOW_FIELD = 'assessment_window_pages'
@@ -9,7 +9,7 @@ TRACK_CONTEXT = False
 
 
 def select_window(unit, original, chunks):
-    return select_assessment_chunk(unit['gemini'].get('citations'), original, chunks)
+    return select_assessment_chunk(unit['derived'].get('citations', unit['gemini'].get('citations')), original, chunks)
 
 
 def batches(candidates):
@@ -17,18 +17,18 @@ def batches(candidates):
 
 
 def request_data(ctx, document, units):
-    data = {'working_units': units, 'supported_anchors': [a for a in ctx.anchors if a['document_id'] == document.id]}
-    return data
+    return {'working_units': units, 'source_documents': ctx.consequence_sources}
 
 
 def review_data(row, document, anchors):
-    return {}
+    return {'context_scope': 'all_supplied_documents'}
 
 
 def citation_sources(ctx, document, local_pages):
-    return local_pages, []
+    return list(document.pages), citation_pages(ctx.consequence_sources)
 
 
 def run(ctx):
     from ...shared.assessments import run as assess
+    ctx.consequence_sources = full_source_documents([*ctx.documents, *ctx.context_documents])
     assess(ctx, sys.modules[__name__])

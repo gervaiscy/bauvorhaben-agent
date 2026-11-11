@@ -1,3 +1,5 @@
+from historical_facts import collect_historical_facts
+from clause_fixtures import answer_for
 """Artifact handoffs preserve prior evidence and never recollect accepted facts."""
 import copy
 import json
@@ -18,7 +20,7 @@ from test_schema6_flow import fixture
 
 
 def collection(doc):
-    return collect_project_facts([doc], SimpleNamespace(extract=lambda p:{'verpflichtungen':[proposal(doc)]}))
+    return collect_historical_facts([doc], SimpleNamespace(extract=lambda p:answer_for(doc,[proposal(doc)])))
 
 
 class FactArtifactTests(unittest.TestCase):
@@ -48,25 +50,36 @@ class FactArtifactTests(unittest.TestCase):
             bad=copy.deepcopy(facts);bad['facts'][0]['derived']['verified_citations'][0][field]=value
             with self.assertRaises(ValueError):validate_facts(bad,[doc])
 
-    def test_saved_facts_skip_provider_and_preserve_failures_while_stopping_at_actions(self):
+    def test_failed_index_is_preserved_but_stops_before_actions(self):
         contract=document('contract','Contractor installs a heat pump.')
         blb=replace(document('blb','Owner supplies water.'),source_type='blb')
         facts=collection(contract);facts['status']='request_failed'
         facts['review_findings'].append({'code':'model_request_failed','pass':'PAGE_PROJECT_FACTS','attempts':[]})
-        before=copy.deepcopy(facts);calls=[];saved=[]
-        def extract(prompt):
-            calls.append(prompt.split('.',1)[0])
-            self.assertEqual(calls[-1],'PAGE_EXTRACTION')
-            return {'working_units':[{'action':'Supply water','citations':[{'pdf_page':1,'quote':blb.pages[0]['text']}]}], 'carry_forward':''}
-        result=extract_project_units([blb],SimpleNamespace(extract=extract),context_documents=[contract],
-            project_facts=facts,stop_after='PAGE_EXTRACTION',on_pass=lambda p,r:saved.append((p,r)))
-        self.assertEqual(calls,['PAGE_EXTRACTION'])
-        self.assertEqual([p for p,r in saved],['PAGE_PROJECT_FACTS','PAGE_EXTRACTION'])
-        self.assertEqual(result['project_facts'],before);self.assertEqual(facts,before)
-        self.assertEqual(result['status'],'request_failed')
-        self.assertEqual(result['completed_passes'],['PAGE_EXTRACTION'])
-        self.assertEqual([r['pass'] for r in result['gemini_responses']],['PAGE_EXTRACTION'])
-        self.assertEqual(result,saved[-1][1])
+        before=copy.deepcopy(facts);saved=[]
+        with self.assertRaisesRegex(ValueError,'incomplete'):
+            extract_project_units([blb],SimpleNamespace(extract=lambda p:self.fail('No downstream call')),
+                context_documents=[contract],project_facts=facts,stop_after='PAGE_EXTRACTION',
+                on_pass=lambda p,r:saved.append((p,r)))
+        self.assertEqual([p for p,r in saved],['PAGE_PROJECT_FACTS'])
+        self.assertEqual(saved[0][1],before)
+        self.assertEqual(facts,before)
+
+    def test_changed_text_coverage_disposition_or_record_counts_are_rejected(self):
+        doc=document('contract','Eine Regel.\n\nKontakt: Beispielstraße.')
+        entries=answer_for(doc)
+        selected=entries['verpflichtungen'][0]['zitate'].pop()
+        entries['nicht_als_fakt_erfasst']=[{**selected,'grund':'Kontaktangabe'}]
+        facts=collect_historical_facts([doc],SimpleNamespace(extract=lambda p:entries))
+        self.assertEqual(validate_facts(facts,[doc]),facts)
+        for kind in ('text','coverage','exclusion','remove_fact','remove_response','remove_window'):
+            bad=copy.deepcopy(facts)
+            if kind=='text':bad['facts'][0]['derived']['text']='Rewritten'
+            elif kind=='coverage':bad['gemini_responses'][0]['coverage']['indexed_ids']=[]
+            elif kind=='exclusion':bad['excluded_passages'][0]['derived']['citation']['quote']='Invented'
+            elif kind=='remove_fact':bad['facts']=[]
+            elif kind=='remove_response':bad['gemini_responses']=[]
+            else:bad['windows']=[]
+            with self.subTest(kind=kind),self.assertRaises(ValueError):validate_facts(bad,[doc])
 
     def test_cli_reuses_full_artifact_writes_separate_snapshot_and_new_raw_only(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -84,7 +97,7 @@ class FactArtifactTests(unittest.TestCase):
             argv=['units','--pages',str(local/'pages.json'),'--documents',str(local/'documents.json'),
                 '--source-type','blb','--context-pages',str(context/'pages.json'),'--context-documents',str(context/'documents.json'),
                 '--project-facts',str(path),'--stop-after','aufgaben','--project','unused','--output',str(root/'tasks.json')]
-            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel',return_value=Model()):main()
+            with patch.object(sys,'argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.cli.GeminiModel',return_value=Model()):main()
             self.assertEqual(calls,['PAGE_EXTRACTION']);self.assertEqual(path.read_bytes(),before)
             result=json.loads((root/'tasks.json').read_text())
             self.assertEqual(result['project_facts'],facts)
@@ -97,7 +110,7 @@ class FactArtifactTests(unittest.TestCase):
             # Invalid handoff is rejected before constructing a provider or creating outputs.
             path.write_text('{"verpflichtungen": []}')
             argv[-1]=str(root/'invalid.json')
-            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel') as provider:
+            with patch.object(sys,'argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.cli.GeminiModel') as provider:
                 with self.assertRaises(ValueError):main()
                 provider.assert_not_called()
             self.assertFalse((root/'invalid.passes').exists())
@@ -105,7 +118,7 @@ class FactArtifactTests(unittest.TestCase):
     def test_fact_only_stage_produces_input_for_next_stage_without_task_calls(self):
         doc=document('contract','Contractor prepares plans.');calls=[]
         def extract(prompt):
-            calls.append(prompt.split('.',1)[0]);return {'verpflichtungen':[proposal(doc)]}
+            calls.append(prompt.split('.',1)[0]);return answer_for(doc,[proposal(doc)])
         result=extract_project_units([doc],SimpleNamespace(extract=extract),stop_after='PAGE_PROJECT_FACTS')
         self.assertEqual(calls,['PAGE_PROJECT_FACTS'])
         self.assertEqual(validate_facts(result,[doc]),result)

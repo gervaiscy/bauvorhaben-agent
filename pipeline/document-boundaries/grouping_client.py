@@ -2,6 +2,7 @@
 """Cached transport for document-boundary proposals."""
 import hashlib
 import json
+import os
 import time
 from pathlib import Path
 
@@ -20,11 +21,17 @@ def gemini_sdk(project, location, model, parts):
     from google import genai
     from google.genai import types
     from document_grouping import RESPONSE_SCHEMA
-    client=genai.Client(vertexai=True,project=project,location=location,
-                       http_options=types.HttpOptions(timeout=600_000))
+    client=None
     converted=[types.Part.from_text(text=part['text']) for part in parts]
     for attempt in range(4):
         try:
+            if os.environ.get('BAUVO_PROVIDER_CALL_BUDGET_FILE'):
+                from bauvo_working_units.call_budget_ledger import consume_from_environment
+                consume_from_environment('DOCUMENT_BOUNDARIES')
+            if client is None:
+                client=genai.Client(vertexai=True,project=project,location=location,
+                    http_options=types.HttpOptions(timeout=600_000,
+                        retry_options=types.HttpRetryOptions(attempts=1)))
             response=client.models.generate_content(model=model,contents=converted,
                 config=types.GenerateContentConfig(**GENERATION,response_json_schema=RESPONSE_SCHEMA))
             if response.candidates and str(response.candidates[0].finish_reason).split('.')[-1]!='STOP':

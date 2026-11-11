@@ -11,7 +11,7 @@ from bauvo_working_units.gemini import GeminiModel
 from bauvo_working_units.project_flow import Document, load_documents, make_page_chunks, extract_project_units
 from bauvo_working_units.page_flow import _payload, _prompt, _view, unit_batches, assessment_findings, extract_page_units, select_assessment_chunk
 from bauvo_working_units.schemas import PROTOCOL, GENERATION, PHASE_THINKING_LEVELS
-from bauvo_working_units.citation_checks import citation_findings
+from bauvo_working_units.citation_evidence import catalog, resolve
 from bauvo_working_units.trace import RawRunRecorder, TracingModel, RetryingModel, ModelRequestFailed
 from prepare import prepare
 
@@ -24,6 +24,23 @@ def read(path):
 
 def write(path, data):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+
+
+def evidence_payload(document, chunk):
+    payload = _payload(document, chunk)
+    payload['evidence_catalog'] = catalog([{**page, 'source_key': payload['source_key'],
+        'document_id': document.id} for page in payload['source_pages']])
+    return payload
+
+
+def record_response(responses, response, pass_name, document, payload, **metadata):
+    # Resolve references for checks and subsequent inputs without repairing or
+    # rewriting the recorded provider answer. Meaning is evaluated separately.
+    resolved, audit, findings = resolve(response, payload['source_pages'], [],
+                                       payload['source_key'], document.id)
+    responses.append({'pass': pass_name, **metadata, 'gemini': copy.deepcopy(response),
+                      'citation_evidence': audit})
+    return resolved, findings
 
 
 def source_jobs(pages, documents, baseline, spec, pass_name):
@@ -68,12 +85,12 @@ def run(output, project, location='global', pages=None, documents=None,
         raise ValueError('Unknown or unavailable evaluation cases: ' + ', '.join(sorted(selected - available)))
     backend = model or GeminiModel(project, location, 'gemini-3.5-flash')
     inputs = [*BASE.glob('*.json'), *BASE.glob('*.py'), *(BASE.parent/'src/bauvo_working_units').rglob('*.py')]
-    inputs += list((BASE.parent/'src/bauvo_working_units/phases').rglob('prompt.txt'))
+    inputs += list((BASE.parent/'src/bauvo_working_units/phases').rglob('*.txt'))
     inputs += [Path(p) for p in (pages, documents, applicability_baseline, timing_baseline) if p]
     hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
     output.mkdir(parents=True)
     write(output/'run-manifest.json', {'protocol': PROTOCOL, 'model': 'gemini-3.5-flash', 'generation': GENERATION, 'phase_thinking_levels': PHASE_THINKING_LEVELS,
-          'chunk_pages': 3, 'overlap_pages': 1, 'legacy_fixture_pages': 5, 'citation_validation': 'page_and_quote_checks', 'inputs_and_code': hashes})
+          'chunk_pages': 10, 'overlap_pages': 1, 'legacy_fixture_pages': 5, 'citation_validation': 'page_and_quote_checks', 'inputs_and_code': hashes})
     prepare(output/'actions')
     summary = []
 
@@ -114,7 +131,7 @@ def run(output, project, location='global', pages=None, documents=None,
             continue
         folder = output/name
         folder.mkdir()
-        payload = _payload(doc, chunk)
+        payload = evidence_payload(doc, chunk)
         write(folder/'inputs.json', {**payload, 'working_units': units})
         write(folder/'expectations.json', expectations)
         traced = recorder(folder)
@@ -123,12 +140,12 @@ def run(output, project, location='global', pages=None, documents=None,
         try:
             if extract_first:
                 response = traced.extract(_prompt('PAGE_EXTRACTION', {**payload, 'prior_context': '', 'known_items': []}, 'de'))
-                responses.append({'pass': 'PAGE_EXTRACTION', 'gemini': copy.deepcopy(response)})
-                findings += citation_findings(response, payload['source_pages'])
+                resolved, issues = record_response(responses, response, 'PAGE_EXTRACTION', doc, payload)
+                findings += issues
                 if not isinstance(response, dict) or not isinstance(response.get('working_units'), list):
                     raise ValueError('Missing extracted units')
-                units = [{**copy.deepcopy(u), 'id': f'E:{i:03d}'} for i, u in enumerate(response['working_units']) if isinstance(u, dict)]
-            chunks = make_page_chunks(doc, chunk_pages=3, overlap_pages=1)
+                units = [{**copy.deepcopy(u), 'id': f'E:{i:03d}'} for i, u in enumerate(resolved['working_units']) if isinstance(u, dict)]
+            chunks = make_page_chunks(doc, chunk_pages=10, overlap_pages=1)
             grouped = {}
             for unit in units:
                 chosen, reason = select_assessment_chunk(unit.get('citations'), chunk, chunks)
@@ -136,7 +153,7 @@ def run(output, project, location='global', pages=None, documents=None,
                 if reason:
                     findings.append({'unit_id': unit['id'], 'code': 'assessment_context_unresolved', 'reason': reason})
             for chosen, candidates in grouped.values():
-                assessment_payload = _payload(doc, chosen)
+                assessment_payload = evidence_payload(doc, chosen)
                 for batch in unit_batches(candidates):
                     try:
                         response = traced.extract(_prompt(pass_name, {**assessment_payload, 'working_units': batch}, 'de'))
@@ -144,9 +161,10 @@ def run(output, project, location='global', pages=None, documents=None,
                         findings.append({'code': 'model_request_failed', 'pass': pass_name,
                                          'pages': list(chosen.pages), 'unit_ids': [u['id'] for u in batch], 'attempts': exc.attempts})
                         continue
-                    responses.append({'pass': pass_name, 'pages': list(chosen.pages), 'gemini': copy.deepcopy(response)})
+                    _, issues = record_response(responses, response, pass_name, doc, assessment_payload,
+                                                pages=list(chosen.pages))
                     findings += assessment_findings(response, [u['id'] for u in batch], pass_name)
-                    findings += citation_findings(response, assessment_payload['source_pages'])
+                    findings += issues
             status = 'request_failed' if any(f['code'] == 'model_request_failed' for f in findings) else 'needs_review' if findings else 'recorded'
         except Exception as exc:
             status = 'request_failed'

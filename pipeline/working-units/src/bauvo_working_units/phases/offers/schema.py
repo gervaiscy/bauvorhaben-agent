@@ -4,5 +4,5 @@ THINKING_LEVEL = 'MINIMAL'
 from ...shared.response_types import obj, array, TEXT, NULL_TEXT, CITATIONS
 
 OFFER = obj({'name': TEXT, 'provider': NULL_TEXT,
-             'description': TEXT, 'terms': array(TEXT), 'citations': CITATIONS})
+             'description': TEXT, 'terms': array(TEXT), 'citations': {**CITATIONS, 'minItems': 1}})
 

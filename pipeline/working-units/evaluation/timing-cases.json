@@ -674,6 +674,143 @@
         "Moving the three-week delivery deadline to submission.",
         "An unconditional three-week branch."
       ]
+    },
+    {
+      "id": "scoped-start-weather-restart-and-cap",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Das Bauwerk ist innerhalb von 28 Wochen ab Beginn der vertraglichen Rohbauarbeiten des Auftragnehmers fertigzustellen. Vorbereitende Eigenleistungen des Bauherrn setzen diese Frist nicht in Gang."
+        },
+        {
+          "pdf_page": 2,
+          "text": "Für Nächte mit Temperaturen unter +2 °C zwischen 22 und 4 Uhr verlängert sich die Frist um die betroffenen Ausfalltage, solange Tragwerk, Dach oder Fassade noch nicht fertiggestellt sind. Für Innenputz und Trockenbau gilt die Verlängerung nur, solange keine ordnungsgemäße Beheizung möglich ist. Nach Ende der Kälteperiode kommen zwei Tage für die Wiederaufnahme hinzu. Die gesamte Verlängerung einschließlich der Wiederaufnahme ist auf sechs Wochen begrenzt."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Bauwerk fertigstellen",
+          "action": "Bauwerk fertigstellen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Das Bauwerk ist innerhalb von 28 Wochen ab Beginn der vertraglichen Rohbauarbeiten des Auftragnehmers fertigzustellen. Vorbereitende Eigenleistungen des Bauherrn setzen diese Frist nicht in Gang."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Start: contractual structural work by the contractor, not preparatory owner work; base duration 28 weeks.",
+        "Retain the night interval, temperature threshold and affected lost days; not an unconditional winter extension.",
+        "Retain the unfinished-trade restriction and the additional heating condition for interior plaster and drywall.",
+        "Retain the two-day restart allowance after the cold period.",
+        "Retain the six-week combined cap, including restart days."
+      ],
+      "forbidden": [
+        "A bare 28-week answer or a generic cold-weather extension without all qualifications.",
+        "Owner work starts the clock; restart days fall outside the cap; invented calendar dates."
+      ]
+    },
+    {
+      "id": "connection-or-confirmed-date-with-reference",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Vor Einplanung der Montage muss der Baustromanschluss vorhanden sein oder eine verbindliche Terminbestätigung des Versorgers vorliegen. Bei dieser Alternative muss der Anschluss innerhalb von vier Wochen nach der Terminbestätigung fertiggestellt werden."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Baustromanschluss oder bestätigten Anschlusstermin nachweisen",
+          "action": "Baustromanschluss oder bestätigten Anschlusstermin nachweisen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Vor Einplanung der Montage muss der Baustromanschluss vorhanden sein oder eine verbindliche Terminbestätigung des Versorgers vorliegen. Bei dieser Alternative muss der Anschluss innerhalb von vier Wochen nach der Terminbestätigung fertiggestellt werden."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Before scheduling assembly, either an existing connection OR binding provider confirmation is sufficient.",
+        "Only the confirmation branch requires completion within four weeks after that confirmation.",
+        "Keep the stated reference event and the conditional nature of the four-week period."
+      ],
+      "forbidden": [
+        "Both alternatives made cumulative; connection required immediately despite valid confirmation.",
+        "Four weeks after assembly or an unstated calendar date."
+      ]
+    },
+    {
+      "id": "all-prerequisites-start-last-received",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer beginnt innerhalb von sieben Wochen, nachdem die Baugenehmigung, die unterzeichnete Planfreigabe und die bestätigte Finanzierung vollständig vorliegen. Maßgeblich ist der Eingang der letzten dieser drei Voraussetzungen. Eingangstermine sind noch nicht bekannt."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Vertragliche Arbeiten beginnen",
+          "action": "Vertragliche Arbeiten beginnen",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer beginnt innerhalb von sieben Wochen, nachdem die Baugenehmigung, die unterzeichnete Planfreigabe und die bestätigte Finanzierung vollständig vorliegen. Maßgeblich ist der Eingang der letzten dieser drei Voraussetzungen. Eingangstermine sind noch nicht bekannt."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Within seven weeks after ALL three prerequisites are present: permit, signed plan approval AND confirmed financing.",
+        "The last received prerequisite starts the period; no calendar date can yet be determined."
+      ],
+      "forbidden": [
+        "A permit alone starts the clock; prerequisites represented as alternatives.",
+        "Exactly seven weeks of waiting; a fabricated start date."
+      ]
+    },
+    {
+      "id": "limited-restart-and-unrelated-deadline",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Planprüfer gibt die Ausführungspläne innerhalb von zwölf Arbeitstagen nach Eingang der vollständigen Unterlagen frei. Bei nachträglichen Änderungswünschen beginnt diese Frist ausschließlich für die betroffenen Pläne erneut. Bloße Rückfragen ohne Änderungswunsch setzen die Frist nicht neu in Gang. Die hiervon unabhängige Lieferung der Statik ist binnen vierzehn Kalendertagen nach Beauftragung fällig."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Ausführungspläne freigeben",
+          "action": "Ausführungspläne freigeben",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Planprüfer gibt die Ausführungspläne innerhalb von zwölf Arbeitstagen nach Eingang der vollständigen Unterlagen frei. Bei nachträglichen Änderungswünschen beginnt diese Frist ausschließlich für die betroffenen Pläne erneut. Bloße Rückfragen ohne Änderungswunsch setzen die Frist nicht neu in Gang. Die hiervon unabhängige Lieferung der Statik ist binnen vierzehn Kalendertagen nach Beauftragung fällig."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Within twelve working days after complete documents arrive.",
+        "Subsequent change requests restart the period only for affected plans.",
+        "Questions alone do not restart the clock; the separate structural-calculation deadline does not apply to plan approval."
+      ],
+      "forbidden": [
+        "All plans receive an unrestricted extension after any question.",
+        "The unrelated fourteen-calendar-day deadline replaces or extends plan approval."
+      ]
     }
   ]
 }

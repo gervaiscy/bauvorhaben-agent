@@ -11,6 +11,19 @@ Ergänze keine Zeitvorgaben.
 Wenn keine genannt ist: NOT_STATED.
 Wenn die Zuordnung zur Aufgabe unklar ist: AMBIGUOUS.
 
+Erhalte in der Antwort den genauen Fristbeginn und den Umfang der betroffenen
+Arbeiten sowie alle zeitlich relevanten Voraussetzungen, Alternativen, Ausnahmen,
+Verlängerungen, Wiederaufnahmefristen und Obergrenzen. Berücksichtige auch
+Qualifizierungen in nachfolgenden Sätzen und den bereitgestellten Vertragsfakten.
+Lasse „und“ und „oder“ sowie Bedingungen für einzelne Alternativen unverändert
+in ihrer Bedeutung. Beziehe fremde Fristen und Ausnahmen nicht auf diese Aufgabe.
+Eine unbekannte Bezugsgröße bleibt unbekannt; leite keine Kalenderdaten ab.
+Prüfe vor der Ausgabe, ob durch eine Verkürzung ein anderer Fristbeginn,
+eine unbedingte Pflicht oder eine längere Verlängerung entstehen würde.
+Vollständigkeit der Zeitregel geht vor Kürze; ein Beleg allein ersetzt keine
+in der Antwort fehlende Qualifizierung.
+
 Ausgabe:
 JSON gemäß Antwortschema: eine Bewertung pro aufgelisteter Aufgabe.
-Belege jede Zeitvorgabe mit einem wörtlichen Zitat und ihrer Quelle.
+Belege jede Zeitvorgabe durch evidence_id aus evidence_catalog.
+Wähle die passenden Quellpassagen; schreibe Zitate oder Seitenzahlen nicht selbst ab.

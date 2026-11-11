@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import copy
 import json
 import os
 from pathlib import Path
@@ -77,7 +78,7 @@ class TracingModel:
 
 
 class RawRunRecorder:
-    """raw.json holds provider values; raw.attempts.json holds status/finish reasons."""
+    """raw.json holds provider values; raw.attempts.json holds status and provider diagnostics."""
     def __init__(self, model, path):
         self._model = model
         self._path = Path(path)
@@ -109,6 +110,12 @@ class RawRunRecorder:
             if isinstance(raw, str):
                 metadata['response_sha256'] = hashlib.sha256(raw.encode()).hexdigest()
             metadata['finish_reason'] = getattr(self._model, 'last_finish_reason', None) or metadata.get('finish_reason')
+            diagnostics = getattr(self._model, 'last_diagnostics', None)
+            if diagnostics is not None:
+                metadata['diagnostics'] = copy.deepcopy(diagnostics)
+            recovery = getattr(self._model, 'last_recovery', None)
+            if recovery is not None:
+                metadata['recovery'] = recovery
             if isinstance(raw, str):
                 try:
                     value = json.loads(raw)
@@ -146,10 +153,11 @@ class RequestCheckpoints:
         (self.directory / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
         self.last_raw_response = None
         self.last_finish_reason = None
+        self.last_diagnostics = None
         if self.unverified:
             print(f'Timing recovery: {self.unverified} legacy records lack response hashes and will not be reused', flush=True)
 
-    def _remember(self, prompt, raw, checksum):
+    def _remember(self, prompt, raw, checksum, diagnostics=None):
         if not checksum:
             self.unverified += 1
             return
@@ -159,7 +167,7 @@ class RequestCheckpoints:
         if (isinstance(value, dict) and isinstance(value.get('assessments'), list)
                 and all(isinstance(row, dict) and all(key in row for key in self.required)
                         for row in value['assessments'])):
-            self.saved[prompt] = raw
+            self.saved[prompt] = (raw, copy.deepcopy(diagnostics))
 
     def _load(self, source):
         # A run folder is convenient; a checkpoint directory or output path disambiguates siblings.
@@ -205,7 +213,8 @@ class RequestCheckpoints:
                 prompt = prompt_path.read_bytes().decode('utf-8')
                 if hashlib.sha256(prompt.encode()).hexdigest() != meta.get('prompt_sha256'):
                     raise ValueError('Timing trace prompt checksum mismatch')
-                self._remember(prompt, response_path.read_bytes().decode('utf-8'), meta.get('response_sha256'))
+                self._remember(prompt, response_path.read_bytes().decode('utf-8'), meta.get('response_sha256'),
+                               meta.get('diagnostics'))
         if checkpoint_directory is not None:
             for checkpoint in sorted(checkpoint_directory.glob('*.json')):
                 if checkpoint.name in ('manifest.json', 'identity.json'):
@@ -214,15 +223,21 @@ class RequestCheckpoints:
                 prompt = record['prompt']
                 if checkpoint.stem != hashlib.sha256(prompt.encode()).hexdigest():
                     raise ValueError('Timing checkpoint fingerprint mismatch')
-                self._remember(prompt, record['raw'], record.get('response_sha256'))
+                if 'diagnostics' in record:
+                    checksum = hashlib.sha256(json.dumps(record['diagnostics'], sort_keys=True).encode()).hexdigest()
+                    if record.get('diagnostics_sha256') != checksum:
+                        raise ValueError('Timing checkpoint diagnostics checksum mismatch')
+                self._remember(prompt, record['raw'], record.get('response_sha256'), record.get('diagnostics'))
 
     def extract(self, prompt):
         self.last_raw_response = None
         self.last_finish_reason = None
+        self.last_diagnostics = None
         if prompt in self.saved:
-            raw = self.saved[prompt]
+            raw, diagnostics = self.saved[prompt]
             self.last_raw_response = raw
             self.last_finish_reason = 'STOP'
+            self.last_diagnostics = copy.deepcopy(diagnostics)
             self.reused += 1
             print(f'Timing checkpoint reused ({self.reused})', flush=True)
             value = json.loads(raw)
@@ -233,12 +248,17 @@ class RequestCheckpoints:
             finally:
                 self.last_raw_response = getattr(self._model, 'last_raw_response', None)
                 self.last_finish_reason = getattr(self._model, 'last_finish_reason', None)
+                self.last_diagnostics = copy.deepcopy(getattr(self._model, 'last_diagnostics', None))
         key = hashlib.sha256(prompt.encode()).hexdigest()
         raw = self.last_raw_response
         if isinstance(raw, str) and isinstance(value, dict):
             target = self.directory / (key + '.json')
             temp = target.with_suffix('.tmp')
-            temp.write_text(json.dumps({'prompt': prompt, 'raw': raw,
-                'response_sha256': hashlib.sha256(raw.encode()).hexdigest()}, ensure_ascii=False))
+            record = {'prompt': prompt, 'raw': raw,
+                      'response_sha256': hashlib.sha256(raw.encode()).hexdigest()}
+            if self.last_diagnostics is not None:
+                record.update(diagnostics=self.last_diagnostics,
+                    diagnostics_sha256=hashlib.sha256(json.dumps(self.last_diagnostics,sort_keys=True).encode()).hexdigest())
+            temp.write_text(json.dumps(record, ensure_ascii=False))
             temp.replace(target)
         return value

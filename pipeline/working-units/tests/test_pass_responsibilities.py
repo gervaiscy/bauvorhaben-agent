@@ -1,3 +1,5 @@
+from clause_fixtures import decode_prompt
+from clause_fixtures import index_answer, answer_for
 """Pass ownership, context identity and raw evidence are application contracts."""
 import copy
 import json
@@ -23,7 +25,7 @@ class PassResponsibilitiesTests(unittest.TestCase):
         offer=RESPONSE_SCHEMAS['PAGE_OFFERS']['properties']['offers']['items']['properties']
         self.assertNotIn('dedupe_key',offer)
         app=RESPONSE_SCHEMAS['PAGE_APPLICABILITY']['properties']['assessments']['items']['properties']
-        self.assertEqual(set(app),{'unit_id','applicability','reason'})
+        self.assertEqual(set(app),{'unit_id','applicability','reason','citations'})
 
     def test_task_only_pass_preserves_third_party_performer_and_uncertain_responsibility(self):
         text = 'Der Sachverständige sollte den Nachweis vor Baubeginn erstellen.'
@@ -53,7 +55,7 @@ class PassResponsibilitiesTests(unittest.TestCase):
         other=doc('other','Der Kunde stellt Bauwasser bereit.',identifier='D2')
         calls=[];answers=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append((kind,data))
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
             citation={'pdf_page':1,'quote':data['source_pages'][0]['text']}
             if kind=='PAGE_EXTRACTION':
                 out={'working_units':[{'name':'Lichtplanung','action':'Lichtplanung optional beauftragen',
@@ -78,7 +80,7 @@ class PassResponsibilitiesTests(unittest.TestCase):
                 out={'assessments':rows}
             answers.append(copy.deepcopy(out));return out
         fact={'verpflichtung':'Nicht beauftragt','zitate':[{'pdf_page':1,'text':agreement.pages[0]['text']}]}
-        facts=collect_project_facts([agreement],SimpleNamespace(extract=lambda p:{'verpflichtungen':[fact]}))
+        facts=collect_project_facts([agreement],SimpleNamespace(extract=lambda p:index_answer(decode_prompt(p))))
         result=extract_page_units([blb,other],SimpleNamespace(extract=extract),context_documents=[agreement],project_facts=facts)
         kinds=[k for k,d in calls];first=kinds.index('PAGE_APPLICABILITY')
         self.assertTrue(all(k=='PAGE_APPLICABILITY' for k in kinds[first:]))
@@ -92,13 +94,13 @@ class PassResponsibilitiesTests(unittest.TestCase):
                    doc('contract','Anderes Thema.',identifier='D2',count=2)]
         calls=[]
         def extract(prompt):
-            calls.append(json.loads(prompt.split('SOURCE DATA:\n')[1]))
-            return {'verpflichtungen':[]}
+            data=decode_prompt(prompt);calls.append(data)
+            return index_answer(data)
         facts=collect_project_facts(contracts,SimpleNamespace(extract=extract))
-        self.assertEqual(len(calls),5)
-        self.assertTrue(all(len(c['source_pages'])<=3 for c in calls))
+        self.assertEqual(len(calls),1)
+        self.assertTrue(all(len(c['source_pages'])<=10 for c in calls))
         self.assertEqual([p for c in facts['windows'] for p in c['primary_pages']],list(range(1,9))+[1,2])
-        self.assertEqual(facts['facts'],[])
+        self.assertEqual(len(facts['facts']),10)
 
     def test_context_citation_cannot_borrow_quote_from_other_source_on_same_page(self):
         local=[{'pdf_page':1,'text':'Local evidence'}]
@@ -123,7 +125,7 @@ class PassResponsibilitiesTests(unittest.TestCase):
         source=doc('blb','Bei gewähltem Paket wird eine Anlage installiert.')
         calls=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':return {'working_units':[{'action':'Anlage installieren',
                 'citations':[{'pdf_page':1,'quote':source.pages[0]['text']}]}],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
@@ -164,8 +166,8 @@ class ProjectContextCliTests(unittest.TestCase):
             class Model:
                 def __init__(self,*args):pass
                 def extract(self,prompt):
-                    kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append((kind,data))
-                    if kind=='PAGE_PROJECT_FACTS':out={'verpflichtungen':[]}
+                    kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
+                    if kind=='PAGE_PROJECT_FACTS':out=index_answer(data)
                     elif kind=='PAGE_EXTRACTION':out={'working_units':[{'action':'Owner task',
                         'citations':[{'pdf_page':1,'quote':'Owner must complete task 1.'}]}],'carry_forward':''}
                     elif kind=='PAGE_OFFERS':out={'offers':[]}
@@ -174,14 +176,16 @@ class ProjectContextCliTests(unittest.TestCase):
             argv=['units','--pages',str(local/'pages.json'),'--documents',str(local/'documents.json'),
                   '--context-pages',str(external/'pages.json'),'--context-documents',str(external/'documents.json'),
                   '--project','unused','--output',str(root/'result.json')]
-            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel',Model):main()
+            with patch.object(sys,'argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.cli.GeminiModel',Model):main()
             app=next(data for kind,data in calls if kind=='PAGE_APPLICABILITY')
             self.assertNotIn('source_snapshots',app['project_facts'])
             snapshots=json.loads((root/'result.project-facts.json').read_text())['source_snapshots']
             self.assertEqual(len(snapshots),2)
             self.assertEqual(len({s['source_key'] for s in snapshots}),2)
             self.assertTrue((root/'result.project-facts.json').is_file())
-            self.assertEqual(json.loads((root/'result.gemini-raw.json').read_text()),answers)
+            result=json.loads((root/'result.json').read_text())
+            self.assertEqual(json.loads((root/'result.gemini-raw.json').read_text()), [r['gemini'] for r in result['gemini_responses']])
+            self.assertEqual([r['gemini'] for r in result['gemini_responses']],answers)
             self.assertEqual(len(json.loads((root/'result.json').read_text())['context_snapshots']),1)
 
 
@@ -189,7 +193,7 @@ class ContextFindingTests(unittest.TestCase):
     def test_unresolved_assessment_context_is_one_finding_not_one_per_pass(self):
         source=doc('blb','Eine Aufgabe ist genannt.')
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':return {'working_units':[{'action':'Aufgabe erledigen','citations':[]}],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
             return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
@@ -199,10 +203,10 @@ class ContextFindingTests(unittest.TestCase):
 
 class OverlapIdentityTests(unittest.TestCase):
     def test_application_ids_and_separate_known_lists_without_dedupe_keys(self):
-        source=doc('source','Der Kunde plant. Ein Zusatzpaket ist gesondert beauftragbar.',count=4)
+        source=doc('source','Der Kunde plant. Ein Zusatzpaket ist gesondert beauftragbar.',count=11)
         calls=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append((kind,data))
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
             if kind in ('PAGE_EXTRACTION','PAGE_OFFERS'):
                 page=next(p['pdf_page'] for p in data['source_pages'] if p['primary'])
                 c={'pdf_page':page,'quote':data['source_pages'][0]['text']}

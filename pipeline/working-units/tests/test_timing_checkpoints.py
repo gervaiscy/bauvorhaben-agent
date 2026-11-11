@@ -159,9 +159,9 @@ class TimingCheckpointTests(unittest.TestCase):
                 argv=['timing','--working-units',str(root/'baseline.json'),'--pages',str(root/'pages.json'),
                     '--documents',str(root/'documents.json'),'--project','test','--output',str(root/(name+'.json'))]
                 if resume:argv+=['--resume-from',str(resume)]
-                with patch('sys.argv',argv),patch('bauvo_working_units.gemini.GeminiModel',return_value=Provider()):
+                with patch('sys.argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.gemini.GeminiModel',return_value=Provider()):
                     main()
                 self.assertTrue((root/(name+'.checkpoints/manifest.json')).is_file())
-            self.assertEqual(len(calls),2)
+            self.assertEqual(len(calls),1)
             self.assertEqual(json.loads((root/'contract.json').read_text()),
                              json.loads((root/'recovered.json').read_text()))

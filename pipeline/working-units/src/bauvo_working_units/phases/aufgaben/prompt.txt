@@ -8,6 +8,9 @@ Erfasse alle beschriebenen Aufgaben des Bauherrn, des Bauunternehmens
 und anderer Beteiligter.
 Berücksichtige auch Bauarbeiten, die als enthaltene Leistungen,
 in passiver Form oder in Leistungsaufstellungen beschrieben werden.
+Allgemeine Werbung und Beschreibungen dessen, was ein Unternehmen leisten kann,
+sind keine Aufgaben. Erfinde daraus keine Beauftragung, auch keine bedingte.
+Erfasse konkrete Aufgaben auch dann, wenn sie in werblichem Umfeld stehen.
 
 Nenne jeweils:
 - Was ist konkret zu tun?
@@ -18,4 +21,5 @@ Ergänze keine Aufgaben oder Zuständigkeiten.
 Unklare Zuständigkeiten bleiben null.
 Stelle Empfehlungen und Wahlmöglichkeiten nicht als Pflichten dar.
 
-Gib zu jeder Aufgabe ein wörtliches Zitat und die PDF-Seitennummer an.
+Belege jede Aufgabe durch citations mit evidence_id aus evidence_catalog.
+Wähle die passenden Quellpassagen; schreibe Zitate oder Seitenzahlen nicht selbst ab.

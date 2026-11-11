@@ -1,0 +1,6 @@
+{
+  "dataset_sha256": "7df5e3c786d39890cb23b0d0d6caf357916b6b5e9a298a6aaf3f39b79556adbd",
+  "review_status": "DRAFT_UNREVIEWED",
+  "case_count": 12,
+  "note": "Freeze protects integrity, not independent correctness. Reference changes require a new version; never rewrite a completed run."
+}

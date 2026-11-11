@@ -1053,6 +1053,97 @@
       "expectations": [
         "Both construction activities must be covered, grouped or separate. Applicability remains separate from task discovery."
       ]
+    },
+    {
+      "id": "capability-directory-only",
+      "purpose": "A directory of multiple suppliers describes capabilities, not project assignments or optional commissioning.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Unsere Partner\nPlanwerk bietet Architektur, Statik und Energieberatung für Bauprojekte an.\nFensterwelt ist ein Hersteller von Fenstern und Türen.\nHolzkontor liefert Holzwerkstoffe und berät Handwerksbetriebe."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Bauunterlagen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [],
+      "expected_offers": [],
+      "forbidden_inferences": [
+        "Do not create project tasks, optional commissioning actions or selectable offers from supplier capabilities alone."
+      ],
+      "expectations": [
+        "No working units and no offers. A hypothetical future commission is not stated."
+      ]
+    },
+    {
+      "id": "capability-directory-with-project-work",
+      "purpose": "Retain assigned work and included passive-form work alongside supplier capability descriptions.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Unsere Partner\nPlanwerk bietet Architektur, Statik und Energieberatung für Bauprojekte an.\nFensterwelt ist ein Hersteller von Fenstern und Türen.\nHolzkontor liefert Holzwerkstoffe und berät Handwerksbetriebe.\nFür dieses Bauvorhaben erstellt Planwerk die statische Berechnung. Der Einbau der Fenster durch den Auftragnehmer ist im Leistungsumfang enthalten."
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Synthetische Bauunterlagen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "structural-calculation",
+          "document_id": "D1",
+          "action": "Statische Berechnung erstellen",
+          "actor": "Planwerk",
+          "performed_by": "Planwerk",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Für dieses Bauvorhaben erstellt Planwerk die statische Berechnung."
+            }
+          ]
+        },
+        {
+          "key": "window-installation",
+          "document_id": "D1",
+          "action": "Fenster einbauen",
+          "actor": "Auftragnehmer",
+          "performed_by": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Einbau der Fenster durch den Auftragnehmer ist im Leistungsumfang enthalten."
+            }
+          ]
+        }
+      ],
+      "expected_offers": [],
+      "forbidden_inferences": [
+        "Do not create project tasks, optional commissioning actions or selectable offers from supplier capabilities alone."
+      ],
+      "expectations": [
+        "Keep the explicitly assigned structural calculation and included window installation when stated; ignore the directory descriptions."
+      ]
     }
   ]
 }

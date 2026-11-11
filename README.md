@@ -1,5 +1,8 @@
 # Bauvo Agent
 
+Analysis defaults to zero new provider calls. See [offline replay and explicit call
+limits](pipeline/working-units/REPLAY.md) before another live run.
+
 For the current modular PDF-to-applicability workflow, see [phases and sequential pipeline](pipeline/working-units/PHASES.md).
 
 Local, reviewable construction-document workflow:
@@ -8,7 +11,7 @@ Local, reviewable construction-document workflow:
 PDF (including scanned PDF) → one 300-DPI PNG per page
     → Gemini 3.5 Flash / minimal → pages.json
     → optional document-boundary proposals → source review
-    → three-page windows with one-page overlap → five Gemini passes
+    → ten-page windows with one-page overlap → five Gemini passes
     → reconciliation, review, timing and draft report
 ```
 
@@ -142,8 +145,8 @@ quality report after resolving findings. This workflow does not certify 99% OCR
 accuracy; that requires independently reviewed reference transcriptions.
 
 Schema-6 working-unit extraction uses five focused passes (actions/roles,
-applicability, offers, structured timing, consequences) in three-page windows with one-page overlap:
-1–3, 3–5, 5–7, etc. Windows stay within confirmed document boundaries;
+applicability, offers, structured timing, consequences) in ten-page windows with one-page overlap:
+1–10, 10–19, 19–28, etc. Windows stay within confirmed document boundaries;
 unverified or uncertain boundaries stop analysis. Page-and-quote citations are checked against the source window and flagged without rewriting or repair. Five focused passes
 replace semantic correction and relationship discovery. Named deadline events remain on unit reviews.
 Long source pages are never silently truncated.
@@ -304,9 +307,16 @@ independently of `BAUVO_MODEL`. Output schema 17 records raw proposals and asses
 Assessments use batches of up to five units. Applicability runs last, assesses modality,
 and receives the complete cited project-facts collection. A separate preparatory pass
 reads supplied non-BLB sources for agreements and obligations of both parties; it replaces
-word-overlap retrieval. It returns `verpflichtung` and page/text `zitate` without
-classification or acceptance status. Facts and raw responses
-are saved separately for review. Cumulative files after each pass are written to
+word-overlap retrieval. It returns source-backed interpretations under `verpflichtungen`:
+each has `interpretation`, nullable `uncertainty`, and all supporting evidence IDs in
+`zitate`. The application attaches exact original quotations separately from the model's
+interpretation. One request includes the complete supplied non-BLB contract package,
+including attachments and amendments; task window settings do not split this pass.
+Collection schema 6 retains full original project-source documents for
+downstream context, exclusions, source fingerprints and passage accounting. Incomplete
+responses stop analysis and remain available for recovery. Interpretations, evidence,
+exclusions and raw responses are saved for review; accounting is not semantic approval.
+Cumulative files after each pass are written to
 `<output-stem>.passes/`; earlier files are never overwritten. Mark standalone BLB
 input with `--source-type blb` (the case pipeline does this automatically).
 Use `--project-facts /path/working-units.project-facts.json` to reuse a saved

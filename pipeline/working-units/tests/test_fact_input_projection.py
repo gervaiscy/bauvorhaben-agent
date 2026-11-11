@@ -1,13 +1,17 @@
+from historical_facts import collect_historical_facts
 import copy
 import json
 import unittest
 from bauvo_working_units.page_flow import _prompt
 
 class FactInputProjectionTests(unittest.TestCase):
-    def test_only_two_fields_and_all_quotes_without_mutating_artifacts(self):
+    def test_all_quotes_provenance_and_uncertainty_without_mutating_artifacts(self):
         payload={'source_pages':[], 'project_facts':{'status':'needs_review',
             'source_snapshots':[{'hash':'x'}], 'excluded_sources':[], 'review_findings':[{'code':'issue'}],
-            'facts':[{'id':'F1','gemini':{'verpflichtung':'An obligation',
+            'facts':[{'id':'F1','source_key':'contract','document_id':'D1',
+                'citations':[{'source_key':'contract','document_id':'D1','pdf_page':1,'quote':'First quote'},
+                             {'source_key':'contract','document_id':'D1','pdf_page':2,'quote':'Second quote'}],
+                'gemini':{'verpflichtung':'An obligation',
                 'zitate':[{'pdf_page':1,'text':'First quote'},{'pdf_page':2,'text':'Second quote'}]},
                 'review_findings':[{'code':'issue'}]}]}}
         original=copy.deepcopy(payload)
@@ -15,7 +19,11 @@ class FactInputProjectionTests(unittest.TestCase):
             with self.subTest(phase=phase):
                 actual=json.loads(_prompt(phase,payload,'de').split('SOURCE DATA:\n')[1])
                 self.assertEqual(actual['project_facts'],{'facts':[
-                    {'verpflichtung':'An obligation','text':'First quote\nSecond quote'}]})
+                    {'id':'F1','text':'First quote\n[separate source passage]\nSecond quote',
+                     'source_key':'contract','document_id':'D1','document_title':None,
+                     'citations':payload['project_facts']['facts'][0]['citations'],
+                     'review_findings':[{'code':'issue'}]}],
+                    'excluded_passages':[], 'review_findings':[{'code':'issue'}]})
                 self.assertEqual(payload,original)
 
     def test_anchors_are_local_only_for_every_pass(self):
@@ -58,4 +66,4 @@ class FactInputProjectionTests(unittest.TestCase):
         self.assertIn('Ergänze keine Zeitvorgaben.',prompt)
         self.assertIn('Wenn keine genannt ist: NOT_STATED.',prompt)
         self.assertIn('Wenn die Zuordnung zur Aufgabe unklar ist: AMBIGUOUS.',prompt)
-        self.assertIn('Belege jede Zeitvorgabe mit einem wörtlichen Zitat und ihrer Quelle.',prompt)
+        self.assertIn('evidence_id',prompt)

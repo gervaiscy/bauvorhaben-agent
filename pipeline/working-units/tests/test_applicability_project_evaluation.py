@@ -52,7 +52,7 @@ class ApplicabilityProjectEvaluationTests(unittest.TestCase):
         for mode in ('original','summary','wrong-source'):
             def extract(prompt):
                 data=json.loads(prompt.split('SOURCE DATA:\n')[1]);fact=data['project_facts']['facts'][0]
-                quote=fact['verpflichtung'] if mode=='summary' else fact['text']
+                quote=case['contract_facts'][0]['statement'] if mode=='summary' else fact['text']
                 citation={'pdf_page':1,'quote':quote,'source_key':docs[0].source_key if mode=='wrong-source'
                           else context[0].source_key,'document_id':context[0].id}
                 return {'assessments':[{'unit_id':data['working_units'][0]['id'],'applicability':'APPLIES',

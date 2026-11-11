@@ -23,7 +23,8 @@ class NegativeWordingTests(unittest.TestCase):
                 self.assertEqual(data['working_units'][0]['action'],'Zufahrt nicht blockieren')
                 row={'unit_id':data['working_units'][0]['id'],'citations':[]}
                 if kind=='PAGE_TIMING':row.update(status='NOT_STATED',timing_rules=[],missing_evidence=[])
-                elif kind=='PAGE_APPLICABILITY':row.update(applicability='APPLIES',reason='Contractual duty',applicability_rules=[],missing_evidence=[])
+                elif kind=='PAGE_APPLICABILITY':row.update(applicability='APPLIES',reason='Contractual duty',
+                    citations=copy.deepcopy(proposal['citations']),applicability_rules=[],missing_evidence=[])
                 else:row.update(status='NOT_STATED',consequences=[])
                 out={'assessments':[row]}
             answers.append(copy.deepcopy(out));return out

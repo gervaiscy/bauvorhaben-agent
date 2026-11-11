@@ -1,9 +1,17 @@
+> Current project-facts runs use the German homeowner-rights prompt and schema 15
+> (`contractual-rights-v2`): `ansprueche: [{aussage, belege}]`.
+> Full context remains in every batch; only citation labels are selected by Gemini.
+> See [current extraction and replay](REPLAY.md#current-extraction-homeowner-contractual-rights).
+> Schema-11 descriptions below document the historical broad reference format.
+
 # Page-based working units
 
-Schema-6 workflow, protocol `page-working-units-v44`, output schema 17:
+See [offline replay and call limits](REPLAY.md) before running model calls.
+
+Schema-6 workflow, protocol `page-working-units-v58`, output schema 18:
 
 ```
-all supplied non-BLB project sources → cited project facts
+all supplied non-BLB project sources → cited homeowner contractual rights
 main pages.json + documents.json
   → Aufgaben and responsible/executing parties
   → optional offers and their conditions
@@ -13,7 +21,7 @@ main pages.json + documents.json
   → working-units.json + raw responses + traces
 ```
 
-Each source window has at most three pages, including one overlapping page, and
+Each task source window has at most ten pages, including one overlapping page, and
 never crosses a document boundary. Only primary pages introduce new action
 occurrences. The three assessment passes use batches of at most five units, each
 with the same proposed action, responsible party and performer. Each unit selects
@@ -43,14 +51,24 @@ including AMBIGUOUS rows; their text and uncertainty remain untouched.
 These checks neither interpret source language nor rewrite/filter model responses or trigger retries.
 
 
-Citation checks flag missing or malformed evidence, pages outside the source window,
-and quotes absent from that page (after Unicode/whitespace normalization). They do
-not establish whether a quote supports the interpretation. Findings never rewrite
-responses, drop units or trigger extra model calls. There is no citation repair,
-exclusion detector, interpretation-correction retry, separate modality verification or relationship graph.
+Models select `evidence_id` values from source-span catalogs instead of copying
+quotations or page numbers. IDs bind the source, document, physical PDF page,
+original page hash and character offsets. The app resolves exact original text
+under task/offer `derived.citations` and assessment `derived.resolved_evidence`;
+raw `gemini` values remain unchanged. These bindings do not establish whether the
+passage supports the interpretation.
+
+An unresolved ID can trigger one logical citation-repair request for the affected
+citation lists. The separate `citation_evidence` audit preserves the original
+findings, bindings and repair response. Valid supporting evidence is retained;
+unknown IDs, unsupported claims and ambiguous repairs remain unresolved.
+Historical quoted responses retain strict source/page/quote checks, including
+Unicode/whitespace normalization. No fuzzy match automatically passes validation.
+See [PHASES.md](PHASES.md) for the separate saved-run audit command and recovery behavior.
 
 Application findings also cover malformed responses, unknown/duplicate unit IDs and
-missing assessments. `citation_validation: "page_and_quote_checks"` describes the checks.
+missing assessments. `citation_validation: "page_and_quote_checks"` retains the
+legacy check label; `evidence_protocol: "source-span-ids-v1"` identifies the new bindings.
 `status: "recorded"` means responses were recorded, not that their meaning or
 citations were verified. Unknown house features and genuine uncertainty remain in
 Gemini's responses. Original proposals and every response remain unchanged under
@@ -129,32 +147,122 @@ additional source evidence (presence alone does not prove acceptance):
 
 Repeat both context arguments in matching order for additional sources. The case
 pipeline supplies the other project sources automatically. Before task extraction,
-the production entrypoint reads every supplied non-BLB document in document-local windows
-using `project_facts.txt`. There is no word ranking or two-window selection.
-The fact pass uses the approved signed-contract-package context and asks which
-agreements and obligations of the owner and contractor are described in the excerpt. This context is
-a supplied project assertion, not a conclusion derived from PDF membership. Its response is `verpflichtungen`,
-with `verpflichtung` and `zitate: [{pdf_page, text}]` per proposal. There are no
-category, selection or agreement-status fields. The app binds quotes to the
-request's source/document, retaining these identifiers beside the raw proposal.
-The schema-routing prefix is followed by this small prompt and page text only;
-the other passes' shared instructions are not added. Overlap proposals are kept
-without semantic deduplication. Collection schema 2 preserves raw proposals and
-source-checked evidence separately; older response formats are not guessed into it.
+the production entrypoint sends every page of all supplied non-BLB contract sources,
+including their attachments and amendments, in every request using
+`phases/project_facts/prompt.txt`. Task window/overlap/character settings do not split
+or truncate this context. Each request assigns at most 50 source passages through
+`target_evidence_ids`; only these targets must be interpreted or explicitly excluded.
+The complete catalog remains citable, including amendments outside the targets.
+BLB documents remain outside project-fact collection.
+The pass produces readable, source-backed interpretations. It retains conditions,
+exceptions, alternatives and explicit uncertainty without silently resolving conflicting
+clauses or treating a model interpretation as authoritative source text.
 
-Applicability receives the complete collected statement list, its uncertainties and
-collection status. Contradictory statements are not merged or resolved by code;
-missing evidence and conflicts must remain visible in the assessment. Invalid fact
-citations are flagged, and the raw proposal remains available. Only source-checked
-quotes can support subsequent cross-document citations. A complete pass does not
-prove that the model found every relevant statement.
+The response separates interpretation from supporting references and exclusions:
+
+```json
+{
+  "verpflichtungen": [{
+    "uncertainty": null,
+    "claims": [{
+      "statement": "Alternativ ist eine Zahlungsbürgschaft zulässig.",
+      "evidence_ids": ["E-clause"]
+    }],
+    "zitate": []
+  }],
+  "nicht_als_fakt_erfasst": [{"evidence_id": "E-contact", "grund": "Reine Kontaktangabe"}]
+}
+```
+
+Each target ID must be selected by at least one interpretation or excluded exactly once
+with a nonempty reason. Exclusions must belong to the targets, and every interpretation
+must cite a target. Other passages may support an interpretation without requiring
+a disposition in that response. IDs cannot have both dispositions within one response.
+Related conditions,
+exceptions and table rows belong with their clause; separate clauses may share
+supporting passages. The application binds IDs to the original source, orders them
+by source position and builds `derived.text` from untouched quotations, with explicit
+separators between passages. `derived.interpretation` is assembled directly from the cited claim statements;
+`derived.uncertainty` normalizes only blank text to null. The original response,
+including any historical explanation, remains unchanged under `gemini`. They never replace the
+source quotations, and valid citations do not establish correct interpretation.
+
+Every fact has nonempty `claims`, each with a `statement` and nonempty `evidence_ids`.
+Claim IDs are authoritative selections and do not need repeating in `zitate`. The
+application builds `derived.verified_citations` from their source-ordered union with
+additional fact-level references. `zitate` may be empty. References selected only at
+fact level remain separately in `derived.context_citations` and are forwarded as
+context, without assigning them to claims. A context reference cannot replace
+evidence for any claim. The application binds each claim independently in `derived.claims` with its original statement, source-ordered
+`verified_citations` and exact `text`; downstream passes retain this mapping.
+Missing, unknown or invalid claim references make a batch incomplete
+and blocks downstream analysis. The completed provider response is still stored and
+replayed without another paid call; raw invalid rows remain preserved.
+The prompt requires a complete provision before its summary and checks meaning,
+qualifications, observations versus events, uncertainty and evidence within the same
+request. These semantic checks are model instructions, not application verification
+or a separate model call.
+
+Collection schema 11 (`evidence_protocol: source-backed-interpretations-v7`,
+`catalog_protocol: source-lines-v2`) preserves raw responses, source fingerprints,
+interpretations, exclusions with original quotations, and per-request `coverage`.
+`source_documents` retains the complete original non-BLB project documents. Every
+downstream pass receives these full texts alongside interpretations and evidence, so
+it can inspect and cite passages the facts model did not select. Interpretations may
+cite an original rule and an amendment together; `derived.sources` retains each source
+identity, and single-document identity fields are null for cross-document entries.
+The prompt requires source-supported conclusions and checking the complete package
+before claiming a referenced amendment is missing. An uncertainty note cannot excuse
+an unsupported assertion in the interpretation. Older schema-2/3/4/5
+artifacts, schema-6 single-request results, schema-7 batched results and schema-8
+strict claim-union results, schema-9 subset-check results and schema-10 union results
+remain readable. Use offline replay for schemas 8–10 before the new analysis flow.
+Unknown IDs, empty claim evidence, invalid rows, contradictory dispositions and
+missing targets produce `incomplete`; the pipeline saves the result and stops before
+Aufgaben. Repeated valid IDs are normalized only in derived data. Completed provider
+responses are stored independently of validation and replayed by default. An incomplete
+STOP answer is not automatically sent to Gemini again; explicit targeted refresh is
+available when a new answer is actually needed. Transport failures or truncation may
+retry once within the shared, explicit attempt limit. There is no verifier or
+citation-repair request in this phase.
+
+Every batch still receives the complete contract package. Its compact `source_pages`
+contain source-qualified page identities and `segments`: pairs of evidence ID and exact
+original text (null IDs preserve gaps). Concatenating segments reconstructs each page
+exactly. Full offsets, hashes and canonical evidence remain local, avoiding a second
+copy of the source text and repeated provenance in the provider payload.
+
+Each provider attempt now records `diagnostics` in `<output-stem>.gemini-raw.attempts.json`
+and `trace/NNNN-attempt.json`, including failed or truncated generations. It contains
+`requested_model`, the serialized `generation_config` sent to the SDK, returned
+`model_version` and `response_id`, and `usage_metadata` with prompt, response, thinking,
+total and cached-token counts when supplied by the provider. The console prints a
+short request/settings and response/token summary. Missing metadata remains null;
+historical responses without usage are not assigned invented token counts. Caches
+and request recovery preserve original diagnostics alongside their response. This
+logging adds no model requests and does not change generation limits or prompts.
+
+Selectable evidence uses original nonblank source lines, with a bounded literal-span
+fallback for long lines. Abbreviations do not create boundaries and independent table
+positions can be selected separately. Each line retains source identity, physical page,
+character offsets and the page fingerprint. A clause can use several lines and share
+qualifications with another clause. Paragraph headings do not force whole-section groups.
+Adjacent selections are reconstructed from the original text, including whitespace-only
+gaps; omitted nonblank text and page changes retain explicit separators.
+
+Downstream stages receive interpretations, uncertainty, original quotations, source
+identities, document titles, exclusions, unresolved findings and complete original
+project context. Historical schema-2/3/4/5 collections remain inspectable using their
+original protocols. New analysis requires schema-11 full-context claim facts; replay a saved claim
+collection offline or extract from accepted pages and grouping outputs. No OCR rerun is required. Complete
+accounting does not prove an interpretation or exclusion is semantically correct.
 
 The CLI writes `working-units.project-facts.json` alongside `working-units.json`
 (or `<output-stem>.project-facts.json` for a custom output name). That file includes
-fact proposals, source fingerprints, windows, raw responses and unresolved findings.
-The main raw response file and traces also preserve fact requests. Failed fact
-windows do not discard successful windows or task results; the final status remains
-`request_failed`. Model parameters stay Gemini 3.5 Flash / MINIMAL.
+interpretations, exclusions, passage accounting, source fingerprints, full source spans,
+raw responses and unresolved findings. The main raw response file and traces preserve
+the full-context request. A failed request retains its raw attempts and stops downstream
+analysis; the final status remains `request_failed`. Existing model settings are unchanged.
 
 `extract_page_units` is the lower-level task-only API: callers must supply a collected
 `project_facts` object. Without one, applicability sees `not_collected`, never an
@@ -265,16 +373,27 @@ The offer-only entry point uses the same offer prompt for contract and BLB sourc
 It validates the saved source fingerprints, boundaries and window layout before any
 model call, then preserves the tasks, facts and earlier raw responses unchanged.
 Only PAGE_OFFERS is requested. Earlier files are never overwritten.
+Every request receives complete text from the primary source documents and all
+supplied context documents, so contracts and amendments can establish that a
+service is already agreed. New offers remain scoped to the local primary pages.
+Document presence alone does not establish acceptance. Cross-document evidence
+uses source-qualified citations; full context fingerprints are recorded.
 
 ```sh
 PYTHONPATH=pipeline/working-units/src .venv/bin/python -m bauvo_working_units.offer_stage \
   --working-units /previous/run/working-units.json \
   --pages /source/pages.json --documents /source/documents.json \
+  --context-pages /other-source/pages.json --context-documents /other-source/documents.json \
+  --context-type project \
   --project YOUR_PROJECT --output /new/run/working-units.json
 ```
 
 Run this once per source, supplying that source's full Aufgaben-only artifact.
-Defaults are Gemini 3.5 Flash minimal, three-page windows and one-page overlap.
+Repeat the context path pair for every other project source. Use `--context-type blb`
+for general specifications; when setting types, provide one per context pair.
+Otherwise saved context types are retained, with new sources defaulting to `project`.
+The PDF pipeline supplies all other contract and BLB sources automatically.
+Defaults are Gemini 3.5 Flash minimal, ten-page windows and one-page overlap.
 Outputs are the cumulative working-units.json, working-units.offers-only.json,
 working-units.gemini-raw.json (new requests only), attempt records and working-units.trace/.
 Failed requests keep partial offers and original tasks with request_failed status.
@@ -295,7 +414,7 @@ Only PAGE_TIMING runs. The saved tasks, offers, facts and earlier responses rema
 preserved in the new cumulative result; timing reviews are appended to each task.
 New raw responses and prompt traces are separate. The sibling
 working-units.timing-only.json contains only the provider's timing assessments.
-Defaults remain Gemini 3.5 Flash minimal, three-page windows and one-page overlap
+Defaults remain Gemini 3.5 Flash minimal, ten-page windows and one-page overlap
 within document boundaries. Assessments use batches of up to five tasks.
 Source/window changes and incomplete prior stages are rejected before model calls.
 Use --date-anchors for source-cited event dates, or retain the saved anchors by
@@ -312,9 +431,19 @@ source pages and document boundaries before model calls. No facts, tasks or offe
 are re-extracted. Every timing request receives all facts for that exact
 (source_key, document_id), retaining original statements, citations and review flags.
 There is no relevance ranking or cross-document fact selection for timing.
-Verified fact quotes can support timing citations outside the three-page source
+Verified fact quotes can support timing citations outside the ten-page source
 window. The window itself remains unchanged. Unverified quotes keep their flags.
 The cumulative result includes the new project_facts. When replacing an older
 collection, previous_project_facts and previous_fact_review_findings preserve its
 evidence separately; current review_findings refer to the new facts and existing
 task/offer/timing findings. The original input files are never rewritten.
+
+Saved schema-8/9/10/11 claims can be replayed offline with
+`--replay-project-facts` (see [commands](REPLAY.md)). The replay validates the
+original artifact against its sources, preserves raw answers and source fingerprints,
+archives earlier findings with the original artifact digest, and recomputes schema-11
+derived evidence and interpretation from claims. Separate review notes survive.
+Unknown evidence, missing claim evidence and genuinely missing targets remain
+blocking. This is structural revalidation, not semantic approval or a model call.
+The older `revalidate_context_citations` API remains available for historical
+schema-8/9 to schema-10 migrations.

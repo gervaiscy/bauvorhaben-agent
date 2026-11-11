@@ -9,7 +9,7 @@ TRACK_CONTEXT = True
 
 
 def select_window(unit, original, chunks):
-    return select_assessment_chunk(unit['gemini'].get('citations'), original, chunks)
+    return select_assessment_chunk(unit['derived'].get('citations', unit['gemini'].get('citations')), original, chunks)
 
 
 def batches(candidates):

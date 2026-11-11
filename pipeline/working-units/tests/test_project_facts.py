@@ -1,4 +1,7 @@
-"""Compact project agreements retain raw text and source-bound quote evidence."""
+from historical_facts import collect_historical_facts
+from clause_fixtures import labeled_answer
+from clause_fixtures import decode_prompt
+"""Source clauses retain original wording, provenance and complete passage accounting."""
 import copy
 import json
 import tempfile
@@ -12,6 +15,7 @@ from bauvo_working_units.page_flow import extract_page_units
 from bauvo_working_units.schemas import RESPONSE_SCHEMAS
 from bauvo_working_units.gemini import IncompleteResponse
 from bauvo_working_units.trace import RetryingModel, RawRunRecorder
+from clause_fixtures import entries_for, answer_for, index_answer, interpreted
 
 
 def document(key, text, number=1, identifier='D1'):
@@ -20,158 +24,179 @@ def document(key, text, number=1, identifier='D1'):
 
 
 def proposal(doc, quote=None):
-    return {'verpflichtung':doc.pages[0]['text'],
-            'zitate':[{'pdf_page':doc.pages[0]['pdf_page'],'text':quote or doc.pages[0]['text']}]}
+    entries = entries_for(doc)
+    return interpreted([{'evidence_id': e['evidence_id']} for e in entries
+                      if quote is None or quote in e['quote']] or [{'evidence_id':'unknown'}])
 
 
 class ProjectFactsTests(unittest.TestCase):
-    def test_schema_extracts_commitments_and_quotes_without_classification(self):
-        fields=RESPONSE_SCHEMAS['PAGE_PROJECT_FACTS']['properties']
-        self.assertEqual(set(fields),{'verpflichtungen'})
-        schema=fields['verpflichtungen']['items']
-        self.assertEqual(set(schema['required']),{'verpflichtung','zitate'})
-        self.assertEqual(set(schema['properties']['zitate']['items']['required']),{'pdf_page','text'})
+    def test_schema_requires_interpretation_uncertainty_and_source_references(self):
+        from bauvo_working_units.phases.project_facts.schema import CLAUSE_INDEX
+        fields=CLAUSE_INDEX['properties']
+        self.assertEqual(set(fields),{'verpflichtungen','nicht_als_fakt_erfasst'})
+        self.assertEqual(fields['verpflichtungen']['items']['required'],['provision_id','status','related_provision_ids','uncertainty','claims','zitate'])
+        self.assertEqual(fields['verpflichtungen']['items']['properties']['zitate']['type'],'array')
+        self.assertNotIn('minItems', fields['verpflichtungen']['items']['properties']['zitate'])
+        self.assertFalse(fields['verpflichtungen']['items']['additionalProperties'])
+        self.assertEqual(set(fields['nicht_als_fakt_erfasst']['items']['required']),{'evidence_id','grund'})
 
-    def test_every_window_is_read_with_only_page_text_and_without_crossing_documents(self):
+    def test_current_prompt_and_exception_are_preserved_in_one_request_without_paraphrase(self):
+        from bauvo_working_units.page_flow import PROMPT_DIRECTORY
+        doc=document('contract','Die Frist verlängert sich bei Frost.\n\n'
+                     'Für Estrich gilt dies nur ohne mögliche Beheizung.')
+        calls=[];answers=[]
+        def extract(prompt):
+            instructions,payload=prompt.split('SOURCE DATA:\n',1)
+            self.assertIn((PROMPT_DIRECTORY/'project_facts/prompt.txt').read_text(),instructions)
+            data=decode_prompt(prompt);calls.append(data)
+            self.assertEqual(data['source_pages'],[{**p,'source_key':doc.source_key,'document_id':doc.id} for p in doc.pages])
+            row=proposal(doc);row['zitate'].reverse()
+            answers.append(answer_for(doc,[row]));return copy.deepcopy(answers[-1])
+        result=collect_historical_facts([doc],SimpleNamespace(extract=extract))
+        self.assertEqual(len(calls),1)
+        self.assertEqual(result['gemini_responses'][0]['gemini'],answers[0])
+        fact=result['facts'][0]
+        self.assertEqual(fact['gemini'],answers[0]['verpflichtungen'][0])
+        self.assertEqual(fact['derived']['verified_citations'][0]['quote'],entries_for(doc)[0]['quote'])
+        self.assertIn('nur ohne mögliche Beheizung',fact['derived']['text'])
+        self.assertEqual(result['status'],'recorded')
+
+    def test_all_documents_are_read_in_one_request_without_window_limits_or_duplicate_inputs(self):
         docs=[Document('D1','A','a.pdf',schema_version=6,source_key='contract',
                        pages=tuple({'pdf_page':n,'text':f'Clause {n}'} for n in range(1,8))),
               document('contract','Another form',8,'D2')]
         calls=[]
         def extract(prompt):
-            self.assertTrue(prompt.startswith('PAGE_PROJECT_FACTS.'))
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(data)
-            self.assertEqual(set(data),{'source_pages'})
-            self.assertTrue(all(set(p)=={'pdf_page','text'} for p in data['source_pages']))
-            return {'verpflichtungen':[]}
-        result=collect_project_facts([*docs,docs[0]],SimpleNamespace(extract=extract))
-        self.assertEqual([w['primary_pages'] for w in result['windows']],[[1,2,3],[4,5],[6,7],[8]])
+            data=decode_prompt(prompt);calls.append(data)
+            self.assertEqual(set(data),{'source_pages','context_scope','documents','evidence_catalog','catalog_protocol','target_evidence_ids','evidence_protocol','reference_map','reference_protocol','provisions','provision_protocol','target_provision_ids'})
+            self.assertTrue(all(set(p)=={'source_key','document_id','pdf_page','text'} for p in data['source_pages']))
+            return index_answer(data)
+        result=collect_historical_facts([*docs,docs[0]],SimpleNamespace(extract=extract),chunk_pages=3)
+        self.assertEqual([w['primary_pages'] for w in result['windows']],[[1,2,3,4,5,6,7],[8]])
         self.assertEqual([[p['pdf_page'] for p in c['source_pages']] for c in calls],
-                         [[1,2,3],[3,4,5],[5,6,7],[8]])
+                         [[1,2,3,4,5,6,7,8]])
         self.assertEqual(len(result['source_snapshots']),2)
+        self.assertTrue(all(r['coverage']['status']=='complete' for r in result['gemini_responses']))
 
     def test_conflicting_snapshots_fail_before_any_request(self):
-        a=document('contract','Agreement A');b=document('contract','Agreement B')
         with self.assertRaisesRegex(ValueError,'Conflicting source snapshots'):
-            collect_project_facts([a,b],SimpleNamespace(extract=lambda p:self.fail('Paid request')))
+            collect_historical_facts([document('contract','A'),document('contract','B')],
+                                  SimpleNamespace(extract=lambda p:self.fail('Paid request')))
 
-    def test_offers_uncertainty_exclusions_and_amendments_are_not_reinterpreted(self):
-        doc=document('contract','Eine Anlage ist angeboten. Auswahl offen. Dämmung ausgeschlossen. Ein Nachtrag ändert die Ausführung.')
-        rows=[{**proposal(doc),'verpflichtung':text} for text in
-              ('Eine Anlage ist angeboten.','Auswahl offen.','Dämmung ausgeschlossen.','Ein Nachtrag ändert die Ausführung.')]
-        before=copy.deepcopy(rows)
-        result=collect_project_facts([doc],SimpleNamespace(extract=lambda p:{'verpflichtungen':copy.deepcopy(rows)}))
-        self.assertEqual([r['gemini'] for r in result['facts']],before)
-        self.assertEqual(rows,before)
-        self.assertEqual(result['status'],'recorded')  # Execution, not legal certainty.
-        self.assertTrue(all('status' not in f['gemini'] for f in result['facts']))
-        self.assertEqual(len(facts_view(result)['facts']),4)
+    def test_qualifications_payment_wording_and_amendments_are_never_rewritten(self):
+        doc=document('contract','Die Bürgschaft gilt für Herstellung ohne erhebliche Mängel.\n\n'
+            'Zahlungsbonus nur laut Nachtrag.\n\nZahlbar sofort ohne Abzug.\n\n'
+            'Der Nachtrag ersetzt die ursprüngliche Sicherheit durch eine Abtretung oder Bürgschaft.')
+        answer=answer_for(doc,[{'zitate':[{'evidence_id':e['evidence_id']}]} for e in entries_for(doc)])
+        result=collect_historical_facts([doc],SimpleNamespace(extract=lambda p:copy.deepcopy(answer)))
+        self.assertEqual([f['derived']['text'] for f in result['facts']], [e['quote'] for e in entries_for(doc)])
+        self.assertEqual(result['gemini_responses'][0]['gemini'],answer)
+        self.assertTrue(all(f['derived']['document_title']=='Contract' for f in result['facts']))
 
-    def test_missing_or_fabricated_evidence_stays_visible_without_becoming_verified(self):
-        doc=document('contract','Vereinbart ist eine Wärmepumpe.')
-        bad=proposal(doc,quote='Vereinbart ist eine Gasheizung.')
-        empty={**proposal(doc),'zitate':[]}
-        result=collect_project_facts([doc],SimpleNamespace(extract=lambda p:{'verpflichtungen':[bad,empty]}))
-        self.assertEqual([r['gemini'] for r in result['facts']],[bad,empty])
-        codes={f['code'] for f in result['review_findings']}
-        self.assertIn('citation_quote_not_found',codes);self.assertIn('missing_citations',codes)
-        self.assertEqual(evidence_pages(result),[])
-        self.assertEqual(len(facts_view(result)['facts']),2)
+    def test_missing_passage_unknown_id_and_conflicting_disposition_are_incomplete_without_repair(self):
+        doc=document('contract','Erste Regel.\n\nEine weitere Regel.')
+        entries=entries_for(doc);a,b=[e['evidence_id'] for e in entries]
+        cases=[({'verpflichtungen':[{'zitate':[{'evidence_id':a}]}], 'nicht_als_fakt_erfasst':[]},
+                'unaccounted_source_passage'),
+               ({'verpflichtungen':[{'zitate':[{'evidence_id':'fabricated'}]}], 'nicht_als_fakt_erfasst':[]},
+                'unknown_evidence_id'),
+               ({'verpflichtungen':[{'zitate':[{'evidence_id':a},{'evidence_id':b}]}],
+                 'nicht_als_fakt_erfasst':[{'evidence_id':a,'grund':'Header'}]},
+                'conflicting_passage_disposition')]
+        for answer,code in cases:
+            answer = labeled_answer([doc], answer)
+            with self.subTest(code=code):
+                calls=[]
+                def extract(prompt):calls.append(prompt);return copy.deepcopy(answer)
+                result=collect_historical_facts([doc],SimpleNamespace(extract=extract))
+                self.assertEqual(len(calls),1)
+                self.assertEqual(result['status'],'incomplete')
+                self.assertIn(code,{f['code'] for f in result['review_findings']})
+                self.assertEqual(result['gemini_responses'][0]['gemini'],answer)
 
-    def test_quotes_are_bound_to_the_request_document_not_another_document_on_same_page(self):
+    def test_excluded_passages_retain_original_evidence_and_a_reason(self):
+        doc=document('contract','Eine konkrete Regel.\n\nKontakt: Beispielstraße 1.')
+        answer=labeled_answer([doc], index_answer({'evidence_catalog':entries_for(doc)},lambda e:not e['quote'].startswith('Kontakt')))
+        result=collect_historical_facts([doc],SimpleNamespace(extract=lambda p:answer))
+        self.assertEqual(result['status'],'recorded')
+        excluded=result['excluded_passages'][0]
+        self.assertEqual(excluded['gemini'],answer['nicht_als_fakt_erfasst'][0])
+        self.assertEqual(excluded['derived']['citation']['quote'],'Kontakt: Beispielstraße 1.')
+        self.assertTrue(excluded['derived']['citation']['evidence_id'])
+
+    def test_invalid_exclusions_duplicate_ids_empty_clauses_and_legacy_summaries_are_rejected(self):
+        doc=document('contract','Eine Regel.');entry=entries_for(doc)[0]['evidence_id']
+        valid=proposal(doc)
+        cases=[{'verpflichtungen':[{'verpflichtung':'Rewritten',**valid}],'nicht_als_fakt_erfasst':[]},
+               {'verpflichtungen':[{'zitate':[]}],'nicht_als_fakt_erfasst':[]},
+               {'verpflichtungen':[{'zitate':[{'evidence_id':entry}]*2}],'nicht_als_fakt_erfasst':[]},
+               {'verpflichtungen':[],'nicht_als_fakt_erfasst':[{'evidence_id':entry,'grund':''}]},
+               {'verpflichtungen':[valid]}]
+        for answer in cases:
+            with self.subTest(answer=answer):
+                result=collect_historical_facts([doc],SimpleNamespace(extract=lambda p:answer))
+                self.assertEqual(result['status'],'incomplete')
+
+    def test_ids_cannot_borrow_an_unsupplied_sources_passage_on_same_page(self):
         a=document('contract','Eine Wärmepumpe ist vereinbart.')
         b=document('offer','Eine Gasheizung wird angeboten.')
-        rows=iter([{'verpflichtungen':[proposal(a)]},{'verpflichtungen':[proposal(b,quote=a.pages[0]['text'])]}])
-        result=collect_project_facts([a,b],SimpleNamespace(extract=lambda p:next(rows)))
-        self.assertEqual(evidence_pages(result),[{'source_key':'contract','document_id':'D1',
-                         'pdf_page':1,'text':a.pages[0]['text']}])
+        unknown=document('missing','Nicht gelieferte Quelle.')
+        def response(prompt):
+            answer=index_answer(decode_prompt(prompt))
+            answer['verpflichtungen'].insert(1,proposal(unknown))
+            return answer
+        result=collect_historical_facts([a,b],SimpleNamespace(extract=response))
         self.assertEqual(result['facts'][1]['derived']['verified_citations'],[])
-        self.assertEqual([r['source_key'] for r in facts_view(result)['facts']],['contract','offer'])
+        self.assertEqual([r['source_key'] for r in facts_view(result)['facts']],['contract',None,'offer'])
+        self.assertEqual({p['source_key'] for p in evidence_pages(result)}, {'contract','offer'})
 
-    def test_provider_cannot_inject_another_source_identifier_into_compact_quotes(self):
-        doc=document('contract','Eine Leistung ist zugesagt.')
-        row=proposal(doc);row['zitate'][0]['source_key']='other'
-        result=collect_project_facts([doc],SimpleNamespace(extract=lambda p:{'verpflichtungen':[row]}))
-        self.assertIn('invalid_project_fact',{f['code'] for f in result['review_findings']})
-        self.assertEqual(evidence_pages(result),[])
-        self.assertEqual(result['facts'][0]['gemini'],row)
-
-    def test_overlap_proposals_are_preserved_instead_of_silently_deduplicated(self):
+    def test_failed_full_context_retries_once_preserving_both_raw_attempts(self):
         doc=Document('D1','Contract','c.pdf',schema_version=6,source_key='contract',
-                     pages=tuple({'pdf_page':n,'text':f'Clause {n}'} for n in range(1,5)))
-        row={'verpflichtung':'Clause 3','zitate':[{'pdf_page':3,'text':'Clause 3'}]}
-        result=collect_project_facts([doc],SimpleNamespace(extract=lambda p:{'verpflichtungen':[copy.deepcopy(row)]}))
-        self.assertEqual([r['gemini'] for r in result['facts']],[row,row])
-        self.assertEqual(result['review_findings'],[])
-        self.assertNotEqual(result['facts'][0]['id'],result['facts'][1]['id'])
-
-    def test_legacy_shape_is_flagged_without_guessing_a_conversion(self):
-        old={'project_facts':[{'subject':'House','value':'Old format'}]}
-        result=collect_project_facts([document('contract','Contract')],SimpleNamespace(extract=lambda p:old))
-        self.assertEqual(result['facts'],[])
-        self.assertEqual(result['gemini_responses'][0]['gemini'],old)
-        self.assertEqual(result['review_findings'][0]['code'],'missing_or_invalid_project_facts')
-
-    def test_failed_window_retries_once_and_keeps_later_facts_and_raw_attempts(self):
-        source=Document('D1','Contract','c.pdf',schema_version=6,source_key='contract',
-                        pages=tuple({'pdf_page':n,'text':f'Vereinbarung {n}'} for n in range(1,5)))
+                     pages=tuple({'pdf_page':n,'text':f'Regel {n}'} for n in range(1,5)))
         calls=[]
         class Model:
-            last_raw_response=None
-            last_finish_reason=None
+            last_raw_response=None;last_finish_reason=None
             def extract(self,prompt):
-                calls.append(prompt)
-                data=json.loads(prompt.split('SOURCE DATA:\n')[1])
-                if [p['pdf_page'] for p in data['source_pages']]==[1,2,3]:
+                calls.append(prompt);data=decode_prompt(prompt)
+                if len(data['source_pages'])==4:
                     self.last_raw_response='{unfinished';self.last_finish_reason='MAX_TOKENS'
                     raise IncompleteResponse('unfinished_generation','MAX_TOKENS')
-                page=data['source_pages'][-1]
-                row={'verpflichtung':page['text'],'zitate':[{'pdf_page':4,'text':page['text']}]}
-                out={'verpflichtungen':[row]};self.last_raw_response=json.dumps(out);self.last_finish_reason='STOP'
-                return out
+                result=index_answer(data);self.last_raw_response=json.dumps(result);self.last_finish_reason='STOP'
+                return result
         with tempfile.TemporaryDirectory() as tmp:
             raw=Path(tmp)/'raw.json'
-            result=collect_project_facts([source],RetryingModel(RawRunRecorder(Model(),raw)))
-            self.assertEqual(result['status'],'request_failed');self.assertEqual(len(result['facts']),1)
-            self.assertEqual(calls[0],calls[1]);self.assertEqual(len(calls),3)
+            result=collect_historical_facts([doc],RetryingModel(RawRunRecorder(Model(),raw)),chunk_pages=3)
+            self.assertEqual(result['status'],'request_failed')
+            self.assertEqual(calls[0],calls[1]);self.assertEqual(len(calls),2)
             self.assertEqual(json.loads(raw.read_text())[:2],['{unfinished','{unfinished'])
-            self.assertEqual(result['gemini_responses'][0]['status'],'request_failed')
             self.assertEqual(len(result['review_findings'][0]['attempts']),2)
 
-    def test_full_collection_reaches_applicability_with_conflicting_and_unresolved_source_text(self):
-        docs=[document('contract','Vereinbart ist Holz.'),document('amendment','Vereinbart ist Stein.'),
-              document('offer','Eine Solaranlage wird angeboten.'),document('selection','Die Farbe bleibt ungeklärt.')]
-        answers=iter([{'verpflichtungen':[proposal(d)]} for d in docs])
-        facts=collect_project_facts(docs,SimpleNamespace(extract=lambda p:next(answers)))
-        source=document('blb','Der Kunde bestätigt die Planung.');calls=[]
+    def test_incomplete_index_stops_before_any_downstream_request(self):
+        doc=document('contract','Eine Regel.');calls=[];saved=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            calls.append(prompt);return {'verpflichtungen':[], 'nicht_als_fakt_erfasst':[]}
+        with self.assertRaisesRegex(ValueError,'incomplete'):
+            extract_project_units([doc],SimpleNamespace(extract=extract),
+                                  on_pass=lambda name,result:saved.append((name,result)))
+        self.assertEqual(len(calls),1)
+        self.assertEqual(saved[0][0],'PAGE_PROJECT_FACTS')
+        self.assertEqual(saved[0][1]['status'],'incomplete')
+
+    def test_full_collection_reaches_applicability_as_original_clauses(self):
+        docs=[document('contract','Vereinbart ist Holz.'),document('amendment','Vereinbart ist Stein.'),
+              document('offer','Eine Solaranlage wird angeboten.'),document('selection','Die Farbe bleibt offen.')]
+        facts=collect_historical_facts(docs,SimpleNamespace(extract=lambda p:index_answer(decode_prompt(p))))
+        local=document('blb','Der Kunde bestätigt die Planung.');calls=[]
+        def extract(prompt):
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':return {'working_units':[{'action':'Planung bestätigen',
-                'citations':[{'pdf_page':1,'quote':source.pages[0]['text']}]}],'carry_forward':''}
+                'citations':[{'pdf_page':1,'quote':local.pages[0]['text']}]}],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
             if kind=='PAGE_APPLICABILITY':calls.append(data)
             return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
-        result=extract_page_units([source],SimpleNamespace(extract=extract),project_facts=facts)
-        received=calls[0]['project_facts']
-        self.assertEqual([r['verpflichtung'] for r in received['facts']],[d.pages[0]['text'] for d in docs])
-        self.assertTrue(all(set(r)=={'verpflichtung','text'} for r in received['facts']))
-        self.assertTrue(all(r['text'] for r in received['facts']))
-        self.assertNotIn('project_context',calls[0]);self.assertEqual(result['project_facts'],facts)
-
-    def test_production_entrypoint_collects_facts_before_task_passes_and_retains_raw(self):
-        source=document('blb','Der Kunde bestätigt die Planung.')
-        contract=document('contract','Vereinbart ist eine Wärmepumpe.');calls=[];answers=[]
-        def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(kind)
-            if kind=='PAGE_PROJECT_FACTS':
-                out={'verpflichtungen':[] if data['source_pages'][0]['text']==source.pages[0]['text'] else [proposal(contract)]}
-            elif kind=='PAGE_EXTRACTION':out={'working_units':[{'action':'Planung bestätigen','citations':[
-                {'pdf_page':1,'quote':source.pages[0]['text']}]}],'carry_forward':''}
-            elif kind=='PAGE_OFFERS':out={'offers':[]}
-            else:out={'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
-            answers.append(copy.deepcopy(out));return out
-        result=extract_project_units([source],SimpleNamespace(extract=extract),context_documents=[contract])
-        self.assertEqual(calls[:2],['PAGE_PROJECT_FACTS','PAGE_PROJECT_FACTS'])
-        self.assertEqual(calls[-1],'PAGE_APPLICABILITY')
-        self.assertEqual([r['gemini'] for r in result['gemini_responses']],answers)
-        self.assertEqual(len(result['project_facts']['facts']),1)
-        self.assertEqual(len(result['working_units']),1)
+        result=extract_page_units([local],SimpleNamespace(extract=extract),project_facts=facts)
+        received=calls[0]['project_facts']['facts']
+        self.assertEqual([r['text'] for r in received],[d.pages[0]['text'] for d in docs])
+        self.assertTrue(all('verpflichtung' not in r for r in received))
+        self.assertEqual([(r['source_key'],r['document_id']) for r in received],[(d.source_key,d.id) for d in docs])
+        self.assertEqual(result['project_facts'],facts)

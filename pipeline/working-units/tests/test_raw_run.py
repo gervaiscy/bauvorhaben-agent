@@ -68,7 +68,7 @@ class RawRunTests(unittest.TestCase):
             output=Path(directory)/'units.json';raw=Path(directory)/'units.gemini-raw.json'
             raw.write_text('[{"original":"keep"}]');before=raw.read_bytes()
             argv=['units','--pages','pages.json','--documents','documents.json','--project','p','--output',str(output)]
-            with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel') as model, self.assertRaises(SystemExit):main()
+            with patch.object(sys,'argv',[*argv,'--max-new-calls','100']),patch('bauvo_working_units.cli.GeminiModel') as model, self.assertRaises(SystemExit):main()
             model.assert_not_called();self.assertEqual(raw.read_bytes(),before)
 
     def test_cli_writes_separate_raw_and_processed_files(self):
@@ -83,7 +83,7 @@ class RawRunTests(unittest.TestCase):
                 return {"schema_version": 9, "working_units": [], "offers": [],
                         "gemini_responses": []}
 
-            with (patch.object(sys, "argv", argv),
+            with (patch.object(sys, "argv", [*argv, "--max-new-calls", "100"]),
                   patch("bauvo_working_units.cli.load_documents", return_value=[]),
                   patch("bauvo_working_units.cli.GeminiModel", FakeGemini),
                   patch("bauvo_working_units.cli.extract_project_units", fake_pipeline)):
@@ -101,7 +101,7 @@ class RawRunTests(unittest.TestCase):
             argv=['units','--pages','pages.json','--documents','documents.json','--project','p','--output',str(output)]
             partial={'schema_version':12,'status':'request_failed','working_units':[], 'offers':[],
                      'gemini_responses':[], 'review_findings':[{'code':'model_request_failed'}]}
-            with (patch.object(sys,'argv',argv), patch('bauvo_working_units.cli.load_documents',return_value=[]),
+            with (patch.object(sys,'argv',[*argv,'--max-new-calls','100']), patch('bauvo_working_units.cli.load_documents',return_value=[]),
                   patch('bauvo_working_units.cli.GeminiModel',FakeGemini),
                   patch('bauvo_working_units.cli.extract_project_units',return_value=partial), self.assertRaises(SystemExit)):
                 main()

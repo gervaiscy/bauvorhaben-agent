@@ -70,7 +70,7 @@ class TimingContractTests(unittest.TestCase):
             answers.append(copy.deepcopy(out));return out
         out=extract_page_units([doc],SimpleNamespace(extract=extract))
         self.assertEqual(calls,['PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'])
-        self.assertEqual(out['schema_version'],17);self.assertEqual(out['status'],'needs_review')
+        self.assertEqual(out['schema_version'],18);self.assertEqual(out['status'],'needs_review')
         self.assertTrue(any(f['code']=='inconsistent_timing_rule' for f in out['review_findings']))
         self.assertEqual([r['gemini'] for r in out['gemini_responses']],answers)
         self.assertEqual(out['working_units'][0]['reviews'][1]['gemini'],answers[3]['assessments'][0])
@@ -85,7 +85,7 @@ class TimingContractTests(unittest.TestCase):
         self.assertEqual(set(schema['properties']['assessments']['items']['properties']),
                          {'unit_id','answer','citations'})
         self.assertEqual(calls[0]['config']['thinking_config'],generation_for('PAGE_TIMING')['thinking_config'])
-        self.assertEqual(set(RESPONSE_SCHEMAS),{'PAGE_PROJECT_FACTS','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'})
+        self.assertEqual(set(RESPONSE_SCHEMAS),{'PAGE_PROJECT_FACTS','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY','PAGE_CITATION_REPAIR'})
 
     def test_unanchored_relative_period_is_flagged_if_claimed_explicit(self):
         result=assessment([rule(offset='six weeks',anchor_events=[])])

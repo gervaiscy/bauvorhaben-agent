@@ -37,7 +37,7 @@ class PageSourceTests(unittest.TestCase):
                     payload=json.loads(prompt.split('\n')[-1]);self.assertLessEqual(len(payload['source_pages']),3)
                     self.assertEqual([p['text'] for p in payload['source_pages']],[fixture()['pages'][n-1]['text'] for n in c.pages])
                     self.assertNotIn('content_blocks',payload)
-            with self.assertRaises(ValueError):make_page_chunks(docs[0],chunk_pages=6)
+            with self.assertRaises(ValueError):make_page_chunks(docs[0],chunk_pages=11)
     def test_distinct_documents_are_separated_without_dropping_footer_or_logo_text(self):
         with tempfile.TemporaryDirectory() as tmp:
             data=fixture(4);docs=self.write(Path(tmp),data,boundaries(data))

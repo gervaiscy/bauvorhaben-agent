@@ -1,0 +1,119 @@
+{
+  "cases": [
+    {
+      "id": "purpose-is-not-an-explicit-consequence",
+      "sources": [
+        "To avoid delaying design, the parties agree that preliminary sketches may be prepared."
+      ],
+      "task": "Prepare preliminary sketches",
+      "expected": {
+        "status": "NOT_STATED",
+        "claims": [],
+        "reason": "The source states a purpose, not the asserted conditional consequence; no supported causal chain is supplied."
+      }
+    },
+    {
+      "id": "possible-effect-is-not-inevitable",
+      "sources": [
+        "Late delivery of the required survey may delay the design meeting."
+      ],
+      "task": "Deliver the survey",
+      "expected": {
+        "status": "EXPLICIT",
+        "claims": [
+          "Late delivery of the required survey may delay the design meeting."
+        ],
+        "reason": "The proposed effect strengthens may to will."
+      }
+    },
+    {
+      "id": "alternative-route-prevents-unconditional-blockade",
+      "sources": [
+        "Release requires either a bank confirmation or a guarantee. Without either, release cannot occur."
+      ],
+      "task": "Provide a bank confirmation",
+      "expected": {
+        "status": "DERIVED",
+        "claims": [
+          "Without a bank confirmation release cannot occur if no guarantee has been supplied either."
+        ],
+        "reason": "A guarantee is an alternative route. The blockade requires both routes to be absent."
+      }
+    },
+    {
+      "id": "amendment-removes-penalty",
+      "sources": [
+        "A late request incurs a fee.",
+        "Amendment: the fee for a late request is waived."
+      ],
+      "task": "Submit the request on time",
+      "expected": {
+        "status": "NOT_STATED",
+        "claims": [],
+        "reason": "The later amendment removes the stated fee."
+      }
+    },
+    {
+      "id": "causal-chain-needs-every-premise",
+      "sources": [
+        "The inspection requires a completed application."
+      ],
+      "task": "Complete the application",
+      "expected": {
+        "status": "NOT_STATED",
+        "claims": [],
+        "reason": "No source establishes that project start requires this inspection."
+      }
+    },
+    {
+      "id": "not-stated-misses-a-documented-effect",
+      "sources": [
+        "If the required confirmation is not received within ten days, the reserved appointment is cancelled."
+      ],
+      "task": "Provide the confirmation within ten days",
+      "expected": {
+        "status": "EXPLICIT",
+        "claims": [
+          "If the required confirmation is not received within ten days, the reserved appointment is cancelled."
+        ],
+        "reason": "NOT_STATED omits an expressly documented cancellation with its trigger and time limit."
+      }
+    },
+    {
+      "id": "included-price-is-not-a-failure-consequence",
+      "sources": [
+        "Supplying and removing the site equipment is included in the agreed fixed price."
+      ],
+      "task": "Supply and remove the site equipment",
+      "expected": {
+        "status": "NOT_STATED",
+        "claims": [],
+        "reason": "An included price does not say what happens when the equipment is not supplied or removed."
+      }
+    },
+    {
+      "id": "responsibility-is-not-a-failure-consequence",
+      "sources": [
+        "The client is responsible for fencing the site."
+      ],
+      "task": "Fence the site",
+      "expected": {
+        "status": "NOT_STATED",
+        "claims": [],
+        "reason": "Responsibility assigns the task; it does not state a consequence of failing to fence the site."
+      }
+    },
+    {
+      "id": "enabling-measure-is-not-proven-necessary",
+      "sources": [
+        "The conduit enables later cable installation without damaging finished rooms."
+      ],
+      "task": "Install the conduit",
+      "expected": {
+        "status": "NOT_STATED",
+        "claims": [],
+        "reason": "A sufficient damage-free route does not establish that alternative damage-free routes are unavailable."
+      }
+    }
+  ]
+}

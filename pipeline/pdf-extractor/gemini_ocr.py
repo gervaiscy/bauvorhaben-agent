@@ -31,6 +31,10 @@ class GeminiImageOCR:
         self._client = client
 
     def process(self, image):
+        import os
+        if os.environ.get('BAUVO_PROVIDER_CALL_BUDGET_FILE'):
+            from bauvo_working_units.call_budget_ledger import consume_from_environment
+            consume_from_environment('PDF_OCR')
         from google import genai
         from google.genai import types
         if self._client is None:

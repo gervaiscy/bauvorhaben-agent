@@ -26,7 +26,12 @@ def run(ctx, phase):
                 ctx.findings.append({'response_id': rid, 'code': 'missing_or_invalid_' + key})
                 continue
             for position, item in enumerate(rows):
+                resolved = ctx.resolved_response(rid)[key][position]
+                evidence = ({'citations': copy.deepcopy(resolved['citations'])}
+                            if isinstance(item, dict) and isinstance(resolved, dict)
+                            and item.get('citations') != resolved.get('citations') else {})
                 target.append({'id': f'{rid}:{kind}:{position:03d}', 'gemini': copy.deepcopy(item),
-                    'derived': {**ctx.metadata(doc, chunk), 'response_id': rid, 'response_position': position}, 'reviews': []})
+                    'derived': {**ctx.metadata(doc, chunk), **evidence,
+                                'response_id': rid, 'response_position': position}, 'reviews': []})
                 if not phase.valid_proposal(item):
                     ctx.findings.append({'response_id': rid, 'row': position, 'code': 'invalid_' + kind})

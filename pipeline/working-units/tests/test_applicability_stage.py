@@ -1,3 +1,5 @@
+from clause_fixtures import decode_prompt
+from clause_fixtures import index_answer
 import copy
 import io
 import json
@@ -21,10 +23,9 @@ class ApplicabilityStageTests(unittest.TestCase):
                    source_key='source',source_snapshot='snapshot',
                    pages=({'pdf_page':1,'text':self.text},))]
         self.citation={'pdf_page':1,'quote':self.text}
-        facts=collect_project_facts(self.docs,SimpleNamespace(extract=lambda prompt:{
-            'verpflichtungen':[{'verpflichtung':self.text,'zitate':[{'pdf_page':1,'text':self.text}]}]}))
+        facts=collect_project_facts(self.docs,SimpleNamespace(extract=lambda prompt:index_answer(decode_prompt(prompt))))
         def earlier(prompt):
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data=decode_prompt(prompt)
             if prompt.startswith('PAGE_EXTRACTION.'):
                 return {'working_units':[{'action':'Bauwasser bereitstellen','actor':'Auftraggeber',
                         'performed_by':None,'citations':[self.citation]}],'carry_forward':''}
@@ -38,7 +39,7 @@ class ApplicabilityStageTests(unittest.TestCase):
         original=copy.deepcopy(self.baseline);calls=[]
         def model(prompt):
             self.assertTrue(prompt.startswith('PAGE_APPLICABILITY.'))
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(data)
+            data=decode_prompt(prompt);calls.append(data)
             self.assertEqual(len(data['project_facts']['facts']),1)
             return {'assessments':[{'unit_id':data['working_units'][0]['id'],
                     'applicability':'APPLIES','reason':'Vertraglich vereinbart',
@@ -73,5 +74,5 @@ class ApplicabilityStageTests(unittest.TestCase):
             output=Path(tmp)/'working-units.json';output.write_text('original')
             argv=['applicability_stage','--working-units','unused','--pages','unused',
                   '--documents','unused','--project','unused','--output',str(output)]
-            with patch('sys.argv',argv),patch('sys.stderr',new=io.StringIO()),self.assertRaises(SystemExit):main()
+            with patch('sys.argv',[*argv,'--max-new-calls','100']),patch('sys.stderr',new=io.StringIO()),self.assertRaises(SystemExit):main()
             self.assertEqual(output.read_text(),'original')

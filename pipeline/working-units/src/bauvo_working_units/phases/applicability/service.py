@@ -34,12 +34,13 @@ def citation_sources(ctx, document, local_pages):
 def model_payload(payload):
     # Keep application fingerprints and collection state in artifacts, not model input.
     payload = {key: copy.deepcopy(payload[key]) for key in
-               ('source_key', 'document', 'source_pages', 'working_units', 'project_facts')
+               ('source_key', 'document', 'source_pages', 'working_units', 'project_facts', 'evidence_catalog', 'catalog_protocol')
                if key in payload}
     payload['source_pages'] = [{key: page[key] for key in ('pdf_page', 'text')}
                                for page in payload['source_pages']]
     payload['project_facts'] = {key: value for key, value in payload.get('project_facts', {}).items()
-                                if key in ('facts', 'review_findings')}
+                                if key in ('facts', 'excluded_passages', 'review_findings', 'catalog_protocol',
+                                           'evidence_protocol', 'source_documents', 'extraction_scope', 'processing')}
     return payload
 
 

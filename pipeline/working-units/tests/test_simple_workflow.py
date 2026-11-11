@@ -1,3 +1,4 @@
+from clause_fixtures import index_answer, answer_for
 import copy
 import json
 from pathlib import Path
@@ -21,7 +22,7 @@ class SimpleWorkflowTests(unittest.TestCase):
                 p = payload(prompt);kind = prompt.split('.', 1)[0]
                 calls.append((kind, copy.deepcopy(p)))
                 if kind == 'PAGE_PROJECT_FACTS':
-                    response = {'verpflichtungen': []}
+                    response = index_answer(p)
                 elif kind == 'PAGE_EXTRACTION':
                     rows = [{'name': 'Coordinate work', 'dedupe_key': str(i), 'action': f'Owner task {i}',
                              'actor': 'Owner', 'performed_by': 'Installer', 'modality': 'REQUIRED',
@@ -46,17 +47,17 @@ class SimpleWorkflowTests(unittest.TestCase):
                     response = {'assessments': rows}
                 answers.append(copy.deepcopy(response))
                 return response
-            result = extract_project_units(load(root), SimpleNamespace(extract=extract))
+            result = extract_project_units(load(root), SimpleNamespace(extract=extract), chunk_pages=3)
             self.assertEqual(original, {str(p): p.read_bytes() for p in root.glob('*.json')})
         return result, calls, answers
 
     def test_only_five_passes_and_document_local_overlap(self):
         result, calls, _ = self.run_case()
-        self.assertEqual(set(k for k, _ in calls), set(RESPONSE_SCHEMAS))
-        self.assertEqual(len(RESPONSE_SCHEMAS), 6)
+        self.assertEqual(set(k for k, _ in calls), set(RESPONSE_SCHEMAS)-{'PAGE_CITATION_REPAIR'})
+        self.assertEqual(len(RESPONSE_SCHEMAS), 7)
         self.assertEqual([w['pages'] for w in result['windows']], [[1,2,3], [3,4,5], [5,6], [7]])
-        for _, p in calls:
-            self.assertLessEqual(len(p['source_pages']), 5)
+        for kind, p in calls:
+            if kind != 'PAGE_PROJECT_FACTS':self.assertLessEqual(len(p['source_pages']), 5)
             if p.get('document', {}).get('id') == 'D2':self.assertEqual([x['pdf_page'] for x in p['source_pages']], [7])
         first=[p for k,p in calls if k=='PAGE_EXTRACTION' and p['document']['id']=='D2'][0]
         self.assertEqual(first['prior_context'], '');self.assertEqual(first['known_items'], [])
@@ -95,12 +96,12 @@ class SimpleWorkflowTests(unittest.TestCase):
                 result,calls,_=self.run_case(response_mode=mode)
                 self.assertEqual(result['status'],'needs_review')
                 self.assertTrue(any(f['code']==code for f in result['review_findings']))
-                self.assertEqual(len(calls),24)  # Four fact windows plus four windows with five task passes.
+                self.assertEqual(len(calls),21)  # One facts request plus four windows with five task passes.
         self.assertEqual(assessment_findings('bad JSON',['U1']),[{'code':'missing_or_invalid_assessments'}])
         self.assertTrue(any(f['code']=='duplicate_review_target' for f in assessment_findings({'assessments':[{'unit_id':'U1'},{'unit_id':'U1'}]},['U1'])))
 
     def test_model_schema_keeps_applicability_simple_and_timing_separate(self):
         app=RESPONSE_SCHEMAS['PAGE_APPLICABILITY']['properties']['assessments']['items']['properties']
-        self.assertEqual(set(app),{'unit_id','applicability','reason'})
+        self.assertEqual(set(app),{'unit_id','applicability','reason','citations'})
         timing=RESPONSE_SCHEMAS['PAGE_TIMING']['properties']['assessments']['items']['properties']
         self.assertEqual(set(timing),{'unit_id','answer','citations'})

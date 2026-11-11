@@ -65,10 +65,10 @@ def load_documents(pages_path: str | Path, documents_path: str | Path | None = N
 
 
 def make_page_chunks(document: Document, whole_document_max_chars: int = 80000,
-                     chunk_pages: int = 3, overlap_pages: int = 1) -> list[PageChunk]:
-    """At most five physical pages TOTAL, including overlap; no text truncation."""
-    if whole_document_max_chars<1 or not 1<=chunk_pages<=5 or not 0<=overlap_pages<chunk_pages:
-        raise ValueError('Require 1–5 total pages including overlap')
+                     chunk_pages: int = 10, overlap_pages: int = 1) -> list[PageChunk]:
+    """At most ten physical pages TOTAL, including overlap; no text truncation."""
+    if whole_document_max_chars<1 or not 1<=chunk_pages<=10 or not 0<=overlap_pages<chunk_pages:
+        raise ValueError('Require 1–10 total pages including overlap')
     pages=[p['pdf_page'] for p in document.pages] if document.pages else list(dict.fromkeys(line.page for line in document.lines));chunks=[];start=0
     while start<len(pages):
         context=pages[max(0,start-overlap_pages):start];primary=[];size=sum(len(p['text']) for p in document.pages if p['pdf_page'] in context) if document.schema_version==6 else 0

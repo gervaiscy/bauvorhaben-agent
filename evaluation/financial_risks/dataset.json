@@ -1,0 +1,630 @@
+{
+  "version": "financial-risk-evaluation-v1",
+  "source_policy": "New synthetic German clauses, no private project evidence. Development diagnostic set informed by observed failure classes; not held-out or representative validation.",
+  "review_status": "DRAFT_UNREVIEWED",
+  "reference_author": "Codex",
+  "cases": [
+    {
+      "id": "excluded-finishing",
+      "kind": "clear",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Der Pauschalpreis umfasst das Haus ohne Maler- und Bodenbelagsarbeiten."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Projektangebot",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "source_key": "S2",
+          "pages": [
+            {
+              "id": "S2:page:1",
+              "pdf_page": 1,
+              "text": "Spachteln, Tapezieren, Anstriche und Bodenbeläge werden nur bei gesonderter Vereinbarung ausgeführt."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D2",
+              "document_title": "Leistungsbeschreibung",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Separate Finanzierung der ausgeschlossenen Innenausbauarbeiten.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Keine Behauptung, dass Eigenleistung gewählt oder eine gesonderte Vereinbarung ausgeschlossen ist."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Kosten bereits entstanden oder ungeplant; Eigenleistung zwingend gewählt."
+        ]
+      }
+    },
+    {
+      "id": "conditional-credit",
+      "kind": "conditions",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Eine Gutschrift von 3.200 EUR wird gewährt, wenn alle Rechnungen innerhalb von 18 Tagen nach Rechnungsstellung bezahlt werden. Auszahlung nach Schlusszahlung und Rückgabe der Bürgschaft. Eine vorherige Verrechnung ist ausgeschlossen."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Zusatzvereinbarung",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Möglicher Verlust der bedingten Zahlungsgutschrift.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Alle Rechnungen; Zahlungseingang innerhalb 18 Tagen nach Rechnungsstellung."
+              },
+              {
+                "id": "K2",
+                "description": "Auszahlung nach Schlusszahlung und Bürgschaftsrückgabe; Rückgabe ist keine ausdrücklich vereinbarte Verfallsbedingung."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Fehlende Bürgschaftsrückgabe führt automatisch zum endgültigen Verlust."
+        ]
+      }
+    },
+    {
+      "id": "amended-security",
+      "kind": "exception",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Vor Leistungsbeginn ist eine Zahlungsbürgschaft über 15 % der Vertragssumme vorzulegen."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Grundvertrag",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "source_key": "S2",
+          "pages": [
+            {
+              "id": "S2:page:1",
+              "pdf_page": 1,
+              "text": "Abweichend vom Grundvertrag entfällt die Bürgschaft vor Leistungsbeginn. Sechs Wochen vor Baubeginn sind die Mittel abzutreten; alternativ darf eine Bürgschaft gestellt werden. Für die alternativ gewählte Bürgschaft berechnet die Bank laut beigefügter Kondition jährlich 0,8 %."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D2",
+              "document_title": "Nachtrag",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Bürgschaftskosten nur bei Wahl dieser Alternative.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Nachtrag ersetzt frühe Pflicht."
+              },
+              {
+                "id": "K2",
+                "description": "Bürgschaft bleibt Alternative zur Abtretung; Wahl unbekannt."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Frühe Bürgschaft weiterhin zwingend; Abtretung hat belegte Gebühren."
+        ]
+      }
+    },
+    {
+      "id": "included-pv",
+      "kind": "no-risk",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Standardmäßig ist nur ein Leerrohr für PV enthalten; Anlage, Anschluss, Zähler und Anträge sind nicht enthalten."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Allgemeine BLB",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "source_key": "S2",
+          "pages": [
+            {
+              "id": "S2:page:1",
+              "pdf_page": 1,
+              "text": "Abweichend von der allgemeinen BLB enthält das vereinbarte Paket die PV-Anlage samt Verkabelung, Anschluss, Zählereinrichtung und erforderlichen Anträgen ohne gesonderte Vergütung."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D2",
+              "document_title": "Projektpaket",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [],
+        "unsupported_claims": [
+          "Zusätzliche Kosten für PV-Anlage, Anschluss, Zähler oder Anträge."
+        ]
+      }
+    },
+    {
+      "id": "ambiguous-pv",
+      "kind": "clarification",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Im Standardpreis ist nur PV-Vorbereitung enthalten. Anschluss, Zähler und Anträge sind gesondert zu vergüten."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Allgemeine BLB",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "source_key": "S2",
+          "pages": [
+            {
+              "id": "S2:page:1",
+              "pdf_page": 1,
+              "text": "Vereinbart ist das Energiepaket inklusive PV laut separater Paketbeschreibung. Diese Paketbeschreibung liegt hier nicht vor."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D2",
+              "document_title": "Projektangebot",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Mögliche Anschlusskosten, deren Deckung durch das PV-Paket zu klären ist.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Paket enthält PV."
+              },
+              {
+                "id": "K2",
+                "description": "Anschluss/Zähler/Anträge bleiben ungeklärt; weder Inklusivleistung noch Mehrkosten sicher."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Anlage fehlt sicher; Anschlussleistungen sicher separat oder sicher enthalten."
+        ]
+      }
+    },
+    {
+      "id": "utility-alternative",
+      "kind": "exception",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Verbrauch von Baustrom, Bauwasser und Beheizung bis zur Abnahme ist vom Pauschalpreis ausgeschlossen."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Grundvertrag",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "source_key": "S2",
+          "pages": [
+            {
+              "id": "S2:page:1",
+              "pdf_page": 1,
+              "text": "Alternativ übernimmt das Unternehmen diese Verbrauchskosten gegen 1,5 % des Pauschalpreises. Annahme schriftlich bis zur Fertigstellung der Genehmigungsplanung. Ob angenommen wurde, ist nicht dokumentiert."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D2",
+              "document_title": "BLB-Angebot",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Zusätzliche Versorgungskosten entweder tatsächlicher Verbrauch oder vereinbartes Pauschalpaket.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Alternative 1,5 % gegen Verbrauchskosten."
+              },
+              {
+                "id": "K2",
+                "description": "Schriftliche Annahme bis Fertigstellung Genehmigungsplanung; Auswahl unbekannt."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Eigentümer trägt in jedem Fall sämtliche tatsächlichen Verbräuche zusätzlich zum Paket."
+        ]
+      }
+    },
+    {
+      "id": "connection-delay",
+      "kind": "derived",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Vor Beginn der Fliesenarbeiten müssen die vom Bauherrn zu organisierenden Hausanschlüsse vorhanden sein. Angaben zur tatsächlichen Herstellung, Wohnsituation und Finanzierung fehlen."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Bauablauf",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Fehlende Anschlüsse können Fliesenarbeiten und Fertigstellung verzögern; zusätzliche Wohn-/Finanzierungskosten nur unter passenden persönlichen Bedingungen.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Tatsächlich fehlende Anschlüsse unbekannt."
+              },
+              {
+                "id": "K2",
+                "description": "Miete, Kreditbedingungen und daraus folgende Kosten unbekannt; nur bedingte Folge."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Bauherr wohnt sicher zur Miete; Anschlüsse sicher unerledigt; bestimmte Zinsen fallen sicher an."
+        ]
+      }
+    },
+    {
+      "id": "administrative-deadline",
+      "kind": "no-risk",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Der Bauherr reicht eine Bauanzeige spätestens zehn Tage vor Baubeginn ein. Dieser Auszug nennt weder Gebühren noch Sanktionen oder Folgen einer Verspätung."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Mitwirkung",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [],
+        "unsupported_claims": [
+          "Erfundene Gebühr, Bußgeld, Schadensersatz oder automatische Bauverzögerung."
+        ]
+      }
+    },
+    {
+      "id": "consent-only",
+      "kind": "no-risk",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Die freiwillige Einwilligung zur Verarbeitung der Kontaktdaten kann jederzeit widerrufen werden. Weitere Folgen sind hier nicht geregelt."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Einwilligung",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [],
+        "unsupported_claims": [
+          "Widerruf blockiert Planung und verursacht Baubeginnverzug oder Preisanpassung."
+        ]
+      }
+    },
+    {
+      "id": "dimension-ambiguity",
+      "kind": "clarification",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Zimmer C: 11,08 m². Die Zeichnung enthält keine Aussage über Mehrpreise."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Kundenzeichnung",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "source_key": "S2",
+          "pages": [
+            {
+              "id": "S2:page:1",
+              "pdf_page": 1,
+              "text": "Ein zusätzliches Zimmer bis ca. 11 m² ist mit Tür, Elektro und Heizung enthalten. Alle Maße sind Circa-Angaben. Fenster des Hauses verbleiben im vereinbarten Standard."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D2",
+              "document_title": "Projektangebot",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [],
+        "unsupported_claims": [
+          "Zusätzliche 0,08 m² lösen einen vereinbarten Mehrpreis aus; Fenster fehlt; notwendiger Umbau."
+        ]
+      }
+    },
+    {
+      "id": "weather-extension",
+      "kind": "conditions",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Fertigstellung 42 Wochen ab Baubeginn. Verlängerung für Nächte unter +4 °C nur solange Rohbau oder Dacharbeiten noch nicht abgeschlossen sind; nach Erwärmung zwei Tage Wiederanlauf. Maximale Verlängerung zehn Wochen. Wohn- und Kreditverhältnisse unbekannt."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Fristen",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Zulässige wetterbedingte Verlängerung kann unter passenden persönlichen Bedingungen zusätzliche Wohn- oder Finanzierungskosten verursachen.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Nur solange Rohbau oder Dacharbeiten nicht abgeschlossen."
+              },
+              {
+                "id": "K2",
+                "description": "Zwei Tage Wiederanlauf und höchstens zehn Wochen."
+              },
+              {
+                "id": "K3",
+                "description": "Persönliche Miet-/Finanzierungsvoraussetzungen unbekannt."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Jede kalte Nacht verlängert unabhängig vom Bauzustand; bestimmter Schaden eingetreten."
+        ]
+      }
+    },
+    {
+      "id": "landscaping-plinth",
+      "kind": "clear",
+      "split": "diagnostic",
+      "sources": [
+        {
+          "source_key": "S1",
+          "pages": [
+            {
+              "id": "S1:page:1",
+              "pdf_page": 1,
+              "text": "Ein Spritzwassersockel von mindestens 25 cm ist freizuhalten. Bei Überbauung oder Anschüttung durch die Terrasse sind gesondert zu vergütende zusätzliche Abdichtungsmaßnahmen erforderlich. Die Terrassengestaltung ist noch nicht festgelegt."
+            }
+          ],
+          "documents": [
+            {
+              "document_id": "D1",
+              "document_title": "Außenanlagen",
+              "pdf_pages": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "exposures": [
+          {
+            "id": "E1",
+            "description": "Zusätzliche Abdichtungskosten bei Überbauung oder Anschüttung des Sockels.",
+            "critical": true,
+            "conditions": [
+              {
+                "id": "K1",
+                "description": "Auslöser Überbauung/Anschüttung; Terrasse noch nicht so gewählt."
+              }
+            ]
+          }
+        ],
+        "unsupported_claims": [
+          "Zusatzabdichtung ist bei jeder Terrasse zwingend."
+        ]
+      }
+    }
+  ]
+}

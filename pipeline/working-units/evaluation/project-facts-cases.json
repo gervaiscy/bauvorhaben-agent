@@ -7,7 +7,8 @@
         "Retain the agreed price and the conditional price guarantee, not just the amount.",
         "Retain eleven months from contract conclusion as the construction-start condition.",
         "Retain the seven-week scheduling period as included within eleven months, not additional.",
-        "Retain the post-expiry index adjustment and its written-request condition."
+        "Retain the post-expiry index adjustment and its written-request condition.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
       ]
     },
     {
@@ -16,7 +17,8 @@
       "expectations": [
         "Retain all five offered positions, including wall layers and room/fixture lists.",
         "Retain the additional sliding door and standard windows and entrance door.",
-        "Preserve that the listed specifications are offered, without asserting accepted contractor obligations."
+        "Preserve that the listed specifications are offered, without asserting accepted contractor obligations.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
       ]
     },
     {
@@ -25,7 +27,8 @@
       "expectations": [
         "Retain the contractor commitment to supply and install a heat pump, with its inclusion in the fixed price.",
         "Do not turn owner permissions for advertising, visits or data processing into contractor performance owed to the owner.",
-        "Retain the owner permissions as agreements, preserving time and appointment restrictions; do not turn them into contractor performance owed to the owner."
+        "Retain the owner permissions as agreements, preserving time and appointment restrictions; do not turn them into contractor performance owed to the owner.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
       ]
     },
     {
@@ -35,7 +38,8 @@
         "Retain the agreed credit amount with the punctual-payment condition from the following sentence.",
         "Retain the three-week payout period after both final payment receipt and guarantee return.",
         "Retain the prohibition on early offsetting.",
-        "Citations must support the conditions as well as the credit amount."
+        "Citations must support the conditions as well as the credit amount.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
       ]
     },
     {
@@ -44,7 +48,8 @@
       "expectations": [
         "Describe all three service positions using the supplied signed-contract-package context.",
         "Do not replace the service extraction with a conclusion that no obligations exist merely because the attachment is titled Angebot.",
-        "Preserve source-stated dimensions, room list and quotations; do not invent further agreement or legal-enforceability judgments."
+        "Preserve source-stated dimensions, room list and quotations; do not invent further agreement or legal-enforceability judgments.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
       ]
     },
     {
@@ -56,8 +61,646 @@
         "Retain the general nine-day payment deadline after receipt of the relevant completion notice.",
         "Retain the conditional credit and its separate thirteen-day receipt requirement after invoice issuance; do not replace the general payment deadline.",
         "Retain the ten-month construction-start condition for the price guarantee.",
-        "Identify each party within the statement and support every agreement with literal citations."
+        "Select original passages identifying each party; group every agreement with its supporting source context.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
       ]
+    },
+    {
+      "id": "payment-milestones-and-retention-basis",
+      "text": "Unterzeichneter Bauvertrag – Zahlungsplan\nDer Pauschalpreis beträgt 480.000 Euro.\nRate | Anteil | Auslöser\n1 | 8 % | Übergabe der Genehmigungsplanung\n2 | 22 % | Fertigstellung der Bodenplatte\n3 | 35 % | Fertigstellung des Rohbaus samt Dachstuhl\n4 | 25 % | Einbau der Fenster und Dachdeckung\n5 | 10 % | Abnahme\nVon der ersten Rate darf der Bauherr 4 % des gesamten Pauschalpreises als Sicherheit einbehalten. Der Einbehalt endet mit der Abnahme oder mit Übergabe einer gleich hohen unbefristeten Bankbürgschaft.",
+      "expectations": [
+        "Retain all five payment percentages paired with their individual milestones; a generic statement about instalments is insufficient.",
+        "Group the retention passage with its four-percent-of-total-price calculation base and first-instalment scope; preserve the original wording.",
+        "Retain both alternative release triggers: acceptance or delivery of an equal-value indefinite bank guarantee.",
+        "Select evidence IDs covering each table row and all retention conditions, not only the payment-plan introduction. Every other catalog ID must have an explicit disposition.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ]
+    },
+    {
+      "id": "weather-exception-in-neighbouring-sentence",
+      "text": "Unterzeichneter Bauvertrag – Ausführungsfrist\nDie Bauzeit beträgt 39 Wochen ab Beginn der Erdarbeiten. Sie verlängert sich um Tage mit Temperaturen unter +2 °C zwischen 1 und 5 Uhr sowie um zwei Tage für die Wiederaufnahme der Arbeiten, solange Rohbau, Estrich oder Trockenbau noch nicht abgeschlossen sind. Für Estrich und Trockenbau gilt dies nur, solange keine ordnungsgemäße Beheizung möglich ist. Die gesamte Verlängerung ist auf drei Monate begrenzt. Der Auftragnehmer informiert den Bauherrn unverzüglich über die Verlängerung und den erwarteten Zeitpunkt der Wiederaufnahme.",
+      "expectations": [
+        "Retain the duration and earthworks start trigger, temperature threshold, nighttime interval, affected trades, two restart days and three-month cap.",
+        "Explain the heating exception for screed and drywall as part of the extension rule; preserve its original scope and cite all qualifying passages.",
+        "Citations must cover the heating exception as well as the general extension rule and cap.",
+        "Retain notification of both the extension and the expected resumption date.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ]
+    },
+    {
+      "id": "contract-hierarchy-costs-and-qualified-consent",
+      "text": "Unterzeichneter Bauvertrag\nDie Unterlagen gelten in dieser Reihenfolge: Bauvertrag, Leistungsbeschreibung mit Plänen, gesetzliche Werkvertragsregeln. Werbeaussagen werden nur Vertragsbestandteil, wenn sie im Bauvertrag oder in der Leistungsbeschreibung enthalten sind. Baustromverbrauch und Heizkosten bis zur Abnahme sind nicht im Festpreis enthalten. Eine Änderung des gesetzlichen Umsatzsteuersatzes verändert den Preis entsprechend, sofern das Änderungsgesetz die Anpassung nicht ausschließt. Auf Verlangen teilt der Auftragnehmer Namen und Anschrift der Nachunternehmer mit. Eigenleistungen sind nach Abnahme oder mit schriftlicher Zustimmung des Auftragnehmers und dokumentierter Zustandsfeststellung zulässig.",
+      "expectations": [
+        "Retain the explicit document order and the condition for incorporating advertised details without making an independent enforceability judgment.",
+        "Retain operating-cost exclusions and the VAT adjustment together with its statutory exception.",
+        "Retain the on-request duty to disclose subcontractor names and addresses.",
+        "Retain acceptance as one route to own work and written consent plus a recorded condition assessment as the other; do not drop the assessment requirement.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ]
+    },
+    {
+      "id": "source-scoped-footer-and-express-amendment",
+      "text": "Anlage – ursprüngliche Vereinbarung und Nachtrag\nDie ursprüngliche Vereinbarung fordert eine Finanzierungsbürgschaft über 18 % des Gesamtpreises vor Baubeginn. Der Nachtrag ersetzt diese Pflicht durch eine Abtretung der Finanzierungsansprüche; alternativ darf der Bauherr eine kostenlose Bürgschaft vorlegen.\nAngebotsformular, Fußzeile: Zahlbar sofort ohne Abzug. Ein bestimmter Betrag ist dieser Fußzeile nicht zugeordnet.",
+      "expectations": [
+        "Retain the original guarantee requirement and the express amendment, identifying what is replaced and preserving assignment or free guarantee as alternatives.",
+        "Do not silently discard the original clause or decide the effective legal outcome beyond the express source wording.",
+        "Attribute the immediate-payment wording to the offer footer and preserve its unclear amount reference; do not derive a project-wide immediate-payment obligation.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ]
+    },
+    {
+      "id": "qualified-assurance-without-strengthening",
+      "text": "Unterzeichneter Bauvertrag – Sicherheiten\nDer Unternehmer übergibt eine Bürgschaft für die rechtzeitige Herstellung ohne erhebliche Mängel. Abweichungen der Raummaße von bis zu 2 % sind zulässig. Eine zusätzliche Zwischenabnahme ist nur auf schriftliches Verlangen des Bauherrn vorgesehen.",
+      "expectations": [
+        "Explain the guarantee without strengthening without significant defects into defect-free performance. Cite the complete original qualification; the application attaches the literal quotations.",
+        "Retain the permitted dimensional deviation of up to two percent without converting the bound into an exact deviation or guaranteed exact dimensions.",
+        "Preserve the written-request condition for an additional intermediate acceptance; do not describe it as unconditional.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ]
+    },
+    {
+      "id": "ambiguous-area-assignment-is-not-an-alternative",
+      "text": "Anlage – Kundenwunsch-Skizze, Textauszug\nAbstellraum\n7,40 m²\n10,20 m²\nWohnen\n29,60 m²\nFür den Abstellraum ist in diesem Auszug keine eindeutige Zuordnung der beiden benachbarten Flächenangaben erkennbar.",
+      "expectations": [
+        "Explain that the source does not establish an area assignment. Set uncertainty explicitly and cite all ambiguous measurements and the source statement about their unclear assignment.",
+        "Do not present 7.40 and 10.20 square metres as selectable alternative room sizes or invent a relationship between the values.",
+        "Retain the clearly associated living-room area of 29.60 square metres without spreading the local ambiguity to all dimensions.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ]
+    },
+    {
+      "id": "offer-footer-with-referenced-credit-conditions",
+      "text": "Anlage – Angebot zum Bauvertrag\nSumme: 425.000 Euro.\nGutschrift für pünktliche Zahlung: 3.700 Euro, vorbehaltlich der Voraussetzungen im Nachtrag Zahlungsbonus.\nSumme inklusive Gutschrift: 421.300 Euro.\nDie Voraussetzungen des Nachtrags sind in diesem Auszug nicht wiedergegeben.\nFußzeile des Angebots: Zahlbar sofort ohne Abzug.",
+      "expectations": [
+        "Group the discounted-total passage with the explicit payment-bonus condition and amendment reference, retaining their original wording.",
+        "Do not invent the absent payment-bonus deadline, payout trigger or other amendment terms.",
+        "Index the immediate-payment footer separately from totals and credit clauses, with its original source provenance.",
+        "Retain the original total and credit amount without treating the discounted total as unconditionally payable.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ]
+    },
+    {
+      "id": "footer-administration-and-binding-requirement",
+      "text": "Bankverbindung: Musterbank, Konto 12345.\nSitz der Gesellschaft: Beispielstadt.\nVerbindliche Erklärungen für Beispiel Vertrieb GmbH bedürfen\neiner schriftlichen Bestätigung durch deren Geschäftsleitung.",
+      "expectations": [
+        "Exclude the two administrative lines with specific reasons.",
+        "Index the written-confirmation requirement as one clause including both wrapped lines.",
+        "Keep its named-company scope and original wording.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          3,
+          4
+        ],
+        "excluded_lines": [
+          1,
+          2
+        ],
+        "clause_groups": [
+          [
+            3,
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pure-benefits-and-specific-included-service",
+      "text": "Unsere Bauweise bietet bestes Raumklima und hohe Wertbeständigkeit.\nIhre Vorteile:\nEine Wärmepumpe mit Fußbodenheizung ist im Preis enthalten.\nSie wird vor der Abnahme installiert.",
+      "expectations": [
+        "Exclude the general promotional benefits and heading.",
+        "Keep the concrete included heat-pump service despite the promotional surroundings.",
+        "Group the installation timing with the included-service clause.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          3,
+          4
+        ],
+        "excluded_lines": [
+          1,
+          2
+        ],
+        "clause_groups": [
+          [
+            3,
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "independent-table-positions-with-wrapped-descriptions",
+      "text": "1 Zusätzliche 2-flg. Tür\t780,00 EUR\nAusführung in Holz, inkl. Beschläge.\n2 Zusätzlicher Raum\t2.600,00 EUR\nBis 14 m², inkl. Heizung und Elektro.\n3 Fenster bleiben Standard\t0,00 EUR",
+      "expectations": [
+        "Use three independent clause groups, one per table position.",
+        "Keep each price with its description, dimensions and inclusions.",
+        "Do not split abbreviations or combine unrelated positions.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "excluded_lines": [],
+        "clause_groups": [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "independent-rules-with-shared-qualification",
+      "text": "Bei Änderung der gesetzlichen Umsatzsteuer wird der Preis angepasst.\nDies gilt nicht, sofern die Anpassung gesetzlich ausgeschlossen ist.\nDie Bauarbeiten beginnen binnen acht Wochen nach Vorlage aller Unterlagen.\nZahlungen erfolgen binnen neun Tagen nach Zugang der Herstellungsmitteilung.",
+      "expectations": [
+        "Keep VAT adjustment and its statutory exception together.",
+        "Separate the construction-start rule and its prerequisites from the payment rule and its trigger.",
+        "Do not group the whole excerpt into a single clause.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "excluded_lines": [],
+        "clause_groups": [
+          [
+            1,
+            2
+          ],
+          [
+            3
+          ],
+          [
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "shared-condition-for-separate-positions",
+      "text": "1 Zusätzlicher Sonnenschutz\t600,00 EUR\n2 Zusätzliche Lüftung\t900,00 EUR\nBeide Positionen werden nur nach schriftlicher Freigabe ausgeführt.",
+      "expectations": [
+        "Keep the two positions independently indexed.",
+        "Attach the shared written-release condition to both clauses; reuse its evidence ID.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          1,
+          2,
+          3
+        ],
+        "excluded_lines": [],
+        "clause_groups": [
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "id": "wrapped-sentences-share-boundary-lines",
+      "text": "Nicht enthalten sind Baustromkosten. Ändert sich die gesetzliche\nUmsatzsteuer, wird der Pauschalpreis entsprechend angepasst.\nDies gilt nicht, wenn die Anpassung gesetzlich ausgeschlossen ist. Der\nFestpreis gilt für zehn Monate. Ein Zeitplan zur\nBaubeginnvorbereitung wird im Planungsgespräch dokumentiert.",
+      "expectations": [
+        "Index cost exclusion, VAT adjustment with its statutory exception, price duration and preparation schedule as four independent subjects.",
+        "Reuse boundary lines in adjacent clauses so the VAT condition includes its opening words and the schedule includes its complete subject.",
+        "Keep literal neighbouring text carried by a shared source line; do not trim or paraphrase it to hide the source boundaries.",
+        "Complete ID accounting with disjoint groups is insufficient when the principal provision in a group loses the beginning or end of a sentence.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "excluded_lines": [],
+        "clause_groups": [
+          [
+            1
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "document-identity-dates-and-project-circumstances",
+      "text": "Angebot\nBelegnummer\tDatum\n8421\t12.04.2026\nBasierend auf Angebot 8421 vom 03.04.2026.\nDie vereinbarte Zahlungsbürgschaft ist derzeit nur mit hohen Kosten erhältlich.\nStattdessen werden die Finanzierungsansprüche vor Baubeginn abgetreten.\nUnterzeichnet in Beispielstadt am 15.04.2026.\nTelefon Zentrale: 030 123456",
+      "expectations": [
+        "Index document identity and its current issue date together, keeping the referenced earlier offer date in its own source clause.",
+        "Retain the stated difficulty obtaining a guarantee as project context even though it creates no independent obligation.",
+        "Retain the assignment arrangement and the stated signing date without resolving chronology or inferring legal effectiveness.",
+        "Exclude the pure switchboard contact line with a reason, rather than treating all administrative-looking information alike.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "excluded_lines": [
+          8
+        ],
+        "clause_groups": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            4
+          ],
+          [
+            5
+          ],
+          [
+            6
+          ],
+          [
+            7
+          ]
+        ]
+      }
+    },
+    {
+      "id": "independent-instalments-with-scoped-retention",
+      "text": "Der Pauschalpreis von 280.000 Euro ist in folgenden Raten zu zahlen.\n1. Rate | 8 % | Übergabe der Genehmigungsplanung\n2. Rate | 32 % | Herstellung der Bodenplatte\n3. Rate | 60 % | Abnahme\nNur von der ersten Rate dürfen 4 % des gesamten Pauschalpreises\nbis zur Abnahme oder Übergabe einer gleich hohen Bankbürgschaft einbehalten werden.",
+      "expectations": [
+        "Index three separate instalments, each retaining its percentage, milestone and shared total-price reference.",
+        "Attach the retention, its total-price calculation base and both release alternatives to the first instalment only.",
+        "Do not merge the payment table into one clause or imply that the retention applies to later instalments.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "excluded_lines": [],
+        "clause_groups": [
+          [
+            1,
+            2,
+            5,
+            6
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "unresolved-sketch-measurements-remain-unassigned",
+      "text": "Technikraum\n6,80 m²\nDiele\n12,30 m²\n6,80 m²\nWohnen\n31,20 m²",
+      "expectations": [
+        "Keep the clearly associated technology-room and living-room areas with their labels.",
+        "Explain the hallway and its two adjacent measurements as an unresolved assignment, with explicit uncertainty and citations for all three lines; do not choose the correct area.",
+        "Do not invent an alternative size, add the values or describe both as established hallway areas.",
+        "Preserve both occurrences of 6.80 square metres with their distinct source IDs. Keep the interpretation and uncertainty separate from the exact source quotations.",
+        "Review the interpretation and its uncertainty against every cited passage and the full original text; valid references and complete accounting do not prove semantic correctness."
+      ],
+      "selection_expectations": {
+        "indexed_lines": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "excluded_lines": [],
+        "clause_groups": [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            6,
+            7
+          ]
+        ],
+        "uncertain_groups": [
+          [
+            3,
+            4,
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "conditional-credit-deferred-payout",
+      "text": "Angebot und Nachtrag Zahlungsbonus\nVertragssumme: 320.000 Euro.\nBedingte Gutschrift: 2.400 Euro; ausgewiesene Summe nach Gutschrift: 317.600 Euro.\nAngebotsfußzeile: Zahlbar sofort ohne Abzug.\nNachtrag: Der Bonus setzt den pünktlichen Eingang aller Raten und Nachtragsrechnungen voraus.\nDie Auszahlung erfolgt erst nach Eingang der letzten Rate und Rückgabe der Vertragserfüllungsbürgschaft.\nEine vorherige Verrechnung mit Rechnungen ist ausgeschlossen.\nDie allgemeinen Raten bleiben zehn Tage nach Zugang der jeweiligen Herstellungsmitteilung zahlbar.",
+      "expectations": [
+        "Explain the displayed discounted total as conditional; never call it the amount immediately payable or available for prior deduction.",
+        "Explain each payment-related claim consistently with the timely-payment condition, deferred payout requiring both final receipt and guarantee return, and offset prohibition.",
+        "Keep the general instalment deadline distinct from bonus eligibility and payout. Each claim must cite the provisions qualifying its own meaning, not rely on another fact.",
+        "Review claims, interpretation and uncertainty together against the complete supplied text. Structural validity and evidence-group coverage do not prove correct interpretation."
+      ],
+      "claim_expectations": {
+        "evidence_groups": [
+          [
+            3,
+            5,
+            6,
+            7
+          ],
+          [
+            6
+          ],
+          [
+            7
+          ],
+          [
+            8
+          ]
+        ]
+      }
+    },
+    {
+      "id": "qualified-assurance-across-lines",
+      "text": "Bauvertrag – Sicherheiten\nDie Bankbürgschaft sichert die rechtzeitige Herstellung\nohne erhebliche Mängel.\nSie ist vor Fälligkeit der zweiten Rate zu übergeben.",
+      "expectations": [
+        "Preserve the original qualification ohne erhebliche Mängel; do not promise defect-free performance.",
+        "The assurance claim must cite both wrapped lines, and the timing claim must retain its second-instalment trigger.",
+        "Review claims, interpretation and uncertainty together against the complete supplied text. Structural validity and evidence-group coverage do not prove correct interpretation."
+      ],
+      "claim_expectations": {
+        "evidence_groups": [
+          [
+            2,
+            3
+          ],
+          [
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "unsigned-consent-form-observation",
+      "text": "Formular Einwilligung\nNamen: Alex Muster und Robin Beispiel\nIch willige in die Verarbeitung der angegebenen Daten zur Vertragsplanung ein.\nUnterschrift: [unleserliches Zeichen]\nBestätigung Erhalt Datenschutzhinweise: ☐",
+      "expectations": [
+        "Describe named people, consent wording, an unreadable recorded mark and an unchecked receipt box as document observations.",
+        "Do not assert that both people signed or granted consent, and do not infer that no handwritten signature exists from OCR alone.",
+        "Any uncertainty about the signatory identity must be respected in both statements and interpretation. The unchecked box does not confirm receipt.",
+        "Review claims, interpretation and uncertainty together against the complete supplied text. Structural validity and evidence-group coverage do not prove correct interpretation."
+      ],
+      "claim_expectations": {
+        "evidence_groups": [
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "bank-confirmation-content-and-exception",
+      "text": "Nachtrag zur Finanzierung\nDer Bauherr tritt seine Finanzierungsansprüche an den Unternehmer ab.\nDie Bank bestätigt das Vorhandensein der Abtretung und der Auszahlungsvoraussetzungen,\nausgenommen den Bautenstand.\nAbtretung und Bestätigung sind acht Wochen vor Baubeginn vorzulegen.\nAlternativ darf vor Baubeginn eine Zahlungsbürgschaft gestellt werden.",
+      "expectations": [
+        "Explain exactly what the bank must confirm: existence of the assignment and disbursement prerequisites except construction progress.",
+        "Keep confirmation contents, the exception and its deadline together in an independently understandable claim; do not reduce this to an appropriate bank confirmation.",
+        "Retain the alternative guarantee route and its own deadline.",
+        "Review claims, interpretation and uncertainty together against the complete supplied text. Structural validity and evidence-group coverage do not prove correct interpretation."
+      ],
+      "claim_expectations": {
+        "evidence_groups": [
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            6
+          ]
+        ]
+      }
+    },
+    {
+      "id": "roof-specification-in-following-line",
+      "text": "Angebotsposition Dachänderung\nÄnderung auf ein Walmdach, ohne Mehrpreis.\nDachneigung 28 Grad.\nAusführung nur bei schriftlicher Freigabe des Bauherrn.",
+      "expectations": [
+        "Explain the roof type, pitch, price and written-release condition as one complete provision.",
+        "A roof claim mentioning the pitch or release condition must cite those lines itself, even if another fact also selects them.",
+        "Review claims, interpretation and uncertainty together against the complete supplied text. Structural validity and evidence-group coverage do not prove correct interpretation."
+      ],
+      "claim_expectations": {
+        "evidence_groups": [
+          [
+            2,
+            3,
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "documented-project-configuration",
+      "text": "Projektvereinbarung\nVereinbart sind ein Holzhaus mit Satteldach, eine Bodenplatte ohne Keller und eine Erdsonden-Wärmepumpe.\nEin Wintergarten ist ausdrücklich nicht im Leistungsumfang enthalten.",
+      "expectations": [
+        "Retain the documented construction type, roof type, foundation without a basement, heating selection and express exclusion of the winter garden as source-backed project context.",
+        "Do not turn the agreed specification into a statement that construction or installation has already occurred.",
+        "Keep independently reviewable project characteristics and the exclusion clear, with evidence for each assertion."
+      ]
+    },
+    {
+      "id": "conditional-feature-does-not-establish-selection",
+      "text": "Bedingte Ausstattungsregeln\nBei Wahl einer Garage ist ein gesonderter Entwässerungsplan vorzulegen.\nBei Wahl eines Carports sind die zulässigen Grenzabstände nachzuweisen.\nAuswahlfeld: ☐ Garage ☐ Carport",
+      "expectations": [
+        "Preserve both conditional rules and their respective evidence without asserting that either option is selected.",
+        "Unchecked selection boxes do not establish selection, rejection or exclusion of either option.",
+        "State the unresolved selection only from the supplied evidence; do not choose the apparently usual option."
+      ]
+    },
+    {
+      "id": "offer-presence-is-not-acceptance",
+      "text": "Vertrag: Eine Abluftanlage gehört zum vereinbarten Leistungsumfang.\nSeparates Zusatzangebot: Komfortlüftung mit Wärmerückgewinnung für 7.850 Euro.\nAnnahme des Zusatzangebots: ☐ ja ☐ nein\nUnterschrift: ____________________",
+      "expectations": [
+        "Distinguish the expressly agreed exhaust-air system from the separately offered upgrade and retain the offered price.",
+        "The presence of the offer and the blank acceptance/signature fields do not establish acceptance or rejection.",
+        "Do not claim that the offered upgrade replaces the agreed equipment without a source establishing that change."
+      ]
+    },
+    {
+      "id": "prerequisite-does-not-establish-completion",
+      "text": "Vor Beginn der Fundamentarbeiten müssen die Baugenehmigung und die Finanzierungsbestätigung vorliegen.\nKontrollformular: ☐ Genehmigung liegt vor ☐ Finanzierung bestätigt\nAnstelle der Finanzierungsbestätigung darf der Bauherr eine vorläufige schriftliche Freigabe der finanzierenden Bank vorlegen.",
+      "expectations": [
+        "Explain the commencement prerequisites and the documented financing alternative with their source scope.",
+        "Neither a contractual prerequisite nor an unchecked checklist establishes that the permit or financing evidence exists or that foundation works have started.",
+        "Do not turn permission to use alternative bank evidence into a statement that this route was selected or completed."
+      ]
+    },
+    {
+      "id": "multiple-provisions-in-one-span",
+      "text": "Der Bauherr beantragt die Entwässerungsgenehmigung und legt vor Beginn der Erdarbeiten einen Versicherungsnachweis vor.",
+      "expectations": [
+        "Retain both independent provisions: apply for the drainage permit and provide insurance evidence before earthworks begin.",
+        "Keep the stated deadline attached to the insurance evidence; do not invent a matching deadline for the permit application.",
+        "Both assertions may cite the same source ID. One citation, or a context-only selection, does not demonstrate that both provisions were extracted.",
+        "A structurally complete answer omitting either provision still requires semantic review and must not be called semantically correct merely because the single ID is accounted for."
+      ]
+    },
+    {
+      "id": "qualified-security-is-not-absolute",
+      "text": "Die Sicherheit deckt die rechtzeitige Fertigstellung ohne erhebliche Funktionsmängel.",
+      "expectations": [
+        "Preserve the exact limitation ohne erhebliche Funktionsmängel; do not promise defect-free construction."
+      ],
+      "interpretation_expectations": {
+        "required_fragments": [
+          "ohne erhebliche Funktionsmängel"
+        ],
+        "forbidden_fragments": [
+          "mängelfreie Herstellung"
+        ],
+        "allowed_statuses": [
+          "CONTRACT_RULE"
+        ]
+      }
+    },
+    {
+      "id": "unassigned-payment-note-is-observation",
+      "text": "Angebotsanlage: Zahlbar sofort ohne Abzug. Der Bezugsbetrag dieser Zahlungsformel ist nicht angegeben.",
+      "expectations": [
+        "Report the payment wording as a document observation; do not assign immediate liability to an unspecified offer amount."
+      ],
+      "interpretation_expectations": {
+        "required_fragments": [
+          "Bezugsbetrag"
+        ],
+        "allowed_statuses": [
+          "DOCUMENT_OBSERVATION",
+          "UNRESOLVED"
+        ],
+        "uncertainty_required": true
+      }
+    },
+    {
+      "id": "postal-exception-survives-credit-interpretation",
+      "text": "Der Bonus beträgt 1.700 EUR bei Geldeingang innerhalb von 18 Tagen. Darin sind drei Tage Postlaufzeit enthalten. Eine längere Postlaufzeit kann der Kunde nachweisen.",
+      "expectations": [
+        "Preserve the deadline, included postal allowance and the ability to prove a longer delivery time."
+      ],
+      "interpretation_expectations": {
+        "required_fragments": [
+          "18 Tagen",
+          "längere Postlaufzeit",
+          "nachweisen"
+        ],
+        "allowed_statuses": [
+          "CONTRACT_RULE"
+        ]
+      }
+    },
+    {
+      "id": "priced-offer-is-not-agreement",
+      "text": "Angebot: Zusätzlicher Speicher für 2.450,00 EUR. Eine Annahme dieses Angebots ist nicht dokumentiert.",
+      "expectations": [
+        "Keep the priced storage unit offered; its listed price does not establish agreement."
+      ],
+      "interpretation_expectations": {
+        "required_fragments": [
+          "2.450,00"
+        ],
+        "allowed_statuses": [
+          "OFFERED"
+        ]
+      }
+    },
+    {
+      "id": "base-price-row-must-state-amount",
+      "text": "1 Stadthaus Nord\t1,00 Stück\t195.000,00 EUR\t195.000,00 EUR\nMit enthaltenem Planungsumfang.",
+      "expectations": [
+        "Capture item, quantity, price, row total and included planning; citation of the row alone does not capture its amount."
+      ],
+      "interpretation_expectations": {
+        "required_fragments": [
+          "195.000,00",
+          "Planung"
+        ],
+        "allowed_statuses": [
+          "OFFERED"
+        ]
+      }
+    },
+    {
+      "id": "signature-ocr-remains-observation",
+      "text": "Unterschriftsbereich: Musterstadt, 04.08.2025\n[signature]\nOCR-Namenswiedergabe: L. Beispiell",
+      "expectations": [
+        "Describe the signature-area observation and OCR name without asserting verified signatory identity."
+      ],
+      "interpretation_expectations": {
+        "required_fragments": [
+          "OCR"
+        ],
+        "allowed_statuses": [
+          "DOCUMENT_OBSERVATION"
+        ]
+      }
     }
   ]
 }

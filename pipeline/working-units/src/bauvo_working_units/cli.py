@@ -9,7 +9,6 @@ from pathlib import Path
 
 from .project_flow import extract_project_units, load_documents
 from .gemini import GeminiModel
-from .schemas import GENERATION, RESPONSE_SCHEMAS, PROTOCOL, PHASE_THINKING_LEVELS
 from .trace import RawRunRecorder, TracingModel, RetryingModel
 
 
@@ -19,26 +18,37 @@ def main() -> None:
     parser.add_argument("--documents", help="Source-bound documents.json proposals (required for schema 6)")
     parser.add_argument("--output", required=True, help="Output JSON path")
     parser.add_argument("--raw-output", help="One JSON array containing only Gemini results")
-    parser.add_argument("--project", required=True, help="Google Cloud project ID")
+    parser.add_argument("--project", help="Google Cloud project ID")
     parser.add_argument("--location", default="global")
     parser.add_argument("--model", default="gemini-3.5-flash")
     parser.add_argument("--whole-document-max-chars", type=int, default=80000)
-    parser.add_argument("--chunk-pages", type=int, default=3)
+    parser.add_argument("--chunk-pages", type=int, default=10)
     parser.add_argument("--overlap-pages", type=int, default=1)
     parser.add_argument("--language", choices=("en", "de"), default="de",
                         help="Language of natural-language output values")
     parser.add_argument("--trace-dir", help="Save every Gemini prompt and raw JSON response for review")
-    parser.add_argument("--cache-dir", help="Resume identical complete model calls without repeating paid requests")
+    parser.add_argument("--cache-dir", help="Replay identical completed provider responses, even when local validation fails")
     parser.add_argument("--date-anchors", help="JSON array of cited document_id/id/event/date anchors; dates must occur in source quotes")
     parser.add_argument('--context-pages', action='append', default=[], help='Additional project sources for fact collection; repeat with matching --context-documents')
     parser.add_argument('--context-documents', action='append', default=[], help='Boundaries for each additional project source')
     parser.add_argument('--source-type', choices=('project','blb'), default='project', help='BLB sources provide tasks, never project facts')
     parser.add_argument('--context-type', action='append', choices=('project','blb'), default=[], help='Type of each context source; default project, or repeat one per context source')
     parser.add_argument('--project-facts', help='Reuse a saved working-units.project-facts.json; original sources must be supplied as pages/context-pages')
+    parser.add_argument('--max-new-calls', type=int, default=0,
+                        help='Maximum actual Gemini attempts, including retries; default 0 (offline)')
+    parser.add_argument('--replay-project-facts', help='Replay saved facts locally against original sources; no Gemini calls')
+    parser.add_argument('--refresh-request', action='append', default=[], help='Explicitly regenerate only this saved request SHA; preserve the previous response')
+    parser.add_argument('--plan-only', action='store_true', help='Write the known request plan without any provider calls')
     stages = {'project-facts':'PAGE_PROJECT_FACTS', 'aufgaben':'PAGE_EXTRACTION', 'offers':'PAGE_OFFERS',
               'timing':'PAGE_TIMING', 'consequences':'PAGE_CONSEQUENCES', 'applicability':'PAGE_APPLICABILITY'}
     parser.add_argument('--stop-after', choices=tuple(stages), default='applicability', help='Stop after this pass; later passes make no requests')
     args = parser.parse_args()
+    if args.max_new_calls < 0:
+        parser.error('--max-new-calls must be nonnegative')
+    if args.max_new_calls and not args.project:
+        parser.error('--project is required for paid calls')
+    if args.replay_project_facts and (args.refresh_request or args.max_new_calls or args.project_facts or args.stop_after != 'project-facts'):
+        parser.error('--replay-project-facts requires --stop-after project-facts, no --project-facts and no paid calls')
     if len(args.context_pages) != len(args.context_documents):
         parser.error('Each --context-pages requires matching --context-documents')
     if args.context_type and len(args.context_type)!=len(args.context_pages):
@@ -64,7 +74,9 @@ def main() -> None:
     facts = None
     if args.project_facts:
         from .fact_artifact import load_facts
+        from .project_facts import require_current_catalog
         facts = load_facts(args.project_facts, [*documents, *context_documents])
+        require_current_catalog(facts)
         if Path(args.project_facts).resolve() in (output.resolve(), raw_output.resolve(), facts_output.resolve(), units_output.resolve() if units_output else None):
             parser.error('Saved facts input must differ from every output')
     if (args.project_facts or args.stop_after != 'applicability') and any(d.schema_version != 6 for d in documents):
@@ -73,21 +85,45 @@ def main() -> None:
     from .date_calculation import validate_anchors
     anchors = validate_anchors(anchors, documents)
     from .pass_snapshots import PassSnapshots
-    snapshots = PassSnapshots(snapshots_dir, facts_output) if all(d.schema_version==6 for d in documents) else None
-    backend=GeminiModel(args.project,args.location,args.model)
-    if args.cache_dir:
-        from .cache import CachedModel
-        backend=CachedModel(backend,args.cache_dir,{'project':args.project,'location':args.location,'model':args.model,
-                            'generation':GENERATION, 'phase_thinking_levels':PHASE_THINKING_LEVELS,
-                            'response_schemas':RESPONSE_SCHEMAS,'protocol':PROTOCOL})
-    model = RawRunRecorder(backend, raw_output)
-    if args.trace_dir:
-        model = TracingModel(model, args.trace_dir)
-    model = RetryingModel(model)
-    result = extract_project_units(documents, model,
-                                   args.whole_document_max_chars, args.chunk_pages,
-                                   args.overlap_pages, args.language, anchors, context_documents, on_pass=snapshots,
-                                   project_facts=facts, stop_after=stages[args.stop_after])
+    snapshots = PassSnapshots(snapshots_dir, facts_output) if not args.plan_only and not args.replay_project_facts and all(d.schema_version==6 for d in documents) else None
+    from .call_budget import CallBudget, BudgetedModel, CallLimitExceeded, PlanOnlyStop
+    from .cache import CachedModel
+    budget = CallBudget(0 if args.plan_only else args.max_new_calls)
+    backend = BudgetedModel(lambda: GeminiModel(args.project, args.location, args.model), budget)
+    backend = CachedModel(backend, args.cache_dir or output.parent / 'provider-responses',
+                          {'project':args.project, 'location':args.location, 'model':args.model},
+                          budget=budget, plan_path=output.with_name(output.stem+'.request-plan.json'),
+                          refresh_requests=args.refresh_request, plan_only=args.plan_only)
+    if args.replay_project_facts:
+        from .phases.project_facts.revalidation import replay_project_facts
+        source = Path(args.replay_project_facts)
+        result = replay_project_facts(json.loads(source.read_text()), [*documents, *context_documents])
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
+        print(f"Offline replay: {len(result['gemini_responses'])} saved responses; 0 new calls; "
+              f"{len(result['facts'])} facts; status={result['status']}; output={output}")
+        if result['status'] in ('incomplete', 'request_failed'):
+            raise SystemExit('Replay remains blocked; missing/invalid evidence preserved in output')
+        return
+    model = backend
+    if not args.plan_only:
+        model = RawRunRecorder(model, raw_output)
+        if args.trace_dir:
+            model = TracingModel(model, args.trace_dir)
+        model = RetryingModel(model)
+    try:
+        result = extract_project_units(documents, model,
+                                       args.whole_document_max_chars, args.chunk_pages,
+                                       args.overlap_pages, args.language, anchors, context_documents, on_pass=snapshots,
+                                       project_facts=facts, stop_after=stages[args.stop_after])
+    except (CallLimitExceeded, PlanOnlyStop) as exc:
+        if args.plan_only:
+            print(f'Plan only: {exc}')
+            return
+        raise SystemExit(str(exc)) from exc
+    if args.plan_only:
+        print("Plan only: reached requests replayed offline; status=" + result.get("status", "unknown") + "; 0 new calls")
+        return
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if args.stop_after == 'project-facts':
@@ -98,6 +134,8 @@ def main() -> None:
         print(f"Wrote {len(result['offers'])} offers, {len(result['working_units'])} Working Units and "
           f"{len(result['gemini_responses'])} preserved Gemini responses to {output}")
 
+    if result.get('status') == 'incomplete':
+        raise SystemExit('Incomplete project facts; output, raw answer and validation findings preserved')
     if result.get("status") == "request_failed":
         raise SystemExit("Unresolved model requests; partial output and raw attempts preserved")
 

@@ -143,7 +143,7 @@ def _resolve_dependencies(units: list[dict[str, Any]]) -> None:
 
 
 def extract_project_units(documents: list[Document], model: Model,
-                          whole_document_max_chars: int = 80000, chunk_pages: int = 3,
+                          whole_document_max_chars: int = 80000, chunk_pages: int = 10,
                           overlap_pages: int = 1, language: str = "de", supported_anchors=None, context_documents=(), on_pass=None,
                           project_facts=None, stop_after='PAGE_APPLICABILITY') -> dict[str, Any]:
     """Retain every proposal and every later Gemini result without semantic edits."""

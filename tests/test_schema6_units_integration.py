@@ -19,7 +19,7 @@ import bauvo
 class Schema6CLIIntegrationTests(unittest.TestCase):
     def test_cli_source_to_output_with_cache_raw_trace_and_new_defaults(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root=Path(tmp);text='The owner supplies construction water.'
+            root=Path(tmp);text='The contractor supplies construction water.'
             pages=[{'pdf_page':1,'text':text,'text_sha256':hashlib.sha256(text.encode()).hexdigest(),'checkboxes':[]}]
             (root/'pages.json').write_text(json.dumps({'schema_version':6,'source':'house.pdf','page_count':1,'pages':pages}))
             (root/'documents.json').write_text(json.dumps({'schema_version':6,'pages_sha256':digest(pages),'status':'proposed',
@@ -33,7 +33,15 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                 def __init__(self,project,location,model):models.append(model)
                 def extract(self,prompt):
                     calls.append(prompt);data=json.loads(prompt.split('SOURCE DATA:\n')[1])
-                    if prompt.startswith('PAGE_PROJECT_FACTS'):response={'verpflichtungen':[]}
+                    if prompt.startswith('PAGE_PROJECT_FACTS'):
+                        from bauvo_working_units.phases.project_facts.payload import expand_payload
+                        data=expand_payload(data)
+                        labels={identifier:label for label,identifier in data['reference_map'].items()}
+                        data['evidence_catalog']=[{**entry,'evidence_id':labels[entry['evidence_id']]}
+                                                  for entry in data['evidence_catalog']]
+                    if prompt.startswith('PAGE_PROJECT_FACTS'):
+                        response={'ansprueche':[{'aussage':'The homeowner is entitled to construction water supplied by the contractor.',
+                            'belege':[e['evidence_id']]} for e in data['evidence_catalog']]}
                     elif prompt.startswith('PAGE_EXTRACTION'):response={'working_units':[proposal],'offers':[],'carry_forward':''}
                     elif prompt.startswith('PAGE_OFFERS'):response={'offers':[]}
                     elif prompt.startswith(('PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY')):
@@ -48,11 +56,20 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                     self.last_raw_response=json.dumps(response);return copy.deepcopy(response)
             for attempt in (1,2):
                 argv=['units','--pages',str(root/'pages.json'),'--documents',str(root/'documents.json'),'--project','p',
-                      '--output',str(root/f'output-{attempt}.json'),'--trace-dir',str(root/f'trace-{attempt}'),'--cache-dir',str(root/'cache')]
+                      '--output',str(root/f'output-{attempt}.json'),'--trace-dir',str(root/f'trace-{attempt}'),'--cache-dir',str(root/'cache'),'--max-new-calls','6']
                 with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel',Fake):main()
-            self.assertEqual(models,['gemini-3.5-flash']*2);self.assertEqual(len(calls),6)
+            self.assertEqual(models,['gemini-3.5-flash']);self.assertEqual(len(calls),6)
             self.assertEqual((root/'pages.json').read_bytes(),before)
-            result=json.loads((root/'output-1.json').read_text());self.assertEqual(result['schema_version'],17)
+            result=json.loads((root/'output-1.json').read_text());self.assertEqual(result['schema_version'],18)
+            self.assertEqual(result['project_facts']['schema_version'],15)
+            self.assertEqual(result['project_facts']['facts'][0]['derived']['text'],text)
+            facts=result['project_facts']
+            self.assertEqual(facts['gemini_responses'][0]['gemini']['ansprueche'][0]['belege'],['S1'])
+            self.assertEqual(facts['facts'][0]['derived']['verified_citations'][0]['evidence_id'],
+                             facts['reference_map']['S1'])
+            for prompt in calls[1:]:
+                data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+                self.assertEqual(data['project_facts']['facts'][0]['text'],text)
             self.assertEqual(result['working_units'][0]['gemini'],proposal)
             self.assertEqual(result['status'],'needs_review')
             self.assertEqual(result['working_units'][0]['gemini']['citations'],proposal['citations'])
@@ -60,8 +77,10 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
             self.assertEqual(len(json.loads((root/'output-1.gemini-raw.json').read_text())),6)
             self.assertEqual(len(list((root/'trace-1').glob('*-prompt.txt'))),6)
             for p in (root/'cache').glob('*.json'):
-                identity=json.loads(p.read_text())['request']['identity'];self.assertEqual(identity['generation'],GENERATION)
-                self.assertIn('response_schemas',identity)
+                request=json.loads(p.read_text())['request']
+                self.assertEqual(set(request['identity']),{'project','location','model'})
+                self.assertIn('response_schema',request)
+                self.assertNotIn('response_schemas',request['identity'])
 
     def test_cache_detects_modified_request_metadata_as_well_as_response_tampering(self):
         from bauvo_working_units.cache import CachedModel
@@ -115,7 +134,7 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
             (folder/'pages.json').write_text('{"schema_version":6}')
             output=root/'working-units/contract';output.mkdir(parents=True)
             target=output/'working-units.json'
-            payload={'schema_version':17,'protocol':PROTOCOL,'status':'request_failed',
+            payload={'schema_version':18,'protocol':PROTOCOL,'status':'request_failed',
                      'project_facts':{'status':'request_failed','facts':[]}}
             target.write_text(json.dumps(payload));before=target.read_bytes()
             with patch('extraction_acceptance.require_approved'),patch.object(bauvo,'command') as command,patch.object(bauvo,'complete') as complete:

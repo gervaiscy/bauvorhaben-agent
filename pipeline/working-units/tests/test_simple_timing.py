@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import hashlib
 import json
@@ -46,7 +47,7 @@ class SimpleTimingTests(unittest.TestCase):
         baseline=extract_page_units(docs,SimpleNamespace(extract=earlier),stop_after='PAGE_OFFERS',project_facts=facts)
         original=copy.deepcopy(baseline)
         def timing(prompt):
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data=decode_prompt(prompt)
             return {'assessments':[{'unit_id':data['working_units'][0]['id'],'answer':'Two weeks before construction',
                 'citations':[{'pdf_page':1,'quote':text}]}]}
         with patch('bauvo_working_units.phases.timing.date_calculation.calculate_dates',side_effect=AssertionError('Do not infer dates')):
@@ -57,11 +58,11 @@ class SimpleTimingTests(unittest.TestCase):
         self.assertEqual(result['gemini_responses'][-1]['gemini']['assessments'][0],review['gemini'])
         self.assertEqual(baseline,original)
         def consequence(prompt):
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);return {'assessments':[
+            data=decode_prompt(prompt);return {'assessments':[
                 {'unit_id':data['working_units'][0]['id'],'status':'NOT_STATED','consequences':[],'citations':[]}]}
         extended=extract_consequences(result,docs,SimpleNamespace(extract=consequence))
         def applicable(prompt):
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);return {'assessments':[
+            data=decode_prompt(prompt);return {'assessments':[
                 {'unit_id':data['working_units'][0]['id'],'applicability':'APPLIES','reason':'Source obligation'}]}
         final=extract_applicability(extended,docs,SimpleNamespace(extract=applicable))
         self.assertEqual(final['working_units'][0]['reviews'][0],review)

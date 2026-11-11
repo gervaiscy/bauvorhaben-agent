@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import hashlib
 import json
@@ -24,17 +25,17 @@ def fixture(root,count=12,spans=None):
     return data,boundaries
 
 def load(root):return load_documents(root/'pages.json',root/'documents.json')
-def payload(prompt):return json.loads(prompt.split('SOURCE DATA:\n',1)[1])
+def payload(prompt):return decode_prompt(prompt)
 def unit(page,quote=None):
     return {'dedupe_key':f'task-{page["pdf_page"]}','name':'Prepare site','actor':'Owner','action':'Prepare site',
             'citations':[{'pdf_page':page['pdf_page'],'quote':quote or page['text'].rstrip('\n')}],
             'tasks':[],'depends_on':[],'unexpected':'preserve'}
 
 class Schema6SourceTests(unittest.TestCase):
-    def test_three_total_pages_overlap_once_and_primary_coverage_once(self):
+    def test_ten_total_pages_overlap_once_and_primary_coverage_once(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);fixture(root);doc=load(root)[0];chunks=make_page_chunks(doc)
-            self.assertEqual([c.pages for c in chunks],[(1,2,3),(3,4,5),(5,6,7),(7,8,9),(9,10,11),(11,12)])
+            self.assertEqual([c.pages for c in chunks],[tuple(range(1,11)),(10,11,12)])
             self.assertEqual([n for c in chunks for n in c.primary_pages],list(range(1,13)))
             self.assertEqual(doc.lines,());self.assertTrue(all('lines' not in p for p in doc.pages))
 
@@ -42,7 +43,7 @@ class Schema6SourceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);fixture(root,19,[[1],[2],[3],[4],[5,6],[7],[8],[9],list(range(10,16)),[16],[17,18],[19]])
             docs=load(root);chunks=[(d.id,c.pages) for d in docs for c in make_page_chunks(d)]
-            self.assertIn(('D9',(10,11,12)),chunks);self.assertIn(('D9',(14,15)),chunks)
+            self.assertIn(('D9',tuple(range(10,16))),chunks)
             self.assertIn(('D10',(16,)),chunks);self.assertIn(('D11',(17,18)),chunks)
             for d in docs:
                 for c in make_page_chunks(d):self.assertTrue(set(c.pages)<={p['pdf_page'] for p in d.pages})
@@ -56,7 +57,7 @@ class Schema6SourceTests(unittest.TestCase):
             doc=load(root)[0];chunks=make_page_chunks(doc,whole_document_max_chars=50)
             self.assertEqual(doc.pages[2]['text'],data['pages'][2]['text'])
             self.assertEqual([n for c in chunks for n in c.primary_pages],list(range(1,8)))
-            self.assertTrue(any(2 in c.pages for c in chunks));self.assertTrue(all(len(c.pages)<=5 for c in chunks))
+            self.assertTrue(any(2 in c.pages for c in chunks));self.assertTrue(all(len(c.pages)<=10 for c in chunks))
 
     def test_invalid_or_unverified_partitions_fail_before_any_request(self):
         for change in ('hash','overlap','gap','order','failed','disabled','assignments','no_boundaries','page_hash','duplicate_id'):

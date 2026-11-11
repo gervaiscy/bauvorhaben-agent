@@ -18,3 +18,5 @@ JSON gemäß Antwortschema: eine Bewertung pro working_unit.
   Unbekannte Auswahl oder Hausmerkmale bleiben CONDITIONAL; unklare oder
   widersprüchliche Belege bleiben UNKNOWN.
 - reason: warum es gilt oder unter welcher Bedingung es gilt
+Belege deine Begründung unter citations durch evidence_id aus evidence_catalog.
+Wähle die passenden Quellpassagen; schreibe Zitate oder Seitenzahlen nicht selbst ab.

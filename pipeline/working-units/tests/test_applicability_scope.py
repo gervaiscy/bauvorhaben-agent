@@ -82,7 +82,7 @@ class ApplicabilityScopeTests(unittest.TestCase):
                 row=result['working_units'][0]['reviews'][2]['gemini']
                 self.assertEqual(row['applicability_rules'],rules)
                 self.assertIsNone(row['applicability_rules'][0]['condition'])
-                self.assertEqual(result['gemini_responses'][4]['gemini'],app_response[0])
+                self.assertEqual(next(r['gemini'] for r in result['gemini_responses'] if r['pass']=='PAGE_APPLICABILITY'),app_response[0])
                 self.assertEqual(result['review_findings'],[])
 
     def test_provider_uses_simple_applicability_schema_without_changing_raw_response(self):
@@ -102,8 +102,8 @@ class ApplicabilityScopeTests(unittest.TestCase):
         schema=calls[0]['config']['response_json_schema']
         self.assertEqual(schema,RESPONSE_SCHEMAS['PAGE_APPLICABILITY'])
         fields=schema['properties']['assessments']['items']
-        self.assertEqual(set(fields['properties']),{'unit_id','applicability','reason'})
-        self.assertEqual(set(fields['required']),{'unit_id','applicability','reason'})
+        self.assertEqual(set(fields['properties']),{'unit_id','applicability','reason','citations'})
+        self.assertEqual(set(fields['required']),{'unit_id','applicability','reason','citations'})
         self.assertFalse(fields['additionalProperties'])
 
     def test_applicability_and_modality_remain_separate_answers_with_raw_evidence(self):

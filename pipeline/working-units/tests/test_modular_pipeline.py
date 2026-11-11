@@ -1,3 +1,5 @@
+from clause_fixtures import decode_prompt
+from clause_fixtures import index_answer
 """Offline end-to-end handoffs, phase isolation, prompt locks and safe pipeline resume."""
 import hashlib
 import json
@@ -16,12 +18,11 @@ class FakeModel:
         self.calls=[];self.fail_timing=fail_timing
 
     def extract(self,prompt):
-        kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+        kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
         self.calls.append((kind,data))
         page=data['source_pages'][0];citation={'pdf_page':page['pdf_page'],'quote':page['text']}
         if kind=='PAGE_PROJECT_FACTS':
-            return {'verpflichtungen':[{'verpflichtung':page['text'],
-                    'zitate':[{'pdf_page':page['pdf_page'],'text':page['text']}]}]}
+            return index_answer(data)
         if kind=='PAGE_EXTRACTION':
             return {'working_units':[{'name':'Bauwasser','action':'Bauwasser bereitstellen',
                     'actor':'Bauherr','performed_by':None,'citations':[citation]}],'carry_forward':''}
@@ -45,6 +46,7 @@ class ModularPipelineTests(unittest.TestCase):
         self.contract=self.root/'contract.pdf';self.contract.write_bytes(b'%PDF contract fixture')
         self.blb=self.root/'blb.pdf';self.blb.write_bytes(b'%PDF blb fixture')
         self.output=self.root/'run';self.commands=[]
+        self.page_count=1
 
     def command(self,argv):
         self.commands.append(argv)
@@ -52,20 +54,88 @@ class ModularPipelineTests(unittest.TestCase):
         if Path(argv[1]).name=='ocr_pipeline.py':
             source=Path(argv[argv.index('--input')+1])
             text='Der Bauherr stellt Bauwasser bereit.'
-            pages=[{'pdf_page':1,'text':text,'checkboxes':[],
-                    'text_sha256':hashlib.sha256(text.encode()).hexdigest()}]
+            pages=[{'pdf_page':n,'text':text,'checkboxes':[],
+                    'text_sha256':hashlib.sha256(text.encode()).hexdigest()}
+                   for n in range(1,self.page_count+1)]
             pipeline.write(folder/'pages.json',{'schema_version':6,'source':str(source),
-                           'sha256':pipeline.sha(source),'page_count':1,'pages':pages})
+                           'sha256':pipeline.sha(source),'page_count':self.page_count,'pages':pages})
         else:
             pages=pipeline.read(argv[argv.index('--input')+1])['pages']
             pipeline.write(folder/'documents.json',{'schema_version':6,'pages_sha256':digest(pages),
                 'status':'proposed','documents':[{'document_id':'D1','document_title':'Document',
-                 'pdf_pages':[1],'uncertain':False}],
-                'page_assignments':[{'pdf_page':1,'document_id':'D1'}]})
+                 'pdf_pages':[p['pdf_page'] for p in pages],'uncertain':False}],
+                'page_assignments':[{'pdf_page':p['pdf_page'],'document_id':'D1'} for p in pages]})
 
     def run_pipeline(self,model,resume=False):
         return pipeline.run([self.contract],[self.blb],self.output,'unused',resume=resume,
-                            model=model,command_runner=self.command)
+                            model=model,command_runner=self.command,max_new_calls=1000)
+
+    def test_facts_use_full_contract_while_task_phases_keep_ten_page_windows(self):
+        self.page_count=20
+        model=FakeModel();manifest=self.run_pipeline(model)
+        expected=[list(range(1,11)),list(range(10,20)),[19,20]]
+        self.assertEqual(manifest['binding']['chunk_pages'],10)
+        self.assertEqual(manifest['binding']['overlap_pages'],1)
+        for kind in ('PAGE_PROJECT_FACTS','PAGE_EXTRACTION','PAGE_OFFERS'):
+            windows=[[p['pdf_page'] for p in data['source_pages']]
+                     for phase,data in model.calls if phase==kind]
+            self.assertEqual(windows,[list(range(1,21))] if kind=='PAGE_PROJECT_FACTS' else expected*2)
+        for kind,data in model.calls:
+            if kind != 'PAGE_PROJECT_FACTS':self.assertLessEqual(len(data['source_pages']),10)
+        for step in manifest['steps']:
+            if not step.startswith(('04-','05-','06-','07-','08-')):
+                continue
+            artifact=pipeline.read(self.output/manifest['steps'][step]['artifact'])
+            self.assertEqual([w['pages'] for w in artifact['windows']],expected)
+            self.assertEqual([n for w in artifact['windows'] for n in w['primary_pages']],
+                             list(range(1,21)))
+
+    def test_consequences_for_every_source_receive_contracts_and_blb_without_reextracting_context(self):
+        model=FakeModel();manifest=self.run_pipeline(model)
+        expected={digest({'source':str(path.resolve()),'pdf_sha256':pipeline.sha(path)})[:16]
+                  for path in (self.contract,self.blb)}
+        calls=[data for phase,data in model.calls if phase=='PAGE_CONSEQUENCES']
+        self.assertEqual(len(calls),2)
+        for data in calls:
+            self.assertEqual({d['source_key'] for d in data['source_documents']},expected)
+            self.assertEqual({d['source_type'] for d in data['source_documents']},{'project','blb'})
+            self.assertEqual(sum(len(d['pages']) for d in data['source_documents']),2)
+            self.assertLessEqual(len(data['working_units']),5)
+        for name in ('contract-01','blb-01'):
+            before=pipeline.read(self.output/manifest['steps']['06-timing/'+name]['artifact'])
+            after=pipeline.read(self.output/manifest['steps']['07-consequences/'+name]['artifact'])
+            self.assertEqual(len(after['working_units']),len(before['working_units']))
+            self.assertEqual(len(after['context_snapshots']),1)
+        self.assertTrue(all('source_documents' not in data for phase,data in model.calls
+                            if phase not in ('PAGE_OFFERS','PAGE_CONSEQUENCES')))
+
+    def test_offers_for_every_source_receive_all_contracts_and_blbs(self):
+        extra_contract=self.root/'amendment.pdf';extra_contract.write_bytes(b'%PDF amendment')
+        extra_blb=self.root/'specification.pdf';extra_blb.write_bytes(b'%PDF specification')
+        model=FakeModel()
+        manifest=pipeline.run([self.contract,extra_contract],[self.blb,extra_blb],self.output,
+                              'unused',model=model,command_runner=self.command,max_new_calls=1000)
+        expected={digest({'source':str(path.resolve()),'pdf_sha256':pipeline.sha(path)})[:16]
+                  for path in (self.contract,extra_contract,self.blb,extra_blb)}
+        calls=[data for phase,data in model.calls if phase=='PAGE_OFFERS']
+        self.assertEqual(len(calls),4)
+        for data in calls:
+            self.assertEqual({d['source_key'] for d in data['source_documents']},expected)
+            self.assertEqual([d['source_type'] for d in data['source_documents']].count('blb'),2)
+        for name in ('contract-01','contract-02','blb-01','blb-02'):
+            before=pipeline.read(self.output/manifest['steps']['04-aufgaben/'+name]['artifact'])
+            after=pipeline.read(self.output/manifest['steps']['05-offers/'+name]['artifact'])
+            self.assertEqual(after['working_units'],before['working_units'])
+            self.assertEqual(len(after['context_snapshots']),3)
+
+    def test_resume_rejects_previous_window_size_before_model_calls(self):
+        manifest=self.run_pipeline(FakeModel())
+        manifest['binding']['chunk_pages']=3
+        pipeline.write(self.output/'pipeline.json',manifest)
+        model=FakeModel()
+        with self.assertRaisesRegex(ValueError,'inputs/configuration/code changed'):
+            self.run_pipeline(model,resume=True)
+        self.assertEqual(model.calls,[])
 
     def test_all_phases_run_in_order_with_separate_artifacts_and_no_blb_fact_calls(self):
         model=FakeModel();result=self.run_pipeline(model)
@@ -141,7 +211,7 @@ class ModularPipelineTests(unittest.TestCase):
         with patch.object(pipeline,'collect_project_facts',side_effect=RuntimeError('stop before facts')):
             with self.assertRaises(RuntimeError):
                 pipeline.run([self.contract],[self.blb],self.output,'unused',model=FakeModel(),
-                             command_runner=uncertain_command)
+                             command_runner=uncertain_command,max_new_calls=1000)
         manifest=pipeline.read(self.output/'pipeline.json')
         manifest['steps'].pop('03-project-facts')
         (self.output/'03-project-facts').rename(self.root/'unused-facts-attempt')
@@ -152,7 +222,7 @@ class ModularPipelineTests(unittest.TestCase):
         pages=self.output/manifest['steps']['01-ocr/blb-01']['artifact'];before=pages.read_bytes()
         def no_pdf_calls(argv):self.fail('Completed PDF phases must be reused')
         result=pipeline.run([self.contract],[self.blb],self.output,'unused',resume=True,model=FakeModel(),
-                            command_runner=no_pdf_calls,accept_analysis_changes=True)
+                            command_runner=no_pdf_calls,accept_analysis_changes=True,max_new_calls=1000)
         self.assertEqual(result['binding_history'],[original_binding])
         self.assertEqual(pages.read_bytes(),before)
         final=pipeline.read(self.output/result['outputs']['blb-01'])
@@ -160,4 +230,4 @@ class ModularPipelineTests(unittest.TestCase):
         # Once analysis has run, this override must not reuse results under changed settings.
         with patch.object(pipeline,'code_binding',return_value='different'),self.assertRaises(ValueError):
             pipeline.run([self.contract],[self.blb],self.output,'unused',resume=True,model=FakeModel(),
-                         command_runner=no_pdf_calls,accept_analysis_changes=True)
+                         command_runner=no_pdf_calls,accept_analysis_changes=True,max_new_calls=1000)

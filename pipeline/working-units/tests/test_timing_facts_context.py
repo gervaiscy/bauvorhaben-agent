@@ -1,3 +1,6 @@
+from historical_facts import collect_historical_facts
+from clause_fixtures import decode_prompt
+from clause_fixtures import index_answer
 import copy
 import json
 from dataclasses import replace
@@ -16,23 +19,23 @@ class TimingFactsContextTests(unittest.TestCase):
         self.doc = Document('D1', 'Contract', 'contract.pdf', schema_version=6,
                    source_key='source-a', source_snapshot='snapshot', pages=tuple(
                    {'pdf_page': n, 'text': self.quote if n == 1 else
-                    'Die zweite Rate folgt nach Herstellung der Bodenplatte.' if n == 5 else 'Andere Angaben.'}
-                   for n in range(1, 6)))
+                    'Die zweite Rate folgt nach Herstellung der Bodenplatte.' if n == 12 else 'Andere Angaben.'}
+                   for n in range(1, 13)))
         def earlier(prompt):
-            data = json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data = decode_prompt(prompt)
             if prompt.startswith('PAGE_EXTRACTION.'):
                 rows = [{'name':'Zweite Rate zahlen','action':'Zweite Rate zahlen','actor':'Bauherr',
-                         'performed_by':None,'citations':[{'pdf_page':5,'quote':self.doc.pages[4]['text']}]}]
-                return {'working_units':rows if any(p['pdf_page']==5 and p['primary'] for p in data['source_pages']) else [],'carry_forward':''}
+                         'performed_by':None,'citations':[{'pdf_page':12,'quote':self.doc.pages[11]['text']}]}]
+                return {'working_units':rows if any(p['pdf_page']==12 and p['primary'] for p in data['source_pages']) else [],'carry_forward':''}
             return {'offers':[]}
         self.baseline = extract_page_units([self.doc], SimpleNamespace(extract=earlier),stop_after='PAGE_OFFERS')
-        self.facts = collect_project_facts([self.doc],SimpleNamespace(extract=self.fact_response))
+        self.facts = collect_historical_facts([self.doc],SimpleNamespace(extract=self.fact_response))
 
     def test_batch_snapshot_has_assessments_without_claiming_phase_complete(self):
         snapshots=[]
         original=copy.deepcopy(self.baseline)
         def timing(prompt):
-            return self.timing_response(json.loads(prompt.split('SOURCE DATA:\n')[1]))
+            return self.timing_response(decode_prompt(prompt))
         result=extract_timing(self.baseline,[self.doc],SimpleNamespace(extract=timing),on_batch=snapshots.append)
         self.assertEqual(len(snapshots),1)
         self.assertNotIn('PAGE_TIMING',snapshots[0]['completed_passes'])
@@ -43,10 +46,8 @@ class TimingFactsContextTests(unittest.TestCase):
         self.assertEqual(self.baseline,original)
 
     def fact_response(self, prompt):
-        pages = json.loads(prompt.split('SOURCE DATA:\n')[1])['source_pages']
-        rows = [{'verpflichtung':p['text'],'zitate':[{'pdf_page':p['pdf_page'],'text':p['text']}]} for p in pages
-                if p['pdf_page'] == 1]
-        return {'verpflichtungen':rows}
+        data = decode_prompt(prompt)
+        return index_answer(data, lambda entry: entry['pdf_page'] == 1)
 
     def timing_response(self, data, citation=None):
         rule = {'kind':'EVENT_RELATIVE','scope':'Zweite Rate zahlen','expression':'zehn Tage nach Zugang',
@@ -62,10 +63,10 @@ class TimingFactsContextTests(unittest.TestCase):
                 original = copy.deepcopy(self.baseline); facts_before = copy.deepcopy(self.facts)
                 def timing(prompt):
                     self.assertTrue(prompt.startswith('PAGE_TIMING.'))
-                    data = json.loads(prompt.split('SOURCE DATA:\n')[1])
-                    self.assertEqual([p['pdf_page'] for p in data['source_pages']],[3,4,5])
+                    data = decode_prompt(prompt)
+                    self.assertEqual([p['pdf_page'] for p in data['source_pages']],[10,11,12])
                     self.assertEqual(len(data['project_facts']['facts']),1)
-                    self.assertEqual(data['project_facts']['facts'][0]['verpflichtung'],self.quote)
+                    self.assertEqual(data['project_facts']['facts'][0]['text'],self.quote)
                     citation = {'pdf_page':1,'quote':self.quote}
                     if qualified: citation.update(source_key='source-a',document_id='D1')
                     return self.timing_response(data,citation)
@@ -78,7 +79,7 @@ class TimingFactsContextTests(unittest.TestCase):
     def test_filter_uses_source_and_document_identity_not_document_id_alone(self):
         other_doc = replace(self.doc,id='D2')
         other_source = replace(self.doc,source_key='source-b')
-        collection = collect_project_facts([self.doc,other_doc,other_source],SimpleNamespace(extract=self.fact_response))
+        collection = collect_historical_facts([self.doc,other_doc,other_source],SimpleNamespace(extract=self.fact_response))
         before = copy.deepcopy(collection)
         view = document_facts_view(collection,self.doc)
         self.assertEqual(len(view['facts']),1)
@@ -94,8 +95,8 @@ class TimingFactsContextTests(unittest.TestCase):
         self.facts['facts'][0]['review_findings'].append(issue)
         self.facts['review_findings'].append(issue);self.facts['status']='needs_review'
         def timing(prompt):
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1])
-            self.assertNotIn('review_findings',data['project_facts']['facts'][0])
+            data=decode_prompt(prompt)
+            self.assertEqual(data['project_facts']['facts'][0]['review_findings'],[issue])
             return self.timing_response(data)
         result=extract_timing(self.baseline,[self.doc],SimpleNamespace(extract=timing),project_facts=self.facts)
         self.assertEqual(result['previous_project_facts'],self.baseline['project_facts'])
@@ -111,7 +112,7 @@ class TimingFactsContextTests(unittest.TestCase):
 
     def test_another_documents_quote_does_not_become_valid_evidence(self):
         def timing(prompt):
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data=decode_prompt(prompt)
             return self.timing_response(data,{'pdf_page':1,'quote':self.quote,
                                                'source_key':'source-a','document_id':'D2'})
         result=extract_timing(self.baseline,[self.doc],SimpleNamespace(extract=timing),project_facts=self.facts)
@@ -131,9 +132,11 @@ class TimingFactsContextTests(unittest.TestCase):
         for mode in ('qualified','unqualified','wrong_source'):
             with self.subTest(mode=mode):
                 def timing(prompt):
-                    data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+                    data=decode_prompt(prompt)
                     fact=data['project_facts']['facts'][0]
-                    self.assertEqual(set(fact),{'verpflichtung','text'})
+                    self.assertEqual(fact['source_key'],'source-a')
+                    self.assertEqual(fact['document_id'],'D1')
+                    self.assertEqual(fact['citations'][0]['pdf_page'],1)
                     self.assertEqual(data['source_pages'][0]['text'],blb.pages[0]['text'])
                     citation={'pdf_page':1,'quote':self.quote}
                     if mode!='unqualified':
@@ -150,7 +153,7 @@ class TimingFactsContextTests(unittest.TestCase):
 
     def test_external_fact_source_must_be_supplied_and_match_before_calls(self):
         external=replace(self.doc,source_key='external')
-        facts=collect_project_facts([external],SimpleNamespace(extract=self.fact_response))
+        facts=collect_historical_facts([external],SimpleNamespace(extract=self.fact_response))
         def fail(prompt):self.fail('Must reject missing or changed evidence before calling Gemini')
         for context in ([],[replace(external,source_snapshot='changed')]):
             with self.subTest(context=context),self.assertRaises(ValueError):

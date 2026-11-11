@@ -11,8 +11,8 @@ PDF → OCR → Document boundaries
 |---|---|---|---|
 | **1. OCR** | PDF file | Render each page as an image. Gemini transcribes its visible text. The app assembles the result. | `pages.json`: page numbers and extracted text |
 | **2. Document boundaries** | `pages.json` | Gemini identifies separate documents using five-page windows and previous-page context. | `documents.json`: document identities, titles and page ranges |
-| **3. Contract facts** | Contract `pages.json` + `documents.json` | Extract agreements and obligations of both parties using three-page windows with one-page overlap. BLB is excluded. | `working-units.project-facts.json`, including quotations, source identities and review findings |
-| **4. Aufgaben** | BLB or contract pages + document boundaries | Extract what must be done, who is responsible and who performs it. Uses three-page windows with one-page overlap, within document boundaries. | `working-units.json` and `working-units.units-only.json` |
+| **3. Contract facts** | Contract `pages.json` + `documents.json` | Extract agreements and obligations of both parties using ten-page windows with one-page overlap. BLB is excluded. | `working-units.project-facts.json`, including quotations, source identities and review findings |
+| **4. Aufgaben** | BLB or contract pages + document boundaries | Extract what must be done, who is responsible and who performs it. Uses ten-page windows with one-page overlap, within document boundaries. | `working-units.json` and `working-units.units-only.json` |
 | **5. Offers** | Saved Aufgaben output + original pages and boundaries | Extract optional/additional offers and their terms. Preserve existing tasks. | New cumulative `working-units.json` and `working-units.offers-only.json` |
 | **6. Timing** | Saved Aufgaben-and-offers output + BLB pages/boundaries + contract facts + original contract pages/boundaries | Assess when each existing task must happen. | New cumulative `working-units.json` and `working-units.timing-only.json` |
 
@@ -22,7 +22,7 @@ For the **BLB timing phase**, these are the individual steps:
    Check that the saved tasks match the BLB text, document boundaries and window configuration. Verify the contract facts against their original sources.
 
 2. **Select context for each task.**  
-   Choose an existing three-page BLB window containing its cited pages, favoring following-page context. Windows never cross document boundaries.
+   Choose an existing ten-page BLB window containing its cited pages, favoring following-page context. Windows never cross document boundaries.
 
 3. **Build a timing request.**  
    Send Gemini:

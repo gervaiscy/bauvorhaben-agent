@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 """Applicability sees source content, complete window units and facts, not app state."""
 import copy
 import json
@@ -11,7 +12,7 @@ from bauvo_working_units.project_flow import Document
 
 
 class ApplicabilityPayloadTests(unittest.TestCase):
-    def test_fact_metadata_stays_in_artifacts_only(self):
+    def test_fact_provenance_and_uncertainty_reach_the_model_without_application_hashes(self):
         issue={'code':'citation_quote_not_found','fact_id':'F1'}
         fact={'id':'F1','source_key':'contract','document_id':'D1',
               'gemini':{'verpflichtung':'Uncertain agreement','zitate':[{'pdf_page':1,'text':'Original quote'}]},
@@ -25,11 +26,15 @@ class ApplicabilityPayloadTests(unittest.TestCase):
                                'source_snapshots':[{'pages_sha256':'hash'}],'excluded_sources':[]}}
         before=copy.deepcopy(data)
         prompt=_prompt('PAGE_APPLICABILITY',data,'de')
-        actual=json.loads(prompt.split('SOURCE DATA:\n')[1])
+        actual=decode_prompt(prompt)
         self.assertEqual(set(actual),{'source_key','document','source_pages','working_units','project_facts'})
         self.assertEqual(actual['source_pages'],[{'pdf_page':1,'text':'Overlap text'},{'pdf_page':2,'text':'New text'}])
         self.assertEqual(actual['working_units'],data['working_units'])
-        self.assertEqual(actual['project_facts'],{'facts':[{'verpflichtung':'Uncertain agreement','text':'Original quote'}]})
+        self.assertEqual(actual['project_facts'],{'facts':[{'id':'F1','text':'',
+            'source_key':'contract','document_id':'D1','document_title':None,'citations':[],
+            'review_findings':[issue]}], 'excluded_passages':[], 'review_findings':[issue]})
+        self.assertNotIn('Uncertain agreement',prompt)
+        self.assertNotIn('Original quote',prompt)  # Unverified raw text cannot become evidence.
         self.assertNotIn('supported_anchors',prompt)
         self.assertEqual(data,before)
         timing=json.loads(_prompt('PAGE_TIMING',data,'de').split('SOURCE DATA:\n')[1])
@@ -43,7 +48,7 @@ class ApplicabilityPayloadTests(unittest.TestCase):
                        pages=({'pdf_page':6,'text':'Work 6.'},))]
         facts=collect_project_facts([],SimpleNamespace(extract=lambda p:self.fail('No fact calls')))
         def earlier(prompt):
-            d=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            d=decode_prompt(prompt)
             if prompt.startswith('PAGE_EXTRACTION.'):
                 page=d['source_pages'][-1]['pdf_page']
                 citations=[3]*6 if page==3 else [3,5] if page==5 else [6]
@@ -54,14 +59,14 @@ class ApplicabilityPayloadTests(unittest.TestCase):
             if prompt.startswith('PAGE_OFFERS.'):return {'offers':[]}
             return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','timing_rules':[],
                                    'missing_evidence':[]} for u in d['working_units']]}
-        baseline=extract_page_units(docs,SimpleNamespace(extract=earlier),project_facts=facts,stop_after='PAGE_TIMING')
+        baseline=extract_page_units(docs,SimpleNamespace(extract=earlier),project_facts=facts,stop_after='PAGE_TIMING', chunk_pages=3)
         original=copy.deepcopy(baseline);calls=[]
         def app(prompt):
-            d=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(d)
+            d=decode_prompt(prompt);calls.append(d)
             return {'assessments':[{'unit_id':u['id'],'applicability':'UNKNOWN','modality':'UNCLEAR',
                                    'reason':'Unresolved','applicability_rules':[],'modality_citations':[],
                                    'missing_evidence':['Selection']} for u in d['working_units']]}
-        result=extract_applicability(baseline,docs,SimpleNamespace(extract=app))
+        result=extract_applicability(baseline,docs,SimpleNamespace(extract=app), chunk_pages=3)
         self.assertEqual([len(c['working_units']) for c in calls],[6,2,1])
         self.assertEqual([[p['pdf_page'] for p in c['source_pages']] for c in calls],[[1,2,3],[3,4,5],[6]])
         self.assertEqual(calls[1]['working_units'][0]['citations'][0]['pdf_page'],3)

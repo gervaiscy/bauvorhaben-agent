@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "legacy_code_limits": {
+    "3c747bc2489e1ddb61dd1514b7c8ab16f78c3c4df507d7a5b8da1883d15664c4": 16384,
+    "887b0aeeccfd7a7ce5540babc552dfec04b5d120313726f6220c909a877368c1": 65536
+  },
+  "target_compatible_code": "f5d09fa5aaf7217f4a0b6c1d54b09b3afbc8da91cc83766b5063b73de6287146"
+}

@@ -11,7 +11,6 @@ from bauvo_working_units.applicability_stage import extract_applicability
 from bauvo_working_units.core import digest
 from bauvo_working_units.gemini import GeminiModel
 from bauvo_working_units.page_flow import extract_page_units
-from bauvo_working_units.project_facts import collect_project_facts
 from bauvo_working_units.project_flow import Document
 from bauvo_working_units.schemas import GENERATION, PROTOCOL, PHASE_THINKING_LEVELS
 from bauvo_working_units.trace import RawRunRecorder, RetryingModel, TracingModel
@@ -35,11 +34,35 @@ def prepare(case):
     contract=document(case['id']+'-contract',[
         {'pdf_page':i+1,'text':row['quote']} for i,row in enumerate(fact_rows)],'project')
     context=[contract] if fact_rows else []
-    def facts_response(prompt):
-        pages=json.loads(prompt.split('SOURCE DATA:\n')[1])['source_pages']
-        return {'verpflichtungen':[{'verpflichtung':fact_rows[p['pdf_page']-1]['statement'],
-                                   'zitate':[{'pdf_page':p['pdf_page'],'text':p['text']}]} for p in pages]}
-    facts=collect_project_facts(context, SimpleNamespace(extract=facts_response))
+    # These authored applicability controls include broad project context, not
+    # just homeowner rights. Keep them explicit historical reference fixtures;
+    # do not pretend the current rights extractor selected these statements.
+    from bauvo_working_units.shared.source_documents import full_source_documents
+    from bauvo_working_units.phases.project_facts.full_context import (
+        context as fact_context, records, source_windows, target_batches, TARGET_BATCH_SIZE)
+    from bauvo_working_units.citation_evidence import CATALOG_PROTOCOL
+    sources = full_source_documents(context)
+    pages, entries, _, _ = fact_context(sources)
+    facts = {'schema_version': 11, 'evidence_protocol': 'source-backed-interpretations-v7',
+             'catalog_protocol': CATALOG_PROTOCOL, 'context_scope': 'full_contract_package',
+             'target_batch_size': TARGET_BATCH_SIZE, 'status': 'recorded' if context else 'no_project_sources',
+             'facts': [], 'excluded_passages': [], 'source_documents': sources,
+             'source_snapshots': [{'source_key': d.source_key, 'document_id': d.id,
+                 'document_sha256': digest(list(d.pages)), 'pages_sha256': d.source_snapshot} for d in context],
+             'excluded_sources': [], 'windows': source_windows(sources),
+             'gemini_responses': [], 'review_findings': []}
+    for metadata, rid in target_batches(sources):
+        rows = [{'claims': [{'statement': entry['quote'], 'evidence_ids': [entry['evidence_id']]}],
+                 'uncertainty': None, 'zitate': []}
+                for entry in entries if entry['evidence_id'] in metadata['target_evidence_ids']]
+        raw = {'verpflichtungen': rows, 'nicht_als_fakt_erfasst': []}
+        selected, excluded, coverage, issues = records(raw, sources,
+            target_evidence_ids=metadata['target_evidence_ids'], response_id=rid,
+            require_claims=True, allow_context_citations=True, derive_fact_citations=True, authoritative_claims=True)
+        facts['facts'].extend(selected)
+        facts['review_findings'].extend(issues)
+        facts['gemini_responses'].append({'id': rid, 'pass': 'PAGE_PROJECT_FACTS', **metadata,
+                                         'gemini': raw, 'coverage': coverage})
     def earlier(prompt):
         data=json.loads(prompt.split('SOURCE DATA:\n')[1])
         if prompt.startswith('PAGE_EXTRACTION.'):
@@ -59,7 +82,7 @@ def run(output, project, location='global', model=None):
     files=[Path(__file__),CASES,*(BASE.parent/'src').rglob('*.py'),*(BASE.parent/'src').rglob('*.txt')]
     hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
     write(output/'run-manifest.json',{'protocol':PROTOCOL,'model':'gemini-3.5-flash',
-          'generation':GENERATION,'phase_thinking_levels':PHASE_THINKING_LEVELS,'chunk_pages':3,'overlap_pages':1,'inputs_and_code':hashes})
+          'generation':GENERATION,'phase_thinking_levels':PHASE_THINKING_LEVELS,'chunk_pages':10,'overlap_pages':1,'inputs_and_code':hashes})
     backend=model if model is not None else GeminiModel(project,location,'gemini-3.5-flash')
     summary=[]
     for case in json.loads(CASES.read_text())['cases']:

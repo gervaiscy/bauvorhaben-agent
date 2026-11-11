@@ -16,7 +16,7 @@ from ...fact_artifact import load_facts, validate_facts
 PRIOR_PASSES = ('PAGE_EXTRACTION', 'PAGE_OFFERS')
 
 
-def extract_timing(baseline, documents, model, chunk_pages=3, overlap_pages=1, anchors=None, project_facts=None, context_documents=(), on_batch=None):
+def extract_timing(baseline, documents, model, chunk_pages=10, overlap_pages=1, anchors=None, project_facts=None, context_documents=(), on_batch=None):
     validate_input(baseline, documents, chunk_pages, overlap_pages, expected_passes=PRIOR_PASSES)
     anchors = validate_anchors(baseline.get('supported_anchors', []) if anchors is None else anchors, documents)
     facts = baseline['project_facts'] if project_facts is None else validate_facts(project_facts, [*documents, *context_documents])
@@ -50,12 +50,14 @@ def main():
     parser.add_argument('--project', required=True)
     parser.add_argument('--model', default='gemini-3.5-flash')
     parser.add_argument('--location', default='global')
-    parser.add_argument('--chunk-pages', type=int, default=3)
+    parser.add_argument('--chunk-pages', type=int, default=10)
     parser.add_argument('--overlap-pages', type=int, default=1)
     parser.add_argument('--project-facts', help='Saved contract facts; provide original sources as pages/context-pages for verification')
     parser.add_argument('--context-pages', action='append', default=[], help='Original pages for contract facts; repeat with matching --context-documents')
     parser.add_argument('--context-documents', action='append', default=[], help='Document boundaries for each context source')
     parser.add_argument('--date-anchors', help='Optional source-cited event dates; otherwise retain saved anchors')
+    from ...call_budget import add_call_arguments, cached_backend
+    add_call_arguments(parser)
     args = parser.parse_args()
     if len(args.context_pages) != len(args.context_documents):
         parser.error('Each --context-pages requires matching --context-documents')
@@ -78,7 +80,7 @@ def main():
     facts = load_facts(args.project_facts, [*documents, *context_documents]) if args.project_facts else None
     from ...gemini import GeminiModel
     from ...trace import RawRunRecorder, TracingModel, RetryingModel, RequestCheckpoints
-    backend = RequestCheckpoints(GeminiModel(args.project, args.location, args.model),
+    backend = RequestCheckpoints(cached_backend(args, output, lambda: GeminiModel(args.project, args.location, args.model)),
         checkpoints,
         {'project':args.project, 'location':args.location, 'model':args.model}, args.resume_from,
         trace_directory=trace)

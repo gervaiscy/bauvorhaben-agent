@@ -1,0 +1,403 @@
+{
+  "purpose": "Contractual provisions for the homeowner, including rights, duties, permissions, formation, representation and formal requirements; fictional, held-out review expectations.",
+  "cases": [
+    {
+      "id": "included-heating",
+      "text": "Der Auftragnehmer errichtet das Gebäude einschließlich einer Fußbodenheizung im Erd- und Obergeschoss.",
+      "expectations": [
+        "A building entitlement includes both stated floors; no unsupported guarantee."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Fußbodenheizung",
+          "Erd- und Obergeschoss"
+        ],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "conditional-credit-with-postal-exception",
+      "text": "Der Bauherr erhält 750 EUR Gutschrift, wenn sämtliche Rechnungen innerhalb von 16 Tagen nach Rechnungsstellung bezahlt werden.\nEine längere Postlaufzeit kann der Bauherr nachweisen.\nDie Auszahlung erfolgt innerhalb von vier Wochen nach letzter Zahlung und Rückgabe der Bürgschaft.",
+      "expectations": [
+        "Keep eligibility, postal exception and deferred payout; do not claim conditions fulfilled."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 2,
+        "required_fragments": [
+          "750",
+          "sämtliche",
+          "16",
+          "Rechnungsstellung",
+          "Postlaufzeit",
+          "vier Wochen",
+          "Rückgabe"
+        ],
+        "forbidden_fragments": [
+          "bereits verdient",
+          "sofort ausgezahlt"
+        ]
+      }
+    },
+    {
+      "id": "qualified-security",
+      "text": "Der Auftragnehmer stellt eine Bürgschaft für die rechtzeitige Herstellung ohne wesentliche Mängel.",
+      "expectations": [
+        "Preserve the qualification instead of strengthening it."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Bürgschaft",
+          "ohne wesentliche Mängel"
+        ],
+        "forbidden_fragments": [
+          "mängelfreie",
+          "mängelfrei"
+        ]
+      }
+    },
+    {
+      "id": "amended-completion",
+      "text": "§ 1 Bauzeit\nDer Auftragnehmer schuldet die Fertigstellung innerhalb von 30 Wochen.\n\nNachtrag zu § 1: Die Frist von 30 Wochen wird auf 34 Wochen geändert.",
+      "expectations": [
+        "One interpreted entitlement reflects the explicit amendment and cites both provisions."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "34 Wochen"
+        ],
+        "forbidden_fragments": [
+          "Anspruch auf Fertigstellung innerhalb von 30 Wochen"
+        ]
+      }
+    },
+    {
+      "id": "unaccepted-priced-offer",
+      "text": "Wir bieten Ihnen ein zusätzliches Dachfenster für 1.250 EUR an.\nEine Beauftragung ist in diesen Unterlagen nicht dokumentiert.",
+      "expectations": [
+        "An unaccepted offer does not establish a homeowner entitlement."
+      ],
+      "rights_expectations": {
+        "min_count": 0,
+        "max_count": 0,
+        "required_fragments": [],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "expressly-incorporated-offer",
+      "text": "Das Angebot A-7 ist Bestandteil dieses Vertrags. Der Auftragnehmer schuldet die dort aufgeführten Leistungen.\nAngebot A-7: Eine zusätzliche Haustür einschließlich Einbau ist zum Festpreis von 2.350 EUR enthalten.",
+      "expectations": [
+        "Express incorporation supports the entitlement despite the attachment title."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Haustür",
+          "Einbau",
+          "2.350"
+        ],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "homeowner-duty-only",
+      "text": "Der Bauherr stellt Bauwasser bereit.\nFirmenlogo\nTelefon: 01234 56789",
+      "expectations": [
+        "Retain the standalone homeowner duty to supply construction water; ignore the logo and phone number."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Bauherr",
+          "Bauwasser"
+        ],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "signature-and-heading-only",
+      "text": "Unterschriften\nBauherr: [signature]\nOrt, Datum: Beispielstadt, 12.05.2025\nSeite 1 von 6",
+      "expectations": [
+        "Signature observations and layout are not standalone entitlements."
+      ],
+      "rights_expectations": {
+        "min_count": 0,
+        "max_count": 0,
+        "required_fragments": [],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "weather-qualified-completion",
+      "text": "Der Auftragnehmer schuldet die abnahmefähige Fertigstellung innerhalb von 40 Wochen nach Beginn der Erdarbeiten.\nBei Nachtfrost verlängert sich die Frist, für Estrich und Trockenbau jedoch nur ohne mögliche ordnungsgemäße Beheizung.\nDie witterungsbedingte Verlängerung beträgt höchstens drei Monate.",
+      "expectations": [
+        "Keep deadline trigger and exceptions together in the entitlement."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "40 Wochen",
+          "Erdarbeiten",
+          "Estrich",
+          "Trockenbau",
+          "Beheizung",
+          "drei Monate"
+        ],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "conditional-discount-with-two-dates",
+      "text": "Der Bauherr erhält 1.800 EUR Nachlass bei Vertragsunterzeichnung bis zum 30.04.2025.\nUnterschrift Bauherr: 28.04.2025\nUnterschrift Auftragnehmer: 05.05.2025",
+      "expectations": [
+        "Extract the documented conditional discount rule without claiming its signing condition was fulfilled. Missing proof of fulfilment does not prevent extraction of the rule itself."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "1.800",
+          "30.04.2025"
+        ],
+        "forbidden_fragments": [
+          "Voraussetzung ist erfüllt",
+          "Frist wurde eingehalten"
+        ]
+      }
+    },
+    {
+      "id": "uncertain-drawing-inclusion",
+      "text": "Kundenwunsch-Zeichnung: Ein Arbeitszimmer mit 11 m² ist dargestellt.\nOb diese Zeichnung als verbindliche Anlage einbezogen wurde, ist aus den Unterlagen nicht feststellbar.",
+      "expectations": [
+        "Do not extract a proposed room as an entitlement when contractual incorporation is unestablished. Do not replace the missing entitlement with a document observation or an unresolved candidate."
+      ],
+      "rights_expectations": {
+        "min_count": 0,
+        "max_count": 0,
+        "required_fragments": [],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "qualified-assignment-confirmation",
+      "text": "Der Bauherr darf anstelle einer Zahlungsbürgschaft Kreditmittel abtreten.\nVoraussetzung ist eine Bankbestätigung über die Abtretung und sämtliche Auszahlungsvoraussetzungen außer dem Baufortschritt.\nDie Bestätigung ist spätestens neun Wochen vor Baubeginn vorzulegen.",
+      "expectations": [
+        "Keep the assignment alternative, confirmation content, construction-progress exception and confirmation deadline together; a generic bank-confirmation reference is insufficient."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Abtretung",
+          "Auszahlungsvoraussetzungen",
+          "Baufortschritt",
+          "neun Wochen",
+          "Baubeginn"
+        ],
+        "forbidden_fragments": []
+      }
+    },
+    {
+      "id": "ownership-evidence-is-associated-duty",
+      "text": "Der Auftragnehmer schuldet die Errichtung des vereinbarten Hauses.\nDer Bauherr verpflichtet sich, sein Eigentum durch einen Grundbuchauszug zehn Wochen vor Baubeginn nachzuweisen.",
+      "expectations": [
+        "Preserve the construction entitlement and associated evidence duty without inventing a suspensive condition for the entitlement itself."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 2,
+        "required_fragments": [
+          "Grundbuchauszug",
+          "zehn Wochen"
+        ],
+        "forbidden_fragments": [
+          "Anspruch steht unter der Bedingung",
+          "nur dann Anspruch"
+        ]
+      }
+    },
+    {
+      "id": "single-notified-viewing",
+      "text": "Der Bauherr gestattet dem Auftragnehmer eine einmalige Hausbesichtigung für Interessenten nach vorheriger Anmeldung innerhalb von acht Monaten nach Fertigstellung.",
+      "expectations": [
+        "When explaining the homeowner limits on this permission, retain one viewing, prior notice and the eight-month window; do not imply repeated viewings are permitted."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "einmalige",
+          "Anmeldung",
+          "acht Monaten",
+          "Fertigstellung"
+        ],
+        "forbidden_fragments": [
+          "beliebig viele",
+          "mehrere Hausbesichtigungen"
+        ]
+      }
+    },
+    {
+      "id": "partially-established-service-scope",
+      "text": "Vertrag: Der Auftragnehmer liefert und montiert eine Hauseingangstür aus Kunststoff.\nEine unverbindliche Vorplanung zeigt zusätzlich ein Aluminium-Vordach. Eine Beauftragung des Vordachs ist nicht dokumentiert.",
+      "expectations": [
+        "Keep the contracted plastic entrance door with installation. Omit the uncommissioned canopy without discarding the supported door entitlement or adding a possible-claim observation."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Hauseingangstür",
+          "Kunststoff"
+        ],
+        "forbidden_fragments": [
+          "Vordach",
+          "Aluminium"
+        ]
+      }
+    },
+    {
+      "id": "bounded-advertising-permission",
+      "text": "Der Auftragnehmer darf bis acht Monate nach Übergabe ein Werbeschild von höchstens 70 x 50 cm an der Grundstückseinfahrt aufstellen.",
+      "expectations": [
+        "Retain the contractor permission independently, including size, location and endpoint relative to handover. Do not turn permission into a duty to install a sign."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Auftragnehmer",
+          "darf",
+          "acht Monate",
+          "Übergabe",
+          "Werbeschild",
+          "70 x 50",
+          "Grundstückseinfahrt"
+        ],
+        "forbidden_fragments": [
+          "Bauherr muss ein Werbeschild aufstellen",
+          "Auftragnehmer muss"
+        ]
+      }
+    },
+    {
+      "id": "independent-credit-and-viewing-permission",
+      "text": "Der Bauherr erhält 850 EUR Gutschrift, wenn alle Rechnungen binnen 18 Tagen nach Rechnungsstellung bezahlt werden.\nDer Bauherr erlaubt eine einmalige Hausbesichtigung nach vorheriger Anmeldung innerhalb von sieben Monaten nach Fertigstellung.",
+      "expectations": [
+        "Retain both the conditional credit and standalone viewing permission. Neighbouring clauses do not establish that viewing is a credit condition or consideration."
+      ],
+      "rights_expectations": {
+        "min_count": 2,
+        "max_count": 2,
+        "required_fragments": [
+          "850",
+          "18 Tagen",
+          "Rechnungsstellung",
+          "einmalige",
+          "Anmeldung",
+          "sieben Monaten",
+          "Fertigstellung"
+        ],
+        "forbidden_fragments": [
+          "Gegenleistung",
+          "Gutschrift nur bei Hausbesichtigung"
+        ]
+      }
+    },
+    {
+      "id": "homeowner-payment-and-cost-restriction",
+      "text": "Der Bauherr muss jede Rate innerhalb von zwölf Tagen nach Zugang der Herstellungsmitteilung bezahlen.\nBaustrom und Bauwasser sind nicht im Festpreis enthalten; die Kosten trägt der Bauherr bis zur Abnahme.",
+      "expectations": [
+        "Retain the standalone payment duty with receipt trigger and deadline, and the separate cost exclusion with the homeowner as cost bearer until acceptance."
+      ],
+      "rights_expectations": {
+        "min_count": 2,
+        "max_count": 2,
+        "required_fragments": [
+          "zwölf Tagen",
+          "Zugang",
+          "Herstellungsmitteilung",
+          "Baustrom",
+          "Bauwasser",
+          "Festpreis",
+          "Bauherr",
+          "Abnahme"
+        ],
+        "forbidden_fragments": [
+          "zwölf Tagen nach Rechnungsstellung"
+        ]
+      }
+    },
+    {
+      "id": "offer-footer-binding-confirmation",
+      "text": "Angebot der Nord Vertrieb GmbH: Eine Garage wird unverbindlich für 19.000 EUR angeboten; eine Beauftragung ist nicht dokumentiert.\nBauleistungen werden von der Süd Bau GmbH erbracht.\nTelefon: 01234 56789\nVerbindliche Erklärungen der Nord Vertrieb GmbH bedürfen einer schriftlichen Bestätigung durch ihre Geschäftsführung.",
+      "expectations": [
+        "Retain the binding-confirmation requirement even in an offer footer beside contact details. Preserve its scope to Nord Vertrieb GmbH. Do not extend it to Süd Bau GmbH or turn the uncommissioned garage into a contractual entitlement."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "Nord Vertrieb GmbH",
+          "schriftlich",
+          "Geschäftsführung"
+        ],
+        "forbidden_fragments": [
+          "Süd Bau GmbH",
+          "Anspruch auf eine Garage",
+          "19.000"
+        ]
+      }
+    },
+    {
+      "id": "contract-formation-confirmation",
+      "text": "Der Bauvertrag kommt erst mit schriftlicher Auftragsbestätigung durch den Auftragnehmer zustande.",
+      "expectations": [
+        "Retain the documented formation rule without asserting that confirmation was already given or the contract already formed."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "schriftlich",
+          "Auftragsbestätigung",
+          "Auftragnehmer"
+        ],
+        "forbidden_fragments": [
+          "Bestätigung liegt vor",
+          "Vertrag ist bereits zustande gekommen"
+        ]
+      }
+    },
+    {
+      "id": "amendments-require-text-form",
+      "text": "Änderungen des Leistungsumfangs bedürfen eines von beiden Vertragsparteien in Textform bestätigten Nachtrags.",
+      "expectations": [
+        "Retain the formal requirement for amendments and both-party confirmation. Do not strengthen Textform to Schriftform or claim a signed original is required."
+      ],
+      "rights_expectations": {
+        "min_count": 1,
+        "max_count": 1,
+        "required_fragments": [
+          "beiden Vertragsparteien",
+          "Textform",
+          "Nachtrag"
+        ],
+        "forbidden_fragments": [
+          "Schriftform",
+          "eigenhändig unterschrieben"
+        ]
+      }
+    }
+  ]
+}
