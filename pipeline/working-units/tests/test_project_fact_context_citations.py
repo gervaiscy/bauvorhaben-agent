@@ -59,8 +59,14 @@ class FactContextCitationTests(unittest.TestCase):
             data = json.loads(_prompt(phase, {'source_pages':[], 'project_facts':facts_view(result)}, 'de')
                               .split('SOURCE DATA:\n',1)[1])
             projected = data['project_facts']['facts'][0]
-            self.assertEqual(projected['context_citations'], fact['derived']['context_citations'])
-            self.assertEqual(projected['claims'], fact['derived']['claims'])
+            if phase == 'PAGE_EXTRACTION':
+                self.assertEqual([c['quote'] for c in projected['context_citations']],
+                                 [c['quote'] for c in fact['derived']['context_citations']])
+                self.assertEqual([[c['quote'] for c in claim['verified_citations']] for claim in projected['claims']],
+                                 [[c['quote'] for c in claim['verified_citations']] for claim in fact['derived']['claims']])
+            else:
+                self.assertEqual(projected['context_citations'], fact['derived']['context_citations'])
+                self.assertEqual(projected['claims'], fact['derived']['claims'])
         self.assertEqual(validate_facts(result, [self.doc]), result)
 
     def test_context_policy_is_generic_and_does_not_classify_by_heading_keywords(self):

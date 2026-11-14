@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import hashlib
 import json
 from pathlib import Path
@@ -150,7 +151,7 @@ class TimingCheckpointTests(unittest.TestCase):
                 last_finish_reason='STOP'
                 def extract(self,prompt):
                     calls.append(prompt)
-                    data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+                    data=decode_prompt(prompt)
                     response={'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]}
                                              for u in data['working_units']]}
                     self.last_raw_response=json.dumps(response)

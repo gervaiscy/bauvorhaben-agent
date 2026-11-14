@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import io
 import json
@@ -33,7 +34,7 @@ class TimingStageTests(unittest.TestCase):
         calls = []
         def timing(prompt):
             self.assertTrue(prompt.startswith('PAGE_TIMING.'))
-            data = json.loads(prompt.split('SOURCE DATA:\n')[1]); calls.append(data)
+            data = decode_prompt(prompt); calls.append(data)
             return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','timing_rules':[],
                                     'missing_evidence':[]} for u in data['working_units']]}
         result = extract_timing(self.baseline, self.docs, SimpleNamespace(extract=timing))
@@ -48,7 +49,7 @@ class TimingStageTests(unittest.TestCase):
 
     def test_relative_deadline_without_supported_date_stays_unresolved(self):
         def timing(prompt):
-            data = json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data = decode_prompt(prompt)
             rule = {'kind':'EVENT_RELATIVE','scope':'Bauwasser bereitstellen',
                     'expression':'zwei Wochen vor Baubeginn','conditions':[], 'alternative_group':None,
                     'anchor_events':['Baubeginn'],'relation':'BEFORE','offset':'zwei Wochen',

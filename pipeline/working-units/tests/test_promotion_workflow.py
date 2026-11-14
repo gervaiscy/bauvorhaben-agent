@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 """Empty extraction and optional activities remain provider-owned, with no text filters."""
 import copy
 import json
@@ -21,7 +22,7 @@ class PromotionWorkflowTests(unittest.TestCase):
         calls=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0]
-            payload=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(kind)
+            payload=decode_prompt(prompt);calls.append(kind)
             self.assertEqual(payload['source_pages'][0]['text'],case['pages'][0]['text'])
             self.assertFalse(set(payload)&{'expected_units','expected_offers','expectations','forbidden_inferences'})
             if kind=='PAGE_EXTRACTION':return {'working_units':copy.deepcopy(units),'carry_forward':''}
@@ -62,7 +63,7 @@ class PromotionWorkflowTests(unittest.TestCase):
         doc=Document('D1','Brochure','synthetic.pdf',schema_version=6,pages=({'pdf_page':1,'text':text},))
         calls=[];answers=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];calls.append(kind);data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            kind=prompt.split('.',1)[0];calls.append(kind);data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':out={'working_units':[copy.deepcopy(unit)],'offers':[],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
             else:

@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 """Offers see complete project sources without extracting context as extra windows."""
 import copy
 import json
@@ -36,7 +37,7 @@ class OfferFullContextTests(unittest.TestCase):
         calls=[];responses=[]
         def model(prompt):
             self.assertTrue(prompt.startswith('PAGE_OFFERS.'))
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(data)
+            data=decode_prompt(prompt);calls.append(data)
             self.assertEqual(data['source_documents'],full_source_documents([*docs,*context]))
             self.assertEqual(sum(len(d['pages']) for d in data['source_documents']),15)
             self.assertEqual(data['prior_context'],'Original extraction context')
@@ -74,7 +75,7 @@ class OfferFullContextTests(unittest.TestCase):
         context=document('D1','specification',[(1,'Optionale Leistung.')])
         baseline=self.baseline([target]);calls=[]
         def model(prompt):
-            calls.append(json.loads(prompt.split('SOURCE DATA:\n')[1]));return {'offers':[]}
+            calls.append(decode_prompt(prompt));return {'offers':[]}
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);saved=root/'tasks.json';saved.write_text(json.dumps(baseline))
             output=root/'offers.json'

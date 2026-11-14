@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import json
 from pathlib import Path
@@ -65,7 +66,7 @@ class AssessmentContextTests(unittest.TestCase):
     def test_timing_and_consequences_use_following_context_but_applicability_keeps_extraction_window(self):
         doc = document(end=7);before = copy.deepcopy(doc.pages);calls = []
         def extract(prompt):
-            data = json.loads(prompt.split('SOURCE DATA:\n')[1]);kind = prompt.split('.',1)[0];calls.append((kind,data))
+            data = decode_prompt(prompt);kind = prompt.split('.',1)[0];calls.append((kind,data))
             if kind == 'PAGE_OFFERS':return {'offers': []}
             if kind == 'PAGE_EXTRACTION':
                 units = [{'action': 'Approve plan', 'citations': [{'pdf_page': 5, 'quote': 'Task on page 5.'}]}] if any(p['pdf_page']==5 and p['primary'] for p in data['source_pages']) else []
@@ -157,7 +158,7 @@ class RetryEvidenceTests(unittest.TestCase):
         calls=[]
         def generate(**kwargs):
             prompt=kwargs['contents'];kind=prompt.split('.',1)[0];calls.append(kind)
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':return response(json.dumps({'working_units':[{'action':'Do task','citations':[{'pdf_page':1,'quote':'Task on page 1.'}]}],'offers':[],'carry_forward':''}))
             if kind=='PAGE_OFFERS':return response('{"offers": []}')
             if kind=='PAGE_APPLICABILITY':return response('{broken','MAX_TOKENS')
@@ -193,7 +194,7 @@ class PartialBatchEvidenceTests(unittest.TestCase):
         calls=[]
         def generate(**kwargs):
             prompt=kwargs['contents'];kind=prompt.split('.',1)[0]
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append((kind,prompt))
+            data=decode_prompt(prompt);calls.append((kind,prompt))
             if kind=='PAGE_EXTRACTION':
                 return response(json.dumps({'working_units':[{'action':f'Task {i}',
                     'citations':[{'pdf_page':1,'quote':'Task on page 1.'}]} for i in range(6)],

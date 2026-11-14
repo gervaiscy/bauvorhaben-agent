@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 """Generic timing controls preserve evidence and keep semantic judgments separate."""
 import copy
 import json
@@ -74,7 +75,7 @@ class TimingQualificationTests(unittest.TestCase):
                      pages=tuple(case['pages']))
         original=copy.deepcopy(case);timing=[]
         def model(prompt):
-            phase=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            phase=prompt.split('.',1)[0];data=decode_prompt(prompt)
             citations=[{'evidence_id':entry['evidence_id']} for entry in data['evidence_catalog']]
             if phase=='PAGE_EXTRACTION':
                 return {'working_units':[{**case['working_units'][0],'citations':citations}],'carry_forward':''}

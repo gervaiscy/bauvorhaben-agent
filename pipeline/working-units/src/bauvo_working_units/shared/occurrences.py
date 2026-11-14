@@ -14,7 +14,7 @@ def run(ctx, phase):
                                 'pages': list(chunk.pages), 'primary_pages': list(chunk.primary_pages)})
             if not any(p['text'].strip() for p in source_pages(doc, chunk) if p['primary']):
                 continue
-            known = [{'id': item['id'], 'name': item['gemini'].get('name')}
+            known = [{'id': item['id'], 'name': item['gemini'].get('title', item['gemini'].get('name'))}
                      for item in target if item['derived']['document_id']==doc.id and isinstance(item['gemini'], dict)]
             extra = {'known_items': known, **phase.request_context(ctx, doc, chunk, carry)}
             rid, response = ctx.request(pass_name, doc, chunk, extra)
@@ -30,6 +30,8 @@ def run(ctx, phase):
                 evidence = ({'citations': copy.deepcopy(resolved['citations'])}
                             if isinstance(item, dict) and isinstance(resolved, dict)
                             and item.get('citations') != resolved.get('citations') else {})
+                if hasattr(phase, 'derived_data'):
+                    evidence.update(phase.derived_data(item, resolved, doc, chunk))
                 target.append({'id': f'{rid}:{kind}:{position:03d}', 'gemini': copy.deepcopy(item),
                     'derived': {**ctx.metadata(doc, chunk), **evidence,
                                 'response_id': rid, 'response_position': position}, 'reviews': []})

@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import json
 from types import SimpleNamespace
@@ -63,7 +64,7 @@ class TimingContractTests(unittest.TestCase):
         doc=Document('D1','Agreement','synthetic.pdf',schema_version=6,pages=({'pdf_page':1,'text':'Source text'},))
         calls=[];answers=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(kind)
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append(kind)
             if kind=='PAGE_EXTRACTION':out={'working_units':[{'action':'Do work','citations':[{'pdf_page':1,'quote':'Source text'}]}],'offers':[],'carry_forward':''}
             elif kind=='PAGE_TIMING':out=assessment([rule('PREREQUISITE',offset='four weeks')]);out['assessments'][0]['unit_id']=data['working_units'][0]['id']
             else:out={'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}

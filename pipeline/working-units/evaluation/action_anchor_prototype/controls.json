@@ -1,0 +1,490 @@
+{
+  "protocol": "action-anchor-prototype-v1",
+  "note": "Authored literal evaluation anchors. Expected values never enter provider inputs. Not a semantic correctness verifier.",
+  "cases": [
+    {
+      "case_id": "task-evidence-credit-reference-context-only-amendment",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "payment",
+              "actors": [
+                "Kundin",
+                "Die Kundin"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "zahlt den ausgewiesenen Endpreis"
+                  ]
+                },
+                {
+                  "source_segment": "S5",
+                  "any_of": [
+                    "Endpreis nach Bonus"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [],
+          "context_checks": [
+            {
+              "id": "credit-reference-and-total",
+              "for_actions": [
+                "payment"
+              ],
+              "segments": [
+                "S3",
+                "S5"
+              ]
+            }
+          ]
+        },
+        "D2": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "proof",
+              "actors": [
+                "Kundin",
+                "Die Kundin"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "übergibt dem Lieferanten",
+                    "das Messprotokoll"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [],
+          "context_checks": []
+        }
+      }
+    },
+    {
+      "case_id": "task-evidence-equivalent-consents-separate-documents",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "processing",
+              "actors": [
+                "Ingenieurbüro Tal"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S2",
+                  "any_of": [
+                    "speichern und verarbeiten"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "withdrawal",
+              "actors": [
+                "Bauherrin",
+                "Ich",
+                "einwilligende Person",
+                "die Bauherrin"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S3",
+                  "any_of": [
+                    "widerrufen"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [
+            {
+              "id": "receipt-is-not-delivery",
+              "anchors": [
+                {
+                  "source_segment": "S4",
+                  "any_of": [
+                    "Informationen erhalten"
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_checks": []
+        },
+        "D2": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "processing",
+              "actors": [
+                "Energieberatung Hafen"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S2",
+                  "any_of": [
+                    "speichern und verarbeiten"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "withdrawal",
+              "actors": [
+                "Bauherrin",
+                "Ich",
+                "einwilligende Person",
+                "die Bauherrin"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S3",
+                  "any_of": [
+                    "widerrufen"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [
+            {
+              "id": "receipt-is-not-delivery",
+              "anchors": [
+                {
+                  "source_segment": "S4",
+                  "any_of": [
+                    "Informationen erhalten"
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_checks": []
+        },
+        "D3": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "processing",
+              "actors": [
+                "Projektservice Wald"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S2",
+                  "any_of": [
+                    "speichern und verarbeiten"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "withdrawal",
+              "actors": [
+                "Bauherrin",
+                "Ich",
+                "einwilligende Person",
+                "die Bauherrin"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S3",
+                  "any_of": [
+                    "widerrufen"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [
+            {
+              "id": "receipt-is-not-delivery",
+              "anchors": [
+                {
+                  "source_segment": "S4",
+                  "any_of": [
+                    "Informationen erhalten"
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_checks": []
+        }
+      }
+    },
+    {
+      "case_id": "task-evidence-penalty-with-later-deadline-definition",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "penalty",
+              "actors": [
+                "Auftragnehmer",
+                "AN",
+                "der Auftragnehmer"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "25 EUR je Verzugstag",
+                    "zahlt der Auftragnehmer"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "delivery",
+              "actors": [
+                "Auftragnehmer",
+                "AN",
+                "der Auftragnehmer"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S3",
+                  "any_of": [
+                    "liefert die Treppenelemente"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [
+            {
+              "id": "promotion-is-not-work",
+              "anchors": [
+                {
+                  "source_segment": "S2",
+                  "any_of": [
+                    "Unser Katalog"
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_checks": [
+            {
+              "id": "deadline-and-cap",
+              "for_actions": [
+                "penalty",
+                "delivery"
+              ],
+              "segments": [
+                "S3"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "task-evidence-series-specification-as-scope",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "garage",
+              "actors": [
+                "Auftragnehmer",
+                "AN",
+                "der Auftragnehmer"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "errichtet die Garage"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [
+            {
+              "id": "excluded-electrical-work",
+              "anchors": [
+                {
+                  "source_segment": "S3",
+                  "any_of": [
+                    "Elektroanschluss"
+                  ]
+                }
+              ]
+            }
+          ],
+          "context_checks": [
+            {
+              "id": "standard-and-exclusion",
+              "for_actions": [
+                "garage"
+              ],
+              "segments": [
+                "S2",
+                "S3"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "task-evidence-independent-actions-different-parties-one-paragraph",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "agreement",
+              "actors": [
+                "Besteller und Lieferant",
+                "Lieferant und Besteller"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "vereinbaren Besteller und Lieferant",
+                    "Mehrpreis und den Liefertermin"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "storage",
+              "actors": [
+                "Besteller",
+                "der Besteller"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "trockenen Lagerplatz",
+                    "stellt vor Anlieferung"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "insurance",
+              "actors": [
+                "Lieferant",
+                "der Lieferant"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "versichert den Transport"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [],
+          "context_checks": []
+        }
+      }
+    },
+    {
+      "case_id": "promotion-and-capability-only",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [],
+          "forbidden_actions": [],
+          "context_checks": []
+        }
+      }
+    },
+    {
+      "case_id": "promotion-with-specific-work",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "calculation",
+              "actors": [
+                "Auftragnehmer",
+                "AN",
+                "der Auftragnehmer"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "erstellt die statische Berechnung"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [],
+          "context_checks": []
+        }
+      }
+    },
+    {
+      "case_id": "explicit-optional-commission",
+      "documents": {
+        "D1": {
+          "scope": "complete_authored_fictional_inventory",
+          "expected_actions": [
+            {
+              "id": "optional-commission",
+              "actors": [
+                "Auftraggeber",
+                "AG",
+                "der Auftraggeber"
+              ],
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "gesondert beauftragen"
+                  ]
+                }
+              ]
+            }
+          ],
+          "forbidden_actions": [
+            {
+              "id": "service-is-not-assigned",
+              "anchors": [
+                {
+                  "source_segment": "S1",
+                  "any_of": [
+                    "Beleuchtungsplan"
+                  ]
+                }
+              ],
+              "actors": [
+                "Auftragnehmer",
+                "AN",
+                "der Auftragnehmer"
+              ]
+            }
+          ],
+          "context_checks": []
+        }
+      }
+    }
+  ]
+}

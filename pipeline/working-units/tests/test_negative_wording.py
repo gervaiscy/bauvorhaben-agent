@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import json
 from types import SimpleNamespace
@@ -16,7 +17,7 @@ class NegativeWordingTests(unittest.TestCase):
                   'performed_by':'Kunde','modality':'REQUIRED','citations':[{'pdf_page':1,'quote':text}]}
         calls=[];answers=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];calls.append(kind);data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            kind=prompt.split('.',1)[0];calls.append(kind);data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':out={'working_units':[copy.deepcopy(proposal)],'offers':[],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
             else:

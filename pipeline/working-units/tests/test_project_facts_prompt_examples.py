@@ -67,7 +67,7 @@ class ProjectFactsPromptExampleTests(unittest.TestCase):
                     **source,'sources':source['documents'],
                     'source_pages':expanded['source_pages'],'evidence_catalog':expanded['evidence_catalog'],
                     'target_evidence_ids':expanded['target_evidence_ids'],'provisions':expanded['provisions']},'de')
-                actual = json.loads(prompt.split('SOURCE DATA:\n',1)[1])
+                actual = json.loads(prompt.split('SOURCE DATA:\n', 1)[1])
                 self.assertEqual(actual,source)
                 self.assertEqual(set(answer),set(CLAUSE_INDEX['required']))
                 row_fields = set(CLAUSE_INDEX['properties']['verpflichtungen']['items']['required'])

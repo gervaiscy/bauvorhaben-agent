@@ -212,22 +212,27 @@ class EvidenceFlowTests(unittest.TestCase):
                 if prompt.startswith('PAGE_CITATION_REPAIR.') and self.interrupt:
                     self.interrupt=False;raise KeyboardInterrupt()
                 data=decode_prompt(prompt)
-                value=unit({'evidence_id':'bad'}) if prompt.startswith('PAGE_EXTRACTION.') else {
-                    'decisions':[{'path':data['targets'][0]['path'],'status':'SUPPORTED',
-                    'citations':[{'evidence_id':data['evidence_catalog'][0]['evidence_id']}],'reason':'Original'}]}
+                if prompt.startswith('PAGE_EXTRACTION.'):
+                    value={'working_units':[],'carry_forward':''}
+                elif prompt.startswith('PAGE_OFFERS.'):
+                    value={'offers':[{'description':'Separate service','citations':[{'evidence_id':'bad'}]}]}
+                else:
+                    value={'decisions':[{'path':data['targets'][0]['path'],'status':'SUPPORTED',
+                        'citations':[{'evidence_id':data['evidence_catalog'][0]['evidence_id']}],'reason':'Original'}]}
                 self.last_raw_response=json.dumps(value);self.last_finish_reason='STOP';return value
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);provider=Provider();identity={'project':'unused','location':'global','model':'fixture'}
             def recorded(folder,previous):
                 return TracingModel(RawRunRecorder(RequestRecovery(provider,folder,previous,identity),folder/'raw.json'),folder/'trace')
             with self.assertRaises(KeyboardInterrupt):
-                extract_page_units([doc],recorded(root/'first',[]),stop_after='PAGE_EXTRACTION')
+                extract_page_units([doc],recorded(root/'first',[]),stop_after='PAGE_OFFERS')
             original={p:p.read_bytes() for p in (root/'first').rglob('*') if p.is_file()}
-            result=extract_page_units([doc],recorded(root/'second',[root/'first']),stop_after='PAGE_EXTRACTION')
+            result=extract_page_units([doc],recorded(root/'second',[root/'first']),stop_after='PAGE_OFFERS')
             self.assertEqual(sum(prompt.startswith('PAGE_EXTRACTION.') for prompt in calls),1)
+            self.assertEqual(sum(prompt.startswith('PAGE_OFFERS.') for prompt in calls),1)
             self.assertEqual(result['review_findings'],[])
-            self.assertEqual(json.loads((root/'second/raw.json').read_text())[1],
-                result['gemini_responses'][0]['citation_evidence']['repair']['gemini'])
+            self.assertEqual(json.loads((root/'second/raw.json').read_text())[-1],
+                result['gemini_responses'][-1]['citation_evidence']['repair']['gemini'])
             self.assertEqual(original,{p:p.read_bytes() for p in (root/'first').rglob('*') if p.is_file()})
 
     def test_saved_result_correction_keeps_raw_proposals_findings_and_input_fingerprints(self):
@@ -249,11 +254,13 @@ class EvidenceFlowTests(unittest.TestCase):
         schema=RESPONSE_SCHEMAS['PAGE_CITATION_REPAIR']['properties']['decisions']['items']
         self.assertEqual(set(schema['properties']),{'path','status','citations','reason'})
         self.assertEqual(schema['properties']['citations']['items']['required'],['evidence_id'])
-        for phase,key,field in (('PAGE_EXTRACTION','working_units','citations'),
-                                ('PAGE_OFFERS','offers','citations')):
+        for phase,key,field in (('PAGE_OFFERS','offers','citations'),):
             citations=RESPONSE_SCHEMAS[phase]['properties'][key]['items']['properties'][field]
             self.assertEqual(citations['minItems'],1)
             self.assertEqual(citations['items']['required'],['evidence_id'])
+        quote=RESPONSE_SCHEMAS['PAGE_EXTRACTION']['properties']['working_units']['items']['properties']['quote']
+        self.assertEqual(quote['minLength'],1)
+        self.assertEqual(quote['type'],'string')
         right = RESPONSE_SCHEMAS['PAGE_PROJECT_FACTS']['properties']['ansprueche']['items']
         self.assertEqual(right['properties']['belege']['minItems'], 1)
         self.assertEqual(right['properties']['belege']['items']['type'], 'string')

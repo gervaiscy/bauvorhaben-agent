@@ -283,7 +283,11 @@ class ContractualRightsTests(unittest.TestCase):
             self.assertEqual(view['facts'][0]['interpretation'], raw['ansprueche'][0]['aussage'])
             self.assertNotIn('uncertainty', view['facts'][0])
             self.assertNotIn('unklarheit', view['facts'][0])
-            self.assertEqual(view['source_documents'][0]['pages'][0]['text'], doc.pages[0]['text'])
+            if phase == 'PAGE_EXTRACTION':
+                self.assertNotIn('source_documents', view)
+                self.assertEqual(view['facts'][0]['citations'][0]['quote'], doc.pages[0]['text'])
+            else:
+                self.assertEqual(view['source_documents'][0]['pages'][0]['text'], doc.pages[0]['text'])
 
     def test_historical_schema14_uncertainty_remains_unchanged_when_loaded_and_replayed(self):
         from bauvo_working_units.phases.project_facts.rights import records, LEGACY_EVIDENCE_PROTOCOL

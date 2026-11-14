@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import json
 from dataclasses import replace
@@ -19,7 +20,7 @@ class OfferStageTests(unittest.TestCase):
             Document('D2', 'Second', 'source.pdf', pages=({'pdf_page': 6, 'text': 'Ein weiteres Angebot.'},),
                      schema_version=6, source_key='source', source_snapshot='snapshot')]
         def tasks(prompt):
-            data = json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data = decode_prompt(prompt)
             p = next(p for p in data['source_pages'] if p['primary'])
             return {'working_units': [{'name': 'Aufgabe', 'action': 'Aufgabe', 'actor': None,
                     'performed_by': None, 'citations': [{'pdf_page': p['pdf_page'], 'quote': p['text']}]}],
@@ -31,7 +32,7 @@ class OfferStageTests(unittest.TestCase):
         calls = []
         def offers(prompt):
             self.assertTrue(prompt.startswith('PAGE_OFFERS.'))
-            data = json.loads(prompt.split('SOURCE DATA:\n')[1]); calls.append(data)
+            data = decode_prompt(prompt); calls.append(data)
             self.assertEqual(data['prior_context'], 'Original context')
             p = next(p for p in data['source_pages'] if p['primary'])
             return {'offers': [{'name': 'Angebot', 'provider': None, 'description': p['text'],

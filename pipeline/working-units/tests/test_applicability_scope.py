@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 """Scope decisions stay provider-owned; timing/progress are not application filters."""
 import copy
 import json
@@ -20,7 +21,7 @@ class ApplicabilityScopeTests(unittest.TestCase):
         answers=[];calls=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];calls.append(kind)
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':
                 out={'working_units':copy.deepcopy(units),'offers':[],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
@@ -62,7 +63,7 @@ class ApplicabilityScopeTests(unittest.TestCase):
                 calls=[];app_response=[]
                 def extract(prompt):
                     kind=prompt.split('.',1)[0];calls.append(kind)
-                    data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+                    data=decode_prompt(prompt)
                     if kind=='PAGE_EXTRACTION':
                         return {'working_units':[{'action':'Prüfgebühren und Lieferkosten tragen',
                             'actor':'Kunde','citations':[{'pdf_page':1,'quote':pages[0]['text']}]}],
@@ -121,7 +122,7 @@ class ApplicabilityScopeTests(unittest.TestCase):
                              pages=({'pdf_page':1,'text':text},))
                 supplied=[]
                 def extract(prompt):
-                    data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+                    data=decode_prompt(prompt)
                     if prompt.startswith('PAGE_EXTRACTION.'):
                         return {'working_units':[{'action':'Beschriebene Aufgabe', 'actor':None,
                                 'performed_by':None, 'citations':[citation]}],'carry_forward':''}

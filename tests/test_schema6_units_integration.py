@@ -26,8 +26,7 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                 'documents':[{'document_id':'D1','document_title':'Contract','pdf_pages':[1],'uncertain':False}],
                 'page_assignments':[{'pdf_page':1,'document_id':'D1'}]}))
             before=(root/'pages.json').read_bytes();calls=[];models=[]
-            proposal={'name':'Supply construction water','dedupe_key':'water','actor':'Owner','action':'Supply water',
-                      'citations':[{'pdf_page':1,'quote':text.replace('water.','waters.')}],'tasks':[],'depends_on':[]}
+            proposal={'title':'Supply construction water','actor':'Contractor','quote':text}
             class Fake:
                 last_raw_response=None
                 def __init__(self,project,location,model):models.append(model)
@@ -42,7 +41,7 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                     if prompt.startswith('PAGE_PROJECT_FACTS'):
                         response={'ansprueche':[{'aussage':'The homeowner is entitled to construction water supplied by the contractor.',
                             'belege':[e['evidence_id']]} for e in data['evidence_catalog']]}
-                    elif prompt.startswith('PAGE_EXTRACTION'):response={'working_units':[proposal],'offers':[],'carry_forward':''}
+                    elif prompt.startswith('PAGE_EXTRACTION'):response={'working_units':[proposal]}
                     elif prompt.startswith('PAGE_OFFERS'):response={'offers':[]}
                     elif prompt.startswith(('PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY')):
                         row={'unit_id':data['working_units'][0]['id'],'citations':[]}
@@ -69,10 +68,21 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                              facts['reference_map']['S1'])
             for prompt in calls[1:]:
                 data=json.loads(prompt.split('SOURCE DATA:\n')[1])
-                self.assertEqual(data['project_facts']['facts'][0]['text'],text)
+                if prompt.startswith('PAGE_EXTRACTION.'):
+                    self.assertNotIn('evidence_catalog', data)
+                    self.assertNotIn('source_documents', data['project_facts'])
+                    citation = data['project_facts']['facts'][0]['citations'][0]
+                    self.assertNotIn('evidence_id', citation)
+                    self.assertEqual(citation['quote'], text)
+                    self.assertEqual([page['text'] for page in data['source_pages']], [text])
+                    self.assertNotIn('reference_protocol', data)
+                else:
+                    self.assertEqual(data['project_facts']['facts'][0]['text'],text)
             self.assertEqual(result['working_units'][0]['gemini'],proposal)
-            self.assertEqual(result['status'],'needs_review')
-            self.assertEqual(result['working_units'][0]['gemini']['citations'],proposal['citations'])
+            self.assertEqual(result['status'],'recorded')
+            self.assertEqual(result['working_units'][0]['derived']['citations'][0]['quote'],proposal['quote'])
+            self.assertEqual(result['working_units'][0]['derived']['source_text'],text)
+            self.assertEqual(result['working_units'][0]['derived']['actor'],'Contractor')
             self.assertEqual(result['citation_validation'],'page_and_quote_checks')
             self.assertEqual(len(json.loads((root/'output-1.gemini-raw.json').read_text())),6)
             self.assertEqual(len(list((root/'trace-1').glob('*-prompt.txt'))),6)

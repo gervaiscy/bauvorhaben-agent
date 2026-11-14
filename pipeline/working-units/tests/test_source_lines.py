@@ -104,7 +104,11 @@ class VersionedClauseIndexTests(unittest.TestCase):
         for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
             data=json.loads(_prompt(phase,{'source_pages':[], 'project_facts':facts_view(facts)},'de')
                             .split('SOURCE DATA:\n')[1])
-            self.assertEqual([f['text'] for f in data['project_facts']['facts']],expected)
+            if phase == 'PAGE_EXTRACTION':
+                self.assertEqual([[c['quote'] for c in f['citations']] for f in data['project_facts']['facts']],
+                                 [[c['quote'] for c in f['citations']] for f in facts_view(facts)['facts']])
+            else:
+                self.assertEqual([f['text'] for f in data['project_facts']['facts']],expected)
 
     def test_original_continuous_text_reaches_every_downstream_projection(self):
         doc=document('contract','Die Leistung gilt\nnur nach Freigabe.\n\nDie Ausnahme bleibt erhalten.')
@@ -117,7 +121,11 @@ class VersionedClauseIndexTests(unittest.TestCase):
         for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
             data={'source_pages':[], 'project_facts':facts_view(facts)}
             actual=json.loads(_prompt(phase,data,'de').split('SOURCE DATA:\n')[1])
-            self.assertEqual(actual['project_facts']['facts'][0]['text'],doc.pages[0]['text'])
+            if phase == 'PAGE_EXTRACTION':
+                self.assertEqual([c['quote'] for c in actual['project_facts']['facts'][0]['citations']],
+                                 [c['quote'] for c in facts_view(facts)['facts'][0]['citations']])
+            else:
+                self.assertEqual(actual['project_facts']['facts'][0]['text'],doc.pages[0]['text'])
         self.assertEqual(facts,before)
 
     def test_schema_and_catalog_metadata_cannot_be_changed_independently(self):

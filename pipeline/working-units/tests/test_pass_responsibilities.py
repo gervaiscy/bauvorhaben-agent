@@ -21,7 +21,7 @@ def doc(key, text, identifier='D1', count=1):
 class PassResponsibilitiesTests(unittest.TestCase):
     def test_schemas_assign_only_actions_to_extraction_and_scope_to_applicability(self):
         fields=RESPONSE_SCHEMAS['PAGE_EXTRACTION']['properties']['working_units']['items']['properties']
-        self.assertEqual(set(fields), {'name','action','actor','performed_by','citations'})
+        self.assertEqual(set(fields), {'title','actor','quote'})
         offer=RESPONSE_SCHEMAS['PAGE_OFFERS']['properties']['offers']['items']['properties']
         self.assertNotIn('dedupe_key',offer)
         app=RESPONSE_SCHEMAS['PAGE_APPLICABILITY']['properties']['assessments']['items']['properties']

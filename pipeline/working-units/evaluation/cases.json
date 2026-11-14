@@ -1144,6 +1144,1102 @@
       "expectations": [
         "Keep the explicitly assigned structural calculation and included window installation when stated; ignore the directory descriptions."
       ]
+    },
+    {
+      "id": "task-evidence-deadline-extension-and-cap",
+      "purpose": "Select the complete split sentence, extension limit and exception; exclude unrelated neighbouring text.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer übergibt den Prüfbericht binnen zwölf Werktagen.\nDie Frist verlängert sich um\ndie Tage fehlender Unterlagen, höchstens um vier Werktage.\nBei Unterbrechungen im Verantwortungsbereich des Auftragnehmers bleibt die Frist unverändert.\n\nDie Telefonzentrale ist werktags erreichbar.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "report",
+          "document_id": "D1",
+          "action": "Prüfbericht übergeben",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer übergibt den Prüfbericht binnen zwölf Werktagen.\nDie Frist verlängert sich um\ndie Tage fehlender Unterlagen, höchstens um vier Werktage.\nBei Unterbrechungen im Verantwortungsbereich des Auftragnehmers bleibt die Frist unverändert.\n"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not select only the base deadline or stop after the unfinished extension sentence.",
+        "Do not add the telephone availability as task evidence."
+      ],
+      "expectations": [
+        "Each task selects its complete applicable original rule; titles are navigation only."
+      ]
+    },
+    {
+      "id": "task-evidence-alternative-documentation",
+      "purpose": "Both alternative actions retain the shared exception; evidence attached to another task is insufficient.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftraggeber übergibt vor Arbeitsbeginn eine Haftpflichtbescheinigung.\nAlternativ kann er eine gleichwertige Sicherheit hinterlegen.\nDann entfällt die Vorlage der Bescheinigung.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "certificate",
+          "document_id": "D1",
+          "action": "Haftpflichtbescheinigung übergeben",
+          "actor": "Auftraggeber",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber übergibt vor Arbeitsbeginn eine Haftpflichtbescheinigung.\nAlternativ kann er eine gleichwertige Sicherheit hinterlegen.\nDann entfällt die Vorlage der Bescheinigung.\n"
+            }
+          ]
+        },
+        {
+          "key": "security",
+          "document_id": "D1",
+          "action": "Alternativ eine gleichwertige Sicherheit hinterlegen",
+          "actor": "Auftraggeber",
+          "modality": "OPTIONAL",
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber übergibt vor Arbeitsbeginn eine Haftpflichtbescheinigung.\nAlternativ kann er eine gleichwertige Sicherheit hinterlegen.\nDann entfällt die Vorlage der Bescheinigung.\n"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not make both alternatives unconditional cumulative obligations.",
+        "Do not omit the alternative from the certificate task because another task already selects it."
+      ],
+      "expectations": [
+        "Each task selects its complete applicable original rule; titles are navigation only."
+      ]
+    },
+    {
+      "id": "task-evidence-payment-table",
+      "purpose": "Payment tasks select their actual table rows, header and applicable withholding rule.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftraggeber zahlt folgende Raten jeweils vierzehn Tage nach Zugang der Rechnung:\n\nPlanungsrate\t20 Prozent\tnach Übergabe der Planungsunterlagen.\nAbnahmerate\t80 Prozent\tnach Abnahme.\nDie Abnahmerate darf bei wesentlichen Mängeln bis zur Beseitigung einbehalten werden.\n\nDie Kontaktdaten des Vertriebs stehen auf der letzten Seite.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "planning-payment",
+          "document_id": "D1",
+          "action": "Planungsrate zahlen",
+          "actor": "Auftraggeber",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber zahlt folgende Raten jeweils vierzehn Tage nach Zugang der Rechnung:\n"
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Planungsrate\t20 Prozent\tnach Übergabe der Planungsunterlagen.\n"
+            }
+          ]
+        },
+        {
+          "key": "acceptance-payment",
+          "document_id": "D1",
+          "action": "Abnahmerate zahlen",
+          "actor": "Auftraggeber",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber zahlt folgende Raten jeweils vierzehn Tage nach Zugang der Rechnung:\n"
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Abnahmerate\t80 Prozent\tnach Abnahme.\n"
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Die Abnahmerate darf bei wesentlichen Mängeln bis zur Beseitigung einbehalten werden.\n"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not select only the payment-plan introduction.",
+        "Do not lose the acceptance-payment withholding exception or apply it to the planning payment.",
+        "Do not add the unrelated contact information."
+      ],
+      "expectations": [
+        "Each task selects its complete applicable original rule; titles are navigation only."
+      ]
+    },
+    {
+      "id": "task-evidence-conditional-refund-and-offset",
+      "purpose": "Payout evidence includes entitlement prerequisites, timing, deductions and the offset restriction.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Wenn der Auftraggeber alle Leihgeräte fristgerecht zurückgibt, erstattet der Auftragnehmer die Bearbeitungsgebühr.\nDie Erstattung erfolgt binnen drei Wochen nach Eingang des letzten Leihgeräts.\nBei beschädigten Geräten verringert sich die Erstattung um die vereinbarten Reparaturkosten.\nEine vorherige Verrechnung mit anderen Rechnungen ist ausgeschlossen.\n\nDie Rücksendeadresse wird im Kundenportal angezeigt.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "refund",
+          "document_id": "D1",
+          "action": "Bearbeitungsgebühr erstatten",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "EVENT_RELATIVE",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Wenn der Auftraggeber alle Leihgeräte fristgerecht zurückgibt, erstattet der Auftragnehmer die Bearbeitungsgebühr.\nDie Erstattung erfolgt binnen drei Wochen nach Eingang des letzten Leihgeräts.\nBei beschädigten Geräten verringert sich die Erstattung um die vereinbarten Reparaturkosten.\nEine vorherige Verrechnung mit anderen Rechnungen ist ausgeschlossen.\n"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not retain only the payout sentence and omit its prerequisite, deductions or offset restriction.",
+        "Do not add the unrelated portal statement as payout evidence."
+      ],
+      "expectations": [
+        "Each task selects its complete applicable original rule; titles are navigation only."
+      ]
+    },
+    {
+      "id": "task-evidence-linked-credit-and-amendment",
+      "purpose": "Follow the credited amount through a separate reference to the available qualification.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftraggeber zahlt den Gesamtpreis inklusive Servicegutschrift: 42.300 EUR.\n\nServicegutschrift: 1.200 EUR laut Zusatzvereinbarung „Servicepaket“.\n\nZusatzvereinbarung „Servicepaket“: Die Gutschrift setzt den Abschluss eines dreijährigen Servicevertrags voraus.\n\nDie Telefonzentrale ist werktags erreichbar.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "payment",
+          "document_id": "D1",
+          "action": "Gesamtpreis einschließlich bedingter Servicegutschrift zahlen",
+          "actor": "Auftraggeber",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber zahlt den Gesamtpreis inklusive Servicegutschrift: 42.300 EUR."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Servicegutschrift: 1.200 EUR laut Zusatzvereinbarung „Servicepaket“."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Zusatzvereinbarung „Servicepaket“: Die Gutschrift setzt den Abschluss eines dreijährigen Servicevertrags voraus."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not select only the final amount.",
+        "Do not invent an unconditional entitlement to the credit or a separate duty to buy the service contract."
+      ],
+      "expectations": [
+        "The payment evidence includes the linking credit passage and the provided amendment condition."
+      ]
+    },
+    {
+      "id": "task-evidence-receipt-without-assignment",
+      "purpose": "A company heading and a receipt acknowledgement do not establish a new delivery action or its performer.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Aussteller: Bauplanung West GmbH.\n\nIch bestätige, die Sicherheitshinweise in Papierform erhalten zu haben.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [],
+      "forbidden_inferences": [
+        "Do not invent a delivery task or assign the issuer or recipient as its performer."
+      ],
+      "expectations": [
+        "No working units: the source records receipt without prescribing a new action."
+      ]
+    },
+    {
+      "id": "task-evidence-delivery-unknown-performer",
+      "purpose": "Keep explicitly described passive work with unknown performer; the issuer does not fill the actor.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Aussteller: Bauplanung West GmbH.\n\nDer Prüfbericht ist dem Bauherrn vor Arbeitsbeginn auszuhändigen.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "report",
+          "document_id": "D1",
+          "action": "Prüfbericht aushändigen",
+          "actor": null,
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Prüfbericht ist dem Bauherrn vor Arbeitsbeginn auszuhändigen."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not infer the actor from the issuer, the recipient or the title.",
+        "Do not drop valid work because its actor is unknown."
+      ],
+      "expectations": [
+        "One report-delivery task with actor=null, supported by the passive obligation."
+      ]
+    },
+    {
+      "id": "task-evidence-delivery-explicit-performer",
+      "purpose": "The stated performer overrides a different document issuer and is distinct from the recipient.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Aussteller: Bauplanung West GmbH.\n\nIch bestätige, die Sicherheitshinweise in Papierform erhalten zu haben.\n\nDie Kontrollstelle Ost übergibt dem Bauherrn den Prüfbericht vor Arbeitsbeginn.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "report",
+          "document_id": "D1",
+          "action": "Prüfbericht übergeben",
+          "actor": "Kontrollstelle Ost",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Kontrollstelle Ost übergibt dem Bauherrn den Prüfbericht vor Arbeitsbeginn."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not assign Bauplanung West GmbH or Bauherr as performer.",
+        "Do not create an additional task from the receipt acknowledgement."
+      ],
+      "expectations": [
+        "Retain the explicit delivery action and its named performer."
+      ]
+    },
+    {
+      "id": "task-evidence-nominal-and-table-work",
+      "purpose": "Cover a conditional penalty payment, separate agreement and both included room rows without active verbs.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Bei vom Auftragnehmer verschuldeter Verspätung ist die vereinbarte Vertragsstrafe vom Auftragnehmer zu zahlen.\n\nMehrkosten sind von beiden Vertragsparteien vor Ausführung gesondert zu vereinbaren.\n\nDie folgenden Positionen werden vom Auftragnehmer ausgeführt:\n\nPosition A\tErdgeschoss: Küche mit Spüle und Mischbatterie.\nPosition B\tObergeschoss: Bad mit Waschbecken und Dusche.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "penalty",
+          "document_id": "D1",
+          "action": "Bei verschuldeter Verspätung Vertragsstrafe zahlen",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Bei vom Auftragnehmer verschuldeter Verspätung ist die vereinbarte Vertragsstrafe vom Auftragnehmer zu zahlen."
+            }
+          ]
+        },
+        {
+          "key": "agreement",
+          "document_id": "D1",
+          "action": "Mehrkosten vor Ausführung gesondert vereinbaren",
+          "actor": "beiden Vertragsparteien",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Mehrkosten sind von beiden Vertragsparteien vor Ausführung gesondert zu vereinbaren."
+            }
+          ]
+        },
+        {
+          "key": "kitchen",
+          "document_id": "D1",
+          "action": "Küche einschließlich Spüle und Mischbatterie ausführen",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Die folgenden Positionen werden vom Auftragnehmer ausgeführt:"
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Position A\tErdgeschoss: Küche mit Spüle und Mischbatterie."
+            }
+          ]
+        },
+        {
+          "key": "bath",
+          "document_id": "D1",
+          "action": "Bad einschließlich Waschbecken und Dusche ausführen",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Die folgenden Positionen werden vom Auftragnehmer ausgeführt:"
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Position B\tObergeschoss: Bad mit Waschbecken und Dusche."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not omit passive or nominal work.",
+        "Do not substitute the general heading for the room details.",
+        "Do not make the conditional penalty unconditional."
+      ],
+      "expectations": [
+        "All four actions must be covered. Each room task includes its concrete fixtures and the performer-bearing header."
+      ]
+    },
+    {
+      "id": "task-evidence-exclusion-without-assignment",
+      "purpose": "A scope exclusion qualifies the included work but does not assign the excluded work to anyone.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer errichtet den Wintergarten.\n\nDie Bepflanzung gehört nicht zum Leistungsumfang des Auftragnehmers.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "wintergarden",
+          "document_id": "D1",
+          "action": "Wintergarten errichten",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer errichtet den Wintergarten."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Die Bepflanzung gehört nicht zum Leistungsumfang des Auftragnehmers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not turn the planting exclusion into a separate task, even with a null actor.",
+        "Do not assign the planting to the homeowner."
+      ],
+      "expectations": [
+        "Keep the winter-garden task with its scope exclusion as evidence."
+      ]
+    },
+    {
+      "id": "task-evidence-exclusion-with-separate-assignment",
+      "purpose": "Retain separately assigned excluded work and distinguish commissioning from performance.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer errichtet den Wintergarten.\n\nDie Bepflanzung gehört nicht zum Leistungsumfang des Auftragnehmers.\n\nDer Bauherr beauftragt eine Gärtnerei mit der Bepflanzung.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "wintergarden",
+          "document_id": "D1",
+          "action": "Wintergarten errichten",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer errichtet den Wintergarten."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Die Bepflanzung gehört nicht zum Leistungsumfang des Auftragnehmers."
+            }
+          ]
+        },
+        {
+          "key": "commission",
+          "document_id": "D1",
+          "action": "Gärtnerei mit Bepflanzung beauftragen",
+          "actor": "Bauherr",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr beauftragt eine Gärtnerei mit der Bepflanzung."
+            }
+          ]
+        },
+        {
+          "key": "planting",
+          "document_id": "D1",
+          "action": "Bepflanzung ausführen",
+          "actor": "Gärtnerei",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr beauftragt eine Gärtnerei mit der Bepflanzung."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not suppress explicit work merely because it is excluded from another party’s scope.",
+        "Do not merge commissioning and performance because their evidence is identical."
+      ],
+      "expectations": [
+        "Keep all three tasks and preserve shared evidence for the two distinct actors."
+      ]
+    },
+    {
+      "id": "task-evidence-credit-reference-context-only-amendment",
+      "purpose": "Select the linking bonus row in its own window while the amendment remains separately sourced contract context.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Die Kundin zahlt den ausgewiesenen Endpreis innerhalb von zwanzig Tagen.\n\nPreis vor Bonus\t31.900 EUR\n\nQualitätsbonus\t−650 EUR laut Zusatzvereinbarung „Messung“.\n\nDie Sprechzeiten stehen im Kundenportal.\n\nEndpreis nach Bonus\t31.250 EUR\n"
+        },
+        {
+          "pdf_page": 2,
+          "text": "Die Kundin übergibt dem Lieferanten spätestens bei Abnahme das Messprotokoll. Der Qualitätsbonus wird nur bei fristgerechter Vorlage des Messprotokolls gewährt.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        },
+        {
+          "document_id": "D2",
+          "document_title": "Zusatzvereinbarung Messung",
+          "pdf_pages": [
+            2
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "payment",
+          "document_id": "D1",
+          "action": "Endpreis mit bedingtem Qualitätsbonus zahlen",
+          "actor": "Kundin",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Kundin zahlt den ausgewiesenen Endpreis innerhalb von zwanzig Tagen."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Preis vor Bonus\t31.900 EUR"
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Qualitätsbonus\t−650 EUR laut Zusatzvereinbarung „Messung“."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Endpreis nach Bonus\t31.250 EUR"
+            }
+          ]
+        },
+        {
+          "key": "proof",
+          "document_id": "D2",
+          "action": "Messprotokoll fristgerecht übergeben",
+          "actor": "Kundin",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 2,
+              "quote": "Die Kundin übergibt dem Lieferanten spätestens bei Abnahme das Messprotokoll. Der Qualitätsbonus wird nur bei fristgerechter Vorlage des Messprotokolls gewährt."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not omit the bonus reference.",
+        "Do not bind amendment labels as if they belonged to the offer window.",
+        "Do not infer that the condition was fulfilled."
+      ],
+      "expectations": [
+        "The payment selects its available reference row; the separately extracted proof action keeps its condition."
+      ]
+    },
+    {
+      "id": "task-evidence-equivalent-consents-separate-documents",
+      "purpose": "Equivalent permissions and withdrawals remain separate across three company-specific windows with different receipt selections.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Ingenieurbüro Tal\n\nIch, die Bauherrin, willige ein, dass Ingenieurbüro Tal meine angegebenen Daten für die Planung speichern und verarbeiten darf.\n\nDiese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt.\n\n☑ Ich habe die Informationen erhalten.\n"
+        },
+        {
+          "pdf_page": 2,
+          "text": "Energieberatung Hafen\n\nIch, die Bauherrin, willige ein, dass Energieberatung Hafen meine angegebenen Daten für die Planung speichern und verarbeiten darf.\n\nDiese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt.\n\n☐ Ich habe die Informationen erhalten.\n"
+        },
+        {
+          "pdf_page": 3,
+          "text": "Projektservice Wald\n\nIch, die Bauherrin, willige ein, dass Projektservice Wald meine angegebenen Daten für die Planung speichern und verarbeiten darf.\n\nDiese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt.\n\n☑ Ich habe die Informationen erhalten.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Einwilligung Ingenieurbüro Tal",
+          "pdf_pages": [
+            1
+          ]
+        },
+        {
+          "document_id": "D2",
+          "document_title": "Einwilligung Energieberatung Hafen",
+          "pdf_pages": [
+            2
+          ]
+        },
+        {
+          "document_id": "D3",
+          "document_title": "Einwilligung Projektservice Wald",
+          "pdf_pages": [
+            3
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "processing-1",
+          "document_id": "D1",
+          "action": "Daten im Rahmen der Einwilligung speichern und verarbeiten",
+          "actor": "Ingenieurbüro Tal",
+          "modality": "PERMISSION",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Ich, die Bauherrin, willige ein, dass Ingenieurbüro Tal meine angegebenen Daten für die Planung speichern und verarbeiten darf."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Diese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt."
+            }
+          ]
+        },
+        {
+          "key": "withdrawal-1",
+          "document_id": "D1",
+          "action": "Einwilligung gegenüber Ingenieurbüro Tal widerrufen (optional)",
+          "actor": "Bauherrin",
+          "modality": "OPTIONAL",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Ich, die Bauherrin, willige ein, dass Ingenieurbüro Tal meine angegebenen Daten für die Planung speichern und verarbeiten darf."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Diese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt."
+            }
+          ]
+        },
+        {
+          "key": "processing-2",
+          "document_id": "D2",
+          "action": "Daten im Rahmen der Einwilligung speichern und verarbeiten",
+          "actor": "Energieberatung Hafen",
+          "modality": "PERMISSION",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 2,
+              "quote": "Ich, die Bauherrin, willige ein, dass Energieberatung Hafen meine angegebenen Daten für die Planung speichern und verarbeiten darf."
+            },
+            {
+              "pdf_page": 2,
+              "quote": "Diese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt."
+            }
+          ]
+        },
+        {
+          "key": "withdrawal-2",
+          "document_id": "D2",
+          "action": "Einwilligung gegenüber Energieberatung Hafen widerrufen (optional)",
+          "actor": "Bauherrin",
+          "modality": "OPTIONAL",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 2,
+              "quote": "Ich, die Bauherrin, willige ein, dass Energieberatung Hafen meine angegebenen Daten für die Planung speichern und verarbeiten darf."
+            },
+            {
+              "pdf_page": 2,
+              "quote": "Diese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt."
+            }
+          ]
+        },
+        {
+          "key": "processing-3",
+          "document_id": "D3",
+          "action": "Daten im Rahmen der Einwilligung speichern und verarbeiten",
+          "actor": "Projektservice Wald",
+          "modality": "PERMISSION",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 3,
+              "quote": "Ich, die Bauherrin, willige ein, dass Projektservice Wald meine angegebenen Daten für die Planung speichern und verarbeiten darf."
+            },
+            {
+              "pdf_page": 3,
+              "quote": "Diese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt."
+            }
+          ]
+        },
+        {
+          "key": "withdrawal-3",
+          "document_id": "D3",
+          "action": "Einwilligung gegenüber Projektservice Wald widerrufen (optional)",
+          "actor": "Bauherrin",
+          "modality": "OPTIONAL",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 3,
+              "quote": "Ich, die Bauherrin, willige ein, dass Projektservice Wald meine angegebenen Daten für die Planung speichern und verarbeiten darf."
+            },
+            {
+              "pdf_page": 3,
+              "quote": "Diese Einwilligung kann ich jederzeit widerrufen. Die bis dahin rechtmäßig erfolgte Verarbeitung bleibt unberührt."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not skip one consent document or merge actions across companies.",
+        "Do not turn receipt acknowledgements into delivery tasks.",
+        "Do not assign withdrawal to the company."
+      ],
+      "expectations": [
+        "Each document retains one company permission and one optional withdrawal with Bauherrin as actor."
+      ]
+    },
+    {
+      "id": "task-evidence-penalty-with-later-deadline-definition",
+      "purpose": "Follow a penalty reference forward to the action, start event and bounded extension instead of selecting the payment clause alone.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Bei schuldhafter Überschreitung der vereinbarten Lieferfrist zahlt der Auftragnehmer 25 EUR je Verzugstag, höchstens ein Prozent des Nettopreises.\n\nUnser Katalog zeigt viele Gestaltungsmöglichkeiten.\n\nDer Auftragnehmer liefert die Treppenelemente binnen sechs Wochen nach Freigabe der Fertigungszeichnung. Eine behördliche Liefersperre verlängert die Lieferfrist um ihre Dauer, höchstens um sieben Tage.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "penalty",
+          "document_id": "D1",
+          "action": "Bei schuldhaftem Lieferverzug Vertragsstrafe zahlen",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Bei schuldhafter Überschreitung der vereinbarten Lieferfrist zahlt der Auftragnehmer 25 EUR je Verzugstag, höchstens ein Prozent des Nettopreises."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer liefert die Treppenelemente binnen sechs Wochen nach Freigabe der Fertigungszeichnung. Eine behördliche Liefersperre verlängert die Lieferfrist um ihre Dauer, höchstens um sieben Tage."
+            }
+          ]
+        },
+        {
+          "key": "delivery",
+          "document_id": "D1",
+          "action": "Treppenelemente innerhalb der geregelten Lieferfrist liefern",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer liefert die Treppenelemente binnen sechs Wochen nach Freigabe der Fertigungszeichnung. Eine behördliche Liefersperre verlängert die Lieferfrist um ihre Dauer, höchstens um sieben Tage."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not omit the referenced deadline or extension cap.",
+        "Do not select catalogue promotion as evidence."
+      ],
+      "expectations": [
+        "The penalty includes the later deadline definition; delivery and penalty remain distinct tasks."
+      ]
+    },
+    {
+      "id": "task-evidence-series-specification-as-scope",
+      "purpose": "Attach a standard-model row and an exclusion to the included construction scope without inventing electrical work.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer errichtet die Garage mit folgendem Leistungsumfang:\n\nAusführung\tGaragentor und Seitenfenster bleiben im Serienmodell.\nNicht enthalten\tDer Elektroanschluss gehört nicht zum Leistungsumfang.\n\nMit Erfahrung schaffen wir Qualität.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "garage",
+          "document_id": "D1",
+          "action": "Garage im beschriebenen Leistungsumfang errichten",
+          "actor": "Auftragnehmer",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer errichtet die Garage mit folgendem Leistungsumfang:"
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Ausführung\tGaragentor und Seitenfenster bleiben im Serienmodell."
+            },
+            {
+              "pdf_page": 1,
+              "quote": "Nicht enthalten\tDer Elektroanschluss gehört nicht zum Leistungsumfang."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not omit the series specification.",
+        "Do not invent an electrical-connection assignment.",
+        "Do not turn general quality promotion into work."
+      ],
+      "expectations": [
+        "The scope task retains both the positive specification and the excluded work."
+      ]
+    },
+    {
+      "id": "task-evidence-independent-actions-different-parties-one-paragraph",
+      "purpose": "Separate a conditional joint agreement, customer preparation and supplier insurance despite identical selected evidence.",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Bei Nachbestellungen vereinbaren Besteller und Lieferant den Mehrpreis und den Liefertermin schriftlich. Der Besteller stellt vor Anlieferung einen trockenen Lagerplatz bereit. Der Lieferant versichert den Transport bis zur Übergabe.\n"
+        }
+      ],
+      "documents": [
+        {
+          "document_id": "D1",
+          "document_title": "Fiktive Regelungen",
+          "pdf_pages": [
+            1
+          ]
+        }
+      ],
+      "expected_units": [
+        {
+          "key": "agreement",
+          "document_id": "D1",
+          "action": "Bei Nachbestellungen Mehrpreis und Liefertermin schriftlich vereinbaren",
+          "actor": "Besteller und Lieferant",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Bei Nachbestellungen vereinbaren Besteller und Lieferant den Mehrpreis und den Liefertermin schriftlich. Der Besteller stellt vor Anlieferung einen trockenen Lagerplatz bereit. Der Lieferant versichert den Transport bis zur Übergabe."
+            }
+          ]
+        },
+        {
+          "key": "storage",
+          "document_id": "D1",
+          "action": "Trockenen Lagerplatz vor Anlieferung bereitstellen",
+          "actor": "Besteller",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Bei Nachbestellungen vereinbaren Besteller und Lieferant den Mehrpreis und den Liefertermin schriftlich. Der Besteller stellt vor Anlieferung einen trockenen Lagerplatz bereit. Der Lieferant versichert den Transport bis zur Übergabe."
+            }
+          ]
+        },
+        {
+          "key": "insurance",
+          "document_id": "D1",
+          "action": "Transport bis zur Übergabe versichern",
+          "actor": "Lieferant",
+          "modality": "REQUIRED",
+          "timing": {
+            "kind": "NOT_STATED",
+            "date": null
+          },
+          "evidence": [
+            {
+              "pdf_page": 1,
+              "quote": "Bei Nachbestellungen vereinbaren Besteller und Lieferant den Mehrpreis und den Liefertermin schriftlich. Der Besteller stellt vor Anlieferung einen trockenen Lagerplatz bereit. Der Lieferant versichert den Transport bis zur Übergabe."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        "Do not merge independent actions because their evidence is shared.",
+        "Do not give all actions the same actor.",
+        "Do not make the conditional agreement an unconditional duty."
+      ],
+      "expectations": [
+        "Three tasks retain the same original paragraph with their distinct supported actors."
+      ]
     }
   ]
 }

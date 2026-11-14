@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 from historical_facts import collect_historical_facts
 """Ownership, status and relationship boundaries; synthetic providers only."""
 import copy
@@ -18,7 +19,7 @@ from test_project_facts import document
 
 
 def payload(prompt):
-    return json.loads(prompt.split('SOURCE DATA:\n', 1)[1])
+    return decode_prompt(prompt)
 
 
 def answer(prompt):

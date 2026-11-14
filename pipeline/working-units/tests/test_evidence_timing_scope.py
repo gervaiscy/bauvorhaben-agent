@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 """Evidence and the activity it describes keep independent timing assessments."""
 import copy
 import json
@@ -25,7 +26,7 @@ class EvidenceTimingScopeTests(unittest.TestCase):
         class Model:
             def extract(inner,prompt):
                 self.assertTrue(prompt.startswith('PAGE_TIMING.'))
-                data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(data)
+                data=decode_prompt(prompt);calls.append(data)
                 self.assertEqual({u['id'] for u in data['working_units']},{'DELIVERY','EVIDENCE'})
                 self.assertFalse(set(data)&{'expected','forbidden','expectations'})
                 case=fixtures[data['source_key']]
@@ -50,7 +51,7 @@ class EvidenceTimingScopeTests(unittest.TestCase):
                 'citations':citation} for expr,conditions in [('acht Wochen',[]),('drei Wochen',['Verbindliche Bestätigung'])]]
         calls=[];timing=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];calls.append(kind);data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            kind=prompt.split('.',1)[0];calls.append(kind);data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':return {'working_units':copy.deepcopy(proposals),'offers':[],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
             ids=[u['id'] for u in data['working_units']]

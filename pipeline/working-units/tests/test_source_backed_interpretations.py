@@ -58,7 +58,10 @@ class SourceBackedInterpretationTests(unittest.TestCase):
             fact=data['project_facts']['facts'][0]
             self.assertEqual(fact['interpretation'],interpretation)
             self.assertEqual(fact['uncertainty'],uncertainty)
-            self.assertEqual(fact['text'],doc.pages[0]['text'])
+            if phase == 'PAGE_EXTRACTION':
+                self.assertEqual([c['quote'] for c in fact['citations']], doc.pages[0]['text'].splitlines(keepends=True))
+            else:
+                self.assertEqual(fact['text'],doc.pages[0]['text'])
         self.assertEqual(facts,before)
 
     def test_every_downstream_pass_can_read_and_cite_unselected_original_context(self):
@@ -75,15 +78,17 @@ class SourceBackedInterpretationTests(unittest.TestCase):
             phase=prompt.split('.',1)[0]
             self.assertNotEqual(phase,'PAGE_CITATION_REPAIR')
             data=decode_prompt(prompt);calls.append(phase)
+            self.assertEqual(data['project_facts']['facts'][0]['interpretation'],'Der Kunde bestätigt den Plan.')
+            if phase=='PAGE_EXTRACTION':
+                self.assertNotIn('source_documents', data['project_facts'])
+                self.assertNotIn('Ein abweichender Nachweis', prompt)
+                ref={'evidence_id':data['source_pages'] and data['evidence_catalog'][0]['evidence_id']}
+                return {'working_units':[{'action':'Plan bestätigen','citations':[ref]}],'carry_forward':''}
             source=data['project_facts']['source_documents'][0]
             self.assertEqual(source['source_key'],'contract')
             self.assertEqual(source['pages'],[{'pdf_page':1,'text':contract.pages[0]['text']}])
-            self.assertEqual(data['project_facts']['facts'][0]['interpretation'],'Der Kunde bestätigt den Plan.')
             ids={e['evidence_id'] for e in data['evidence_catalog']}
             self.assertTrue({e['evidence_id'] for e in entries} <= ids)
-            if phase=='PAGE_EXTRACTION':
-                ref={'evidence_id':entries_for(local)[0]['evidence_id']}
-                return {'working_units':[{'action':'Plan bestätigen','citations':[ref]}],'carry_forward':''}
             if phase=='PAGE_OFFERS':return {'offers':[]}
             if phase=='PAGE_CONSEQUENCES':
                 return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','consequences':[]}

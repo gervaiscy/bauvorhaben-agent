@@ -36,10 +36,34 @@ def evidence_payload(document, chunk):
 def record_response(responses, response, pass_name, document, payload, **metadata):
     # Resolve references for checks and subsequent inputs without repairing or
     # rewriting the recorded provider answer. Meaning is evaluated separately.
-    resolved, audit, findings = resolve(response, payload['source_pages'], [],
-                                       payload['source_key'], document.id)
+    reference_map = None
+    if pass_name == 'PAGE_EXTRACTION':
+        from bauvo_working_units.phases.aufgaben.response import resolve_response
+        resolved, audit, findings, reference_map = resolve_response(response, payload)
+    else:
+        resolved, audit, findings = resolve(response, payload['source_pages'], [],
+                                           payload['source_key'], document.id)
+    if pass_name == 'PAGE_EXTRACTION' and isinstance(resolved, dict):
+        from types import SimpleNamespace
+        from bauvo_working_units.phases.aufgaben.response import derived_data, is_selection
+        from bauvo_working_units.phases.aufgaben.quotations import is_quotation
+        chunk = SimpleNamespace(pages=[p['pdf_page'] for p in payload['source_pages']])
+        for position, row in enumerate(resolved.get('working_units', [])):
+            raw = response['working_units'][position]
+            if is_selection(raw) or is_quotation(raw):
+                derived = derived_data(raw, row, document, chunk)
+                view = _view({'id': None, 'gemini': raw, 'derived': derived})
+                row.update({k: v for k, v in view.items() if k != 'id'})
     responses.append({'pass': pass_name, **metadata, 'gemini': copy.deepcopy(response),
-                      'citation_evidence': audit})
+                      'citation_evidence': audit,
+                      **({'reference_map': reference_map} if reference_map is not None else {})})
+    if pass_name == 'PAGE_EXTRACTION':
+        if reference_map is not None:
+            from bauvo_working_units.phases.aufgaben.passages import REFERENCE_PROTOCOL
+            responses[-1]['reference_protocol'] = REFERENCE_PROTOCOL
+        else:
+            from bauvo_working_units.phases.aufgaben.quotations import PROTOCOL as QUOTE_PROTOCOL
+            responses[-1]['quote_protocol'] = QUOTE_PROTOCOL
     return resolved, findings
 
 

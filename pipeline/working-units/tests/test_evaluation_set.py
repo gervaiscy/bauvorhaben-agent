@@ -13,7 +13,7 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 class EvaluationSetTests(unittest.TestCase):
     def test_expected_evidence_is_literal_document_local_and_ids_are_unique(self):
         data=json.loads((EVALUATION/'cases.json').read_text());cases=data['cases']
-        self.assertEqual(len(cases),18);self.assertEqual(len({c['id'] for c in cases}),18)
+        self.assertEqual(len(cases),34);self.assertEqual(len({c['id'] for c in cases}),34)
         for case in cases:
             pages={p['pdf_page']:p['text'] for p in case['pages']}
             documents={d['document_id']:d['pdf_pages'] for d in case['documents']}
@@ -29,7 +29,7 @@ class EvaluationSetTests(unittest.TestCase):
     def test_preparation_is_deterministic_and_uses_production_schema6_loader(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);a=root/'a';b=root/'b'
-            self.assertEqual(module.prepare(a),18);self.assertEqual(module.prepare(b),18)
+            self.assertEqual(module.prepare(a),34);self.assertEqual(module.prepare(b),34)
             for p in a.rglob('*.json'):self.assertEqual(p.read_bytes(),(b/p.relative_to(a)).read_bytes())
             for folder in a.iterdir():
                 docs=load_documents(folder/'pages.json',folder/'documents.json')

@@ -1,5 +1,7 @@
 """Working-unit extraction owns primary-page traversal and continuation context."""
 from ...shared.occurrences import run as run_occurrences
+from .response import derived_data, is_selection, valid_selection
+from .quotations import is_quotation, valid_quotation
 
 PASS = 'PAGE_EXTRACTION'
 KEY = 'working_units'
@@ -9,7 +11,7 @@ TRACK_WINDOWS = True
 
 
 def request_context(ctx, document, chunk, carry):
-    return {'prior_context': carry}
+    return {}
 
 
 def carry_forward(ctx, document, chunk, response):
@@ -21,6 +23,10 @@ def carry_forward(ctx, document, chunk, response):
 
 
 def valid_proposal(item):
+    if is_quotation(item):
+        return valid_quotation(item)
+    if is_selection(item):
+        return valid_selection(item)
     return isinstance(item, dict) and isinstance(item.get('action'), str)
 
 

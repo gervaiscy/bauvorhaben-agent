@@ -18,6 +18,14 @@ class FactInputProjectionTests(unittest.TestCase):
         for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_CONSEQUENCES'):
             with self.subTest(phase=phase):
                 actual=json.loads(_prompt(phase,payload,'de').split('SOURCE DATA:\n')[1])
+                if phase == 'PAGE_EXTRACTION':
+                    projected = actual['project_facts']['facts'][0]
+                    self.assertEqual([c['quote'] for c in projected['citations']], ['First quote', 'Second quote'])
+                    self.assertTrue(all('evidence_id' not in c for c in projected['citations']))
+                    self.assertEqual(projected['review_findings'], [{'code':'issue'}])
+                    self.assertNotIn('source_documents', actual['project_facts'])
+                    self.assertEqual(payload, original)
+                    continue
                 self.assertEqual(actual['project_facts'],{'facts':[
                     {'id':'F1','text':'First quote\n[separate source passage]\nSecond quote',
                      'source_key':'contract','document_id':'D1','document_title':None,
@@ -53,7 +61,10 @@ class FactInputProjectionTests(unittest.TestCase):
             with self.subTest(phase=phase):
                 data=json.loads(_prompt(phase,payload,'de').split('SOURCE DATA:\n')[1])
                 self.assertNotIn('primary_pages',data)
-                if phase in ('PAGE_EXTRACTION','PAGE_OFFERS'):
+                if phase == 'PAGE_EXTRACTION':
+                    self.assertEqual([(p['pdf_page'], p['primary'], p['text'])
+                                      for p in data['source_pages']], [(1, False, 'Overlap'), (2, True, 'New page')])
+                elif phase == 'PAGE_OFFERS':
                     self.assertEqual(data['source_pages'],payload['source_pages'])
                 self.assertEqual(payload,original)
 

@@ -40,6 +40,12 @@ def _payload(document, chunk):
 
 
 def _prompt(pass_name, payload, language):
+    if pass_name == 'PAGE_EXTRACTION':
+        from .phases.aufgaben.payload import model_input
+        data, _ = model_input(payload)
+        language_rule = '' if language == 'de' else '\nFormuliere title und actor auf Englisch. quote bleibt unverändert.\n'
+        return (pass_name + '.\n' + PASS_RULES[pass_name].rstrip() + language_rule
+                + '\n\nSOURCE DATA:\n' + json.dumps(data, ensure_ascii=False))
     if pass_name == 'PAGE_PROJECT_FACTS' and payload.get('evidence_protocol') in ('contractual-rights-v1', 'contractual-rights-v2', 'contractual-rights-v3'):
         from .phases.project_facts.payload import compact_pages, reference_map, REFERENCE_PROTOCOL
         labels = {identifier: label for label, identifier in reference_map(payload['evidence_catalog']).items()}
@@ -154,6 +160,9 @@ def _view(record):
             for key in ('name', 'action', 'actor', 'performed_by', 'citations')}}
     if 'citations' in record['derived']:
         view['citations'] = copy.deepcopy(record['derived']['citations'])
+    if record['derived'].get('task_protocol') in ('selected-source-passages-v1', 'selected-source-passages-v2', 'task-original-quote-v1'):
+        view.update(name=record['derived']['title'], action=record['derived'].get('source_text'),
+                    actor=record['derived'].get('actor'), performed_by=None)
     return view
 
 
@@ -236,10 +245,11 @@ def extract_page_units(documents, model, max_chars=80000, chunk_pages=10, overla
                             for p in supporting_pages]
         pages = [{**p, 'source_key': source_key, 'document_id': document.id} for p in local_pages]
         entries = catalog([*pages, *supporting_pages])
+        request_payload = {**_payload(document, chunk), **extra,
+                           'catalog_protocol': CATALOG_PROTOCOL, 'evidence_catalog': entries}
+        reference_map = None
         try:
-            response = model.extract(_prompt(pass_name, {**_payload(document, chunk), **extra,
-                                                       'catalog_protocol': CATALOG_PROTOCOL,
-                                                       'evidence_catalog': entries}, language))
+            response = model.extract(_prompt(pass_name, request_payload, language))
         except ModelRequestFailed as exc:
             failure = {'response_id': response_id, 'code': 'model_request_failed', 'pass': pass_name,
                        'document_id': document.id, 'pages': list(chunk.pages),
@@ -252,9 +262,20 @@ def extract_page_units(documents, model, max_chars=80000, chunk_pages=10, overla
             return response_id, None
         responses.append({'id': response_id, 'pass': pass_name, 'source_key': document.source_key,
                           'document_id': document.id, 'pages': list(chunk.pages),
-                          'primary_pages': list(chunk.primary_pages), 'gemini': copy.deepcopy(response)})
-        resolved, audit, issues = resolve(response, local_pages, supporting_pages, source_key,
-                                         document.id, model=None if pass_name == 'PAGE_CONSEQUENCES' else model)
+                          'primary_pages': list(chunk.primary_pages), 'gemini': copy.deepcopy(response),
+                          **({'reference_map': reference_map} if reference_map is not None else {})})
+        if pass_name == 'PAGE_EXTRACTION':
+            from .phases.aufgaben.response import resolve_response
+            resolved, audit, issues, reference_map = resolve_response(response, request_payload)
+            if reference_map is not None:
+                from .phases.aufgaben.passages import REFERENCE_PROTOCOL
+                responses[-1].update(reference_protocol=REFERENCE_PROTOCOL, reference_map=reference_map)
+            else:
+                from .phases.aufgaben.quotations import PROTOCOL as QUOTE_PROTOCOL
+                responses[-1]['quote_protocol'] = QUOTE_PROTOCOL
+        else:
+            resolved, audit, issues = resolve(response, local_pages, supporting_pages, source_key,
+                document.id, model=None if pass_name == 'PAGE_CONSEQUENCES' else model)
         if audit['bindings'] or audit['original_findings']:
             responses[-1]['citation_evidence'] = audit
         resolved_responses[response_id] = resolved

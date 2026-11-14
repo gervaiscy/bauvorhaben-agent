@@ -1,0 +1,477 @@
+[
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Der Bauherr beauftragt einen Installateur mit der Herstellung des Bauwasseranschlusses.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S2",
+              "Beide Handlungen müssen vor Baubeginn abgeschlossen sein.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": []
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Installateur vor Baubeginn beauftragen",
+          "actor": "Bauherr",
+          "evidence_ids": [
+            "S1",
+            "S2"
+          ]
+        },
+        {
+          "title": "Bauwasseranschluss vor Baubeginn herstellen",
+          "actor": "Installateur",
+          "evidence_ids": [
+            "S1",
+            "S2"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ],
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Der Bauherr zahlt den folgenden Gesamtbetrag.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S2",
+              "Grundsumme\t48.700 EUR\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S3",
+              "Servicegutschrift\t−900 EUR gemäß Nachtrag „Wartung“.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S4",
+              "Gesamtbetrag inklusive Servicegutschrift\t47.800 EUR\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S5",
+              "Zahlbar innerhalb von zehn Tagen.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": [
+          {
+            "id": "F1",
+            "citations": [
+              {
+                "source_key": "beispiel",
+                "document_id": "B2",
+                "pdf_page": 2,
+                "quote": "Nachtrag „Wartung“: Die Servicegutschrift wird nur bei Abschluss eines Wartungsvertrags gewährt."
+              }
+            ],
+            "review_findings": [],
+            "interpretation": "Die Servicegutschrift setzt einen Wartungsvertrag voraus."
+          }
+        ]
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Gesamtbetrag unter Berücksichtigung der Servicegutschrift zahlen",
+          "actor": "Bauherr",
+          "evidence_ids": [
+            "S1",
+            "S2",
+            "S3",
+            "S4",
+            "S5"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ],
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Die einwilligende Person gestattet der Planservice Nord GmbH, ihre freiwillig angegebenen Daten zur Vertragsdurchführung zu verarbeiten und zu speichern.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S2",
+              "Die einwilligende Person kann diese Einwilligung gegenüber der Planservice Nord GmbH jederzeit widerrufen. Die Verarbeitung bis zum Widerruf bleibt rechtmäßig.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S3",
+              "Die einwilligende Person gestattet der Bauberatung Süd GmbH, ihre freiwillig angegebenen Daten zur Vertragsdurchführung zu verarbeiten und zu speichern.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S4",
+              "Die einwilligende Person kann diese Einwilligung gegenüber der Bauberatung Süd GmbH jederzeit widerrufen. Die Verarbeitung bis zum Widerruf bleibt rechtmäßig.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S5",
+              "Ich bestätige, die Datenschutzhinweise in Papierform erhalten zu haben.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": []
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Daten im Rahmen der Einwilligung verarbeiten und speichern",
+          "actor": "Planservice Nord GmbH",
+          "evidence_ids": [
+            "S1",
+            "S2"
+          ]
+        },
+        {
+          "title": "Einwilligung gegenüber Planservice Nord GmbH widerrufen (optional)",
+          "actor": "einwilligende Person",
+          "evidence_ids": [
+            "S1",
+            "S2"
+          ]
+        },
+        {
+          "title": "Daten im Rahmen der Einwilligung verarbeiten und speichern",
+          "actor": "Bauberatung Süd GmbH",
+          "evidence_ids": [
+            "S3",
+            "S4"
+          ]
+        },
+        {
+          "title": "Einwilligung gegenüber Bauberatung Süd GmbH widerrufen (optional)",
+          "actor": "einwilligende Person",
+          "evidence_ids": [
+            "S3",
+            "S4"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ],
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Der Auftragnehmer saniert das Dach innerhalb von neun Wochen ab Montagebeginn. Die Herstellungsfrist verlängert sich um die Tage einer behördlich angeordneten Unterbrechung, höchstens um fünf Werktage. Andere Unterbrechungen verlängern die Frist nicht.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S2",
+              "Die Telefonzentrale ist werktags erreichbar.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S3",
+              "Bei schuldhafter Überschreitung dieser Herstellungsfrist zahlt der Auftragnehmer eine Vertragsstrafe von 40 EUR je Tag, höchstens zwei Prozent der Nettovergütung.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": []
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Dach innerhalb der geregelten Herstellungsfrist sanieren",
+          "actor": "Auftragnehmer",
+          "evidence_ids": [
+            "S1"
+          ]
+        },
+        {
+          "title": "Bei schuldhafter Fristüberschreitung Vertragsstrafe zahlen",
+          "actor": "Auftragnehmer",
+          "evidence_ids": [
+            "S1",
+            "S3"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ],
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Der Auftragnehmer errichtet den Anbau nach folgender Leistungsaufstellung:\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S2",
+              "Position 1\tFenster und Eingangstür bleiben in der Standardausführung.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S3",
+              "Position 2\tMalerarbeiten sind nicht im Leistungsumfang enthalten.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S4",
+              "Wir verwirklichen Wohnträume mit unserer langjährigen Erfahrung.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": []
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Anbau mit dem beschriebenen Leistungsumfang errichten",
+          "actor": "Auftragnehmer",
+          "evidence_ids": [
+            "S1",
+            "S2",
+            "S3"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ],
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Wenn Zusatzleistungen beauftragt werden, legen Auftraggeber und Auftragnehmer die Mehrkosten und Terminänderungen vor Ausführung schriftlich fest. Der Auftraggeber übergibt vor Leistungsbeginn eine Bankbürgschaft. Mit Eigenleistungen beginnt der Auftraggeber erst nach Abnahme der bisherigen Auftragnehmerleistungen oder nach schriftlicher Freigabe durch den Auftragnehmer.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": []
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Bei Zusatzleistungen Mehrkosten und Terminänderungen schriftlich vereinbaren",
+          "actor": "Auftraggeber und Auftragnehmer",
+          "evidence_ids": [
+            "S1"
+          ]
+        },
+        {
+          "title": "Bankbürgschaft vor Leistungsbeginn übergeben",
+          "actor": "Auftraggeber",
+          "evidence_ids": [
+            "S1"
+          ]
+        },
+        {
+          "title": "Eigenleistungen erst nach Abnahme oder schriftlicher Freigabe beginnen",
+          "actor": "Auftraggeber",
+          "evidence_ids": [
+            "S1"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ],
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Aussteller: Planbüro Mitte.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S2",
+              "Ich bestätige, die Hinweise erhalten zu haben.\n"
+            ],
+            [
+              null,
+              "\n"
+            ],
+            [
+              "S3",
+              "Der Prüfbericht ist dem Bauherrn vor Baubeginn auszuhändigen.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": []
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Prüfbericht vor Baubeginn aushändigen",
+          "actor": null,
+          "evidence_ids": [
+            "S3"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ],
+  [
+    {
+      "source_pages": [
+        {
+          "source_key": "beispiel",
+          "document_id": "B1",
+          "pdf_page": 1,
+          "primary": true,
+          "segments": [
+            [
+              "S1",
+              "Der Bauherr legt vor Baubeginn einen Versicherungsnachweis vor. Stattdessen darf er eine gleichwertige Bankgarantie vorlegen; in diesem Fall entfällt der Versicherungsnachweis.\n"
+            ]
+          ]
+        }
+      ],
+      "project_facts": {
+        "facts": []
+      }
+    },
+    {
+      "working_units": [
+        {
+          "title": "Versicherungsnachweis vorlegen, sofern keine Bankgarantie vorgelegt wird",
+          "actor": "Bauherr",
+          "evidence_ids": [
+            "S1"
+          ]
+        },
+        {
+          "title": "Alternativ eine gleichwertige Bankgarantie vorlegen",
+          "actor": "Bauherr",
+          "evidence_ids": [
+            "S1"
+          ]
+        }
+      ],
+      "carry_forward": ""
+    }
+  ]
+]

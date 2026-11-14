@@ -1,5 +1,13 @@
 # Focused evaluations
 
+The isolated [action anchor prototype](action_anchor_prototype/README.md) compares
+specific original action quotations with application-retained paragraph/window
+context. It jointly checks missing/extra actions, grouping and actors against
+separate authored expectations. It leaves production unchanged, defaults to zero
+new provider calls, preserves completed responses before validation and supports
+offline replay. Its literal controls require semantic review; they are not a
+production correctness verifier.
+
 Current project-facts controls ask: **Welche Regelungen enthalten die Vertragsunterlagen
 für mein Bauvorhaben, und was bedeuten sie für mich als Bauherrn?**
 Twenty-one fictional cases in `contractual-rights-cases.json`
@@ -46,8 +54,36 @@ rewriting interpretations, or claiming that valid JSON means correct meaning.
   --output runs/manual/focused-new-run --project YOUR_PROJECT
 ```
 
-This runs eighteen end-to-end action cases, twenty-four applicability controls and twenty-three
+This runs thirty-four end-to-end action cases, twenty-four applicability controls and twenty-three
 timing controls, including the qualification controls described below.
+Four `task-evidence-*` action controls cover complete split sentences and extension
+limits, alternative documentation, payment-table rows with a withholding exception,
+and conditional refunds with deductions and offset restrictions. Their expected
+source selections are separate from the model input. Offline tests check literal
+restoration and preservation of those authored selections; they do not measure
+whether Gemini selects them correctly.
+Seven additional `task-evidence-*` controls cover linked credits and amendments,
+receipt-only acknowledgements, passive work with unknown performer, an explicit
+performer distinct from the issuer, nominal actions and included room rows,
+scope exclusions without assignment, and separately assigned excluded work.
+They include positive counterexamples: an unknown actor does not erase work;
+an exclusion from one party's scope does not erase another party's assignment.
+The production prompt performs its coverage check within the same response;
+there is no extra model pass, application-side semantic filter or new accounting field.
+Five further action controls are held out of the prompt demonstrations:
+`task-evidence-credit-reference-context-only-amendment`,
+`task-evidence-equivalent-consents-separate-documents`,
+`task-evidence-penalty-with-later-deadline-definition`,
+`task-evidence-series-specification-as-scope`, and
+`task-evidence-independent-actions-different-parties-one-paragraph`.
+They cover a separately sourced bonus amendment, three equivalent company consents
+in separate document windows, a deadline defined after its penalty, standard scope
+and exclusions, and three actors sharing one paragraph. The prompt instead contains
+eight independent fictional input/output demonstrations with complete production-shaped
+JSON answers. Offline checks bind those examples, preserve source text and actors,
+and exercise context-only amendments without making fact quotations selectable as
+window labels. These authored answers verify transport and example consistency,
+not whether Gemini generalizes; fresh provider answers need separate semantic review.
 Add the following arguments to include source-backed BLB windows:
 
 ```
@@ -80,7 +116,7 @@ to revisit the previously failed BLB applicability window without a full BLB run
 The production context selection and one-retry wrapper are used. Raw attempts and
 finish reasons remain separate from interpreted results, including recovered failures.
 
-The step-2 action/timing suite consists of the eighteen action cases plus twenty-three timing
+The step-2 action/timing suite consists of the thirty-four action cases plus twenty-three timing
 controls. Added cases cover statements versus actions, checklist context across pages,
 performance versus commissioning, installation versus confirmation, negative timing,
 WITHIN_AFTER deadlines and durations with unknown starts. Expectations remain separate

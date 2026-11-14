@@ -155,6 +155,35 @@ def decode_prompt(prompt):
     import json
     from bauvo_working_units.phases.project_facts.payload import expand_payload
     value = json.loads(prompt.split('SOURCE DATA:\n', 1)[1])
+    if prompt.startswith('PAGE_EXTRACTION.') and all('text' in p for p in value['source_pages']):
+        # Historical provider doubles still return source-ID responses. Construct
+        # their old catalog locally; it is never part of the actual Gemini input.
+        from bauvo_working_units.phases.aufgaben.payload import legacy_input
+        from bauvo_working_units.phases.aufgaben.passages import passage_catalog
+        wire, _ = legacy_input(value)
+        entries = passage_catalog([{**p, 'source_key': value.get('source_key', 'source'),
+                                   'document_id': value.get('document', {}).get('id', 'D1')}
+                                  for p in value['source_pages']])
+        labels = [label for p in wire['source_pages'] for label, _ in p['segments'] if label]
+        return {**value, 'evidence_catalog': [{**entry, 'evidence_id': label}
+                                            for label, entry in zip(labels, entries)]}
+    if prompt.startswith('PAGE_EXTRACTION.') and value.get('reference_protocol') in ('source-labels-v1', 'source-paragraph-labels-v1'):
+        # Legacy semantic test doubles consume ordinary pages. Decode the new
+        # transport without changing source wording or synthetic predictions.
+        entries, pages = [], []
+        for page in value['source_pages']:
+            plain = {k: page[k] for k in ('pdf_page', 'primary', 'checkboxes') if k in page}
+            plain['text'] = ''.join(text for _, text in page['segments'])
+            pages.append(plain)
+            source = [{**plain, 'source_key': page['source_key'], 'document_id': page['document_id']}]
+            if value['reference_protocol'] == 'source-paragraph-labels-v1':
+                from bauvo_working_units.phases.aufgaben.passages import passage_catalog
+                expanded = passage_catalog(source)
+            else:
+                expanded = catalog(source)
+            labels = [label for label, _ in page['segments'] if label is not None]
+            entries.extend({**entry, 'evidence_id': label} for label, entry in zip(labels, expanded))
+        return {**value, 'source_pages': pages, 'evidence_catalog': entries}
     if not prompt.startswith('PAGE_PROJECT_FACTS.'):
         return value
     expanded = expand_payload(value)

@@ -62,7 +62,7 @@ class ProjectFactsPromptContractTests(unittest.TestCase):
                    'source_pages':list(doc.pages),'evidence_catalog':source['evidence_catalog'],
                    'catalog_protocol':CATALOG_PROTOCOL,'working_units':[],
                    'project_facts':{'facts':[],'excluded_passages':[],'review_findings':[]}}
-        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
+        for phase in ('PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
             with self.subTest(phase=phase):
                 prompt = _prompt(phase,request,'de')
                 instructions,data = prompt.split('SOURCE DATA:\n',1)

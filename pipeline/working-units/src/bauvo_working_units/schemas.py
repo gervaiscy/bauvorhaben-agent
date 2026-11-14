@@ -1,5 +1,5 @@
 """Compatibility exports and registry for phase-owned response contracts."""
-PROTOCOL = 'page-working-units-v62'
+PROTOCOL = 'page-working-units-v69'
 
 UNIT_BATCH_SIZE = 5
 
@@ -16,7 +16,7 @@ from .phases.consequences.schema import CONSEQUENCES
 
 RESPONSE_SCHEMAS = {
     'PAGE_PROJECT_FACTS': RIGHTS,
-    'PAGE_EXTRACTION': obj({'working_units': array(UNIT), 'carry_forward': TEXT}),
+    'PAGE_EXTRACTION': obj({'working_units': array(UNIT)}),
     'PAGE_OFFERS': obj({'offers': array(OFFER)}),
     'PAGE_APPLICABILITY': obj({'assessments': array(APPLICABILITY)}),
     'PAGE_TIMING': obj({'assessments': array(TIMING)}),

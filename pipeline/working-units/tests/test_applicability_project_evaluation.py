@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 """Verify evaluation isolation and evidence preservation, not model interpretation."""
 import copy
 import json
@@ -19,7 +20,7 @@ class ApplicabilityProjectEvaluationTests(unittest.TestCase):
         calls=[];answers=[]
         def extract(prompt):
             self.assertTrue(prompt.startswith('PAGE_APPLICABILITY.'))
-            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append(data)
+            data=decode_prompt(prompt);calls.append(data)
             self.assertNotIn('expectations',data)
             self.assertNotIn('expected',data)
             answer={'assessments':[{'unit_id':u['id'],'applicability':'UNKNOWN','modality':'UNCLEAR',
@@ -51,7 +52,7 @@ class ApplicabilityProjectEvaluationTests(unittest.TestCase):
         original=copy.deepcopy(baseline)
         for mode in ('original','summary','wrong-source'):
             def extract(prompt):
-                data=json.loads(prompt.split('SOURCE DATA:\n')[1]);fact=data['project_facts']['facts'][0]
+                data=decode_prompt(prompt);fact=data['project_facts']['facts'][0]
                 quote=case['contract_facts'][0]['statement'] if mode=='summary' else fact['text']
                 citation={'pdf_page':1,'quote':quote,'source_key':docs[0].source_key if mode=='wrong-source'
                           else context[0].source_key,'document_id':context[0].id}

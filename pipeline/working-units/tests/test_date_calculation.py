@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 import copy
 import json
 from pathlib import Path
@@ -75,7 +76,7 @@ class DateCalculationTests(unittest.TestCase):
     def test_calculation_is_derived_without_modifying_raw_timing_response(self):
         answers=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':out={'working_units':[{'action':'Freigabe vorlegen','citations':[self.citation]}],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
             elif kind=='PAGE_TIMING':out={'assessments':[{'unit_id':data['working_units'][0]['id'],'status':'EXPLICIT',
@@ -133,7 +134,7 @@ class FivePassTests(unittest.TestCase):
               Document('D2','B','a.pdf',schema_version=6,pages=({'pdf_page':21,'text':text},))]
         calls=[];answers=[]
         def extract(prompt):
-            kind=prompt.split('.',1)[0];data=json.loads(prompt.split('SOURCE DATA:\n')[1]);calls.append((kind,data))
+            kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
             page=data.get('primary_pages',[data['source_pages'][0]['pdf_page']])[0];citation={'pdf_page':page,'quote':text}
             if kind=='PAGE_EXTRACTION':
                 out={'working_units':[{'action':'Planung bestätigen','actor':'Kunde','performed_by':'Kunde',

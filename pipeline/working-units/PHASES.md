@@ -20,7 +20,100 @@ is explicitly separate from semantic completeness. Empty extraction is valid and
 does not remove any original source text. All downstream phases retain source
 access and receive `extraction_scope: homeowner_contractual_position`. Older artifacts replay under
 their own protocols; they are never converted to rights by renaming fields.
-The units cache protocol is 104; the PDF extraction protocol is unchanged.
+The units cache protocol is 111; the PDF extraction protocol is unchanged.
+
+Aufgaben sends the current document-local window of at most ten pages as plain
+original page text, with page numbers, overlap markers and checkbox metadata.
+Documents remain grouped according to `documents.json`. Accepted
+`project_facts.facts` retain their interpretations and original quotations as
+contractual context; full fact source documents and evidence catalogs are not sent.
+There are no selectable segment labels in the current Aufgaben request.
+
+The German prompt identifies tasks and their performers. Gemini returns only:
+
+```json
+{"working_units": [{"title": "Kurzer Aufgabenname", "actor": null,
+                    "quote": "Unveränderte Originaltextstelle"}]}
+```
+
+There is no `carry_forward`, task description, evidence-ID selection or requirement
+to collect conditions, deadlines and exceptions in this stage. Independently
+executable tasks are separate rows and may share the same original quotation.
+The title is an orientation aid; actor is Gemini's source-based interpretation or
+null. The task text is the original quotation, not the title.
+
+The application binds each quote to a unique literal occurrence within the supplied
+window of the current document. It does not search contractual context or other
+documents to validate a task quote. Exact whitespace and wording must match; no fuzzy
+matching, whitespace rewriting or semantic repair is performed. Repeated occurrences
+are ambiguous and remain findings. Gemini can include more surrounding original text
+to disambiguate them. Cross-page quotes use the document's supplied page order with
+one newline between pages; canonical citations retain exact per-page spans.
+
+Every provider row and complete raw response remain unchanged, including invalid
+proposals. Derived source locations contain application-owned IDs, page, offsets
+and exact quotations. Derived task records use `task-original-quote-v1` and retain
+`title`, `actor`, `source_text` and canonical `citations`. Downstream views use the
+original `source_text` as `action` and the generated title as `name`; conditions,
+timing, consequences and applicability retain their separate stages and source
+access. Invalid quotes remain visible with findings and do not trigger an additional
+model verification or repair request. Local checks establish source binding and
+structure, not semantic extraction completeness or actor correctness.
+
+The same document windows, raw-response storage, request budgeting and offline
+cache replay remain available. A distinct prompt/schema identity prevents the
+new requests from reusing old extraction answers. Settled project-facts artifacts
+remain reusable. Historical ID-selection and action/citation records remain readable
+through their existing compatibility paths; they are not new provider output schemas.
+
+The following paragraphs describe earlier revisions of the historical selection
+protocol; their complex evidence-selection rules are no longer the live prompt.
+
+The initial 12 November 2026 Aufgaben prompt clarification makes each task's selected
+evidence self-contained: complete relevant sentences, linked prerequisites,
+exceptions, alternatives, timing extensions and limits, and relevant table rows
+must be selected together. Line labels are explicitly described as fragments,
+not complete provisions. Fictional examples cover split sentences, alternative
+evidence requirements and a payment table with a withholding exception. A fact
+or citation attached to another task does not substitute for selecting that
+task's own evidence. This changes the provider prompt fingerprint without changing
+the response schema or local source-binding protocol. There is no additional
+model call or automatic expansion of selected passages. Offline checks verify
+transport and example consistency; semantic improvement requires reviewing a
+fresh provider response. Existing run files are preserved.
+
+The subsequent Aufgaben boundary change uses the paragraph/row selections described
+above. A selected paragraph restores all its original line spans, including internal
+whitespace, rather than exposing individual wrapped lines as model choices. This
+does not append any unselected paragraph. Paragraphs are layout units, not verified
+semantic clauses; related provisions elsewhere still require model selection.
+Project-facts input, catalog, prompt and response identities are unchanged.
+
+The 13 November 2026 Aufgaben prompt clarification follows references between
+available passages (including credited totals and their conditions), separates
+performers from document issuers and recipients, and checks each primary paragraph
+and table row for concrete work. Passive and nominal work remains eligible;
+unknown actors remain null without suppressing the task. Receipt-only acknowledgements
+do not establish a new delivery task. Scope exclusions qualify the associated
+positive service and do not alone assign excluded work to anyone; explicit
+separate assignments remain tasks. Seven fictional controls exercise these
+distinctions alongside the existing promotion and optional-commission controls.
+This changes only the prompt fingerprint, not the input/output contract, source
+binding or orchestration. No extra provider request, semantic deletion filter or
+coverage-accounting field is added. Offline tests verify preservation of authored
+selections and actors; semantic accuracy still requires reviewing provider responses.
+
+The subsequent prompt revision replaces mixed prose/JSON demonstrations with eight
+fictional inputs and complete expected JSON outputs. Examples cover a credit whose
+amendment is context-only, equivalent consents and withdrawal roles, penalties with
+referenced deadlines, standard scope/exclusions and independent actions in a shared
+paragraph. Commissioning, alternatives and unknown actors remain demonstrated.
+The definition explicitly includes concrete permissions, choices and recommendations;
+source-supported actor roles suffice without personal names. Five separate evaluation
+cases remain outside the examples. Schema, source binding, request flow and settled
+project facts are unchanged. The updated prompt has a new request identity; existing
+provider answers and run files remain intact. Offline example checks do not certify
+Gemini's semantic completeness, and no live provider run is included in this revision.
 
 Current local validation accepts a fact supported anywhere in the supplied contract
 package; evidence need not overlap its assigned extraction batch. Batch assignments

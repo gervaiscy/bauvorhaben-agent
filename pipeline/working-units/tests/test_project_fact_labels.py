@@ -1,3 +1,4 @@
+from clause_fixtures import decode_prompt
 from historical_facts import collect_historical_facts
 from clause_fixtures import owned_answer, labeled_answer
 """Short model references bind exactly to immutable source fingerprints, offline."""
@@ -23,7 +24,7 @@ from test_project_facts import document
 
 
 def select_targets(prompt):
-    data = json.loads(prompt.split('SOURCE DATA:\n', 1)[1])
+    data = decode_prompt(prompt)
     return owned_answer(data, {'verpflichtungen': [{'uncertainty': None, 'claims': [
         {'statement': 'Source-backed synthetic statement.', 'evidence_ids': data['target_evidence_ids']}],
         'zitate': []}], 'nicht_als_fakt_erfasst': []})
@@ -35,7 +36,7 @@ class ProjectFactLabelTests(unittest.TestCase):
                 document('amendment', 'Amended provision.')]
         requests = []
         def provider(prompt):
-            data = json.loads(prompt.split('SOURCE DATA:\n', 1)[1])
+            data = decode_prompt(prompt)
             requests.append(data)
             expanded = expand_payload(data)
             for identifier in expanded['reference_map'].values():

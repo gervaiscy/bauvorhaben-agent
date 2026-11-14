@@ -60,7 +60,7 @@ class SimpleWorkflowTests(unittest.TestCase):
             if kind != 'PAGE_PROJECT_FACTS':self.assertLessEqual(len(p['source_pages']), 5)
             if p.get('document', {}).get('id') == 'D2':self.assertEqual([x['pdf_page'] for x in p['source_pages']], [7])
         first=[p for k,p in calls if k=='PAGE_EXTRACTION' and p['document']['id']=='D2'][0]
-        self.assertEqual(first['prior_context'], '');self.assertEqual(first['known_items'], [])
+        self.assertNotIn('prior_context', first);self.assertEqual(first['known_items'], [])
 
     def test_applicability_uses_whole_window_while_other_assessments_keep_five_unit_batches(self):
         result, calls, _ = self.run_case(12)

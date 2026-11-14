@@ -105,7 +105,7 @@ def exact_binding(citation, pages):
 
 
 def resolve(response, local_pages, supporting_pages, source_key, document_id, model=None,
-            allow_exact_rebinding=False, catalog_protocol=CATALOG_PROTOCOL):
+            allow_exact_rebinding=False, catalog_protocol=CATALOG_PROTOCOL, reference_map=None):
     """Return derived evidence and active findings; never mutate a provider answer.
 
     Legacy quoted responses retain strict checks by default. The explicit saved-run
@@ -124,17 +124,26 @@ def resolve(response, local_pages, supporting_pages, source_key, document_id, mo
     for path, values, claim in list(citations(derived)):
         if not isinstance(values, list):
             continue
+        selected = []
         for index, citation in enumerate(values):
-            location = f'{path}[{index}]'
+            location = f'{path}[{len(selected)}]'
             if isinstance(citation, dict) and 'evidence_id' in citation:
                 reference_mode = True
-                identifier = citation['evidence_id']
-                entry = lookup.get(identifier) if isinstance(identifier, str) else None
-                if entry is None:
+                label = citation['evidence_id']
+                identifier = (reference_map.get(label) if isinstance(label, str) else None) if reference_map is not None else label
+                identifiers = identifier if isinstance(identifier, list) else [identifier]
+                if not identifiers or any(not isinstance(i, str) or i not in lookup for i in identifiers):
                     unknown.add(location)
                 else:
-                    values[index] = canonical(entry)
-                    bindings.append({'path': location, 'method': 'evidence_reference', **canonical(entry)})
+                    for identifier in identifiers:
+                        entry = lookup[identifier]
+                        bindings.append({'path': f'{path}[{len(selected)}]', 'method': 'evidence_reference',
+                                         **canonical(entry),
+                                         **({'source_label': label} if reference_map is not None else {})})
+                        selected.append(canonical(entry))
+                    continue
+            selected.append(citation)
+        values[:] = selected
 
     def check(value):
         issues = citation_findings(value, local_pages, supporting_pages,

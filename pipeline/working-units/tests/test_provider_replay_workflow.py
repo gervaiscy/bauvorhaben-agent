@@ -65,7 +65,7 @@ class ProviderReplayWorkflowTests(unittest.TestCase):
         self.assertEqual(len(prompts), 3)
         contexts = []
         for prompt in prompts:
-            compact = json.loads(prompt.split('SOURCE DATA:\n')[1])
+            compact = json.loads(prompt.split('SOURCE DATA:\n', 1)[1])
             self.assertNotIn('evidence_catalog', compact)
             self.assertTrue(all('text' not in page and 'segments' in page for page in compact['source_pages']))
             expanded = expand_payload(compact)
