@@ -79,7 +79,13 @@ class ModularPipelineTests(unittest.TestCase):
         for kind in ('PAGE_PROJECT_FACTS','PAGE_EXTRACTION','PAGE_OFFERS'):
             windows=[[p['pdf_page'] for p in data['source_pages']]
                      for phase,data in model.calls if phase==kind]
-            self.assertEqual(windows,[list(range(1,21))] if kind=='PAGE_PROJECT_FACTS' else expected*2)
+            if kind=='PAGE_PROJECT_FACTS':
+                self.assertEqual(windows,[list(range(1,21))])
+            elif kind=='PAGE_OFFERS':
+                # Identical source text/facts share actual requests; provenance is local.
+                self.assertEqual(windows,[list(range(1,11)),list(range(11,20)),[20]])
+            else:
+                self.assertEqual(windows,expected*2)
         for kind,data in model.calls:
             if kind != 'PAGE_PROJECT_FACTS':self.assertLessEqual(len(data['source_pages']),10)
         for step in manifest['steps']:
@@ -89,6 +95,11 @@ class ModularPipelineTests(unittest.TestCase):
             self.assertEqual([w['pages'] for w in artifact['windows']],expected)
             self.assertEqual([n for w in artifact['windows'] for n in w['primary_pages']],
                              list(range(1,21)))
+            if step.startswith('06-timing/'):
+                from bauvo_working_units.phases.timing.artifact import review_view, validation_view
+                folder = (self.output/manifest['steps'][step]['artifact']).parent
+                self.assertEqual(pipeline.read(folder/'result.json'), review_view(artifact))
+                self.assertEqual(pipeline.read(folder/'result.validation.json'), validation_view(artifact))
 
     def test_consequences_for_every_source_receive_contracts_and_blb_without_reextracting_context(self):
         model=FakeModel();manifest=self.run_pipeline(model)
@@ -109,19 +120,21 @@ class ModularPipelineTests(unittest.TestCase):
         self.assertTrue(all('source_documents' not in data for phase,data in model.calls
                             if phase not in ('PAGE_OFFERS','PAGE_CONSEQUENCES')))
 
-    def test_offers_for_every_source_receive_all_contracts_and_blbs(self):
+    def test_offer_sources_match_extraction_type_and_contract_context_reaches_blb_through_facts(self):
         extra_contract=self.root/'amendment.pdf';extra_contract.write_bytes(b'%PDF amendment')
         extra_blb=self.root/'specification.pdf';extra_blb.write_bytes(b'%PDF specification')
         model=FakeModel()
         manifest=pipeline.run([self.contract,extra_contract],[self.blb,extra_blb],self.output,
                               'unused',model=model,command_runner=self.command,max_new_calls=1000)
-        expected={digest({'source':str(path.resolve()),'pdf_sha256':pipeline.sha(path)})[:16]
-                  for path in (self.contract,extra_contract,self.blb,extra_blb)}
         calls=[data for phase,data in model.calls if phase=='PAGE_OFFERS']
-        self.assertEqual(len(calls),4)
+        # All four identical page/fact inputs share one actual request. Canonical
+        # source identity is applied locally, without copying sources into the wire.
+        self.assertEqual(len(calls),1)
         for data in calls:
-            self.assertEqual({d['source_key'] for d in data['source_documents']},expected)
-            self.assertEqual([d['source_type'] for d in data['source_documents']].count('blb'),2)
+            self.assertEqual(set(data),{'source_pages','project_facts'})
+            self.assertTrue(data['project_facts']['facts'])
+            self.assertTrue(data['project_facts']['facts'][0]['evidence'])
+            self.assertTrue(all('pages' not in s for s in data['project_facts']['documents']))
         for name in ('contract-01','contract-02','blb-01','blb-02'):
             before=pipeline.read(self.output/manifest['steps']['04-aufgaben/'+name]['artifact'])
             after=pipeline.read(self.output/manifest['steps']['05-offers/'+name]['artifact'])
@@ -140,7 +153,8 @@ class ModularPipelineTests(unittest.TestCase):
     def test_all_phases_run_in_order_with_separate_artifacts_and_no_blb_fact_calls(self):
         model=FakeModel();result=self.run_pipeline(model)
         self.assertEqual([k for k,d in model.calls],['PAGE_PROJECT_FACTS']+
-            [kind for kind in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY') for _ in range(2)])
+            [kind for kind in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY')
+             for _ in range(1 if kind=='PAGE_OFFERS' else 2)])
         self.assertEqual(len(self.commands),4)
         self.assertEqual(result['status'],'recorded')
         self.assertEqual(len(result['steps']),15)

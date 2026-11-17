@@ -22,6 +22,7 @@ class FocusedEvaluationTests(unittest.TestCase):
                 data=decode_prompt(prompt);kind=prompt.split('.',1)[0]
                 calls.append((kind,data))
                 if kind=='PAGE_PROJECT_FACTS':return index_answer(data)
+                if kind=='PAGE_OFFERS':return {'offers':[]}
                 if kind=='PAGE_EXTRACTION':
                     return {'working_units':[{'name':'Task','dedupe_key':'task','action':'Do task','actor':'Owner',
                            'performed_by':None,'modality':'REQUIRED','citations':[]}],'offers':[],'carry_forward':''}

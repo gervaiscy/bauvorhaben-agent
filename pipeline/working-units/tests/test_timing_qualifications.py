@@ -17,7 +17,15 @@ sys.path.insert(0,str(BASE))
 import focused_evaluation as evaluation
 
 CASES = ('scoped-start-weather-restart-and-cap', 'connection-or-confirmed-date-with-reference',
-         'all-prerequisites-start-last-received', 'limited-restart-and-unrelated-deadline')
+         'all-prerequisites-start-last-received', 'limited-restart-and-unrelated-deadline',
+         'contained-rental-limit-is-not-installation-duration',
+         'post-completion-inspection-does-not-recite-financing',
+         'weather-qualifications-apply-only-to-named-subset',
+         'direct-timing-and-alternative-paths-remain-task-specific',
+         'phase-duration-without-its-own-start-event',
+         'explicit-common-phase-start-is-retained',
+         'explicit-specific-phase-start-is-retained',
+         'composite-task-keeps-separate-phase-durations')
 
 
 class TimingQualificationTests(unittest.TestCase):
@@ -46,19 +54,17 @@ class TimingQualificationTests(unittest.TestCase):
             case=fixtures[data['source_key']]
             self.assertEqual([{k:page[k] for k in ('pdf_page','text')} for page in data['source_pages']],case['pages'])
             self.assertFalse(set(data)&{'expected','forbidden','expectations'})
-            self.assertTrue(data['evidence_catalog'])
-            for entry in data['evidence_catalog']:
-                original=next(p['text'] for p in case['pages'] if p['pdf_page']==entry['pdf_page'])
-                self.assertEqual(entry['quote'],original[entry['start']:entry['end']])
+            self.assertNotIn('evidence_catalog', data)
+            self.assertEqual(data['project_facts'], {'facts': []})
             # Deliberately incomplete: source-valid evidence must not be reported
             # as proof that the condensed timing answer preserved all conditions.
             response={'assessments':[{'unit_id':u['id'],'answer':'Eine verkürzte Zeitantwort.',
-                'citations':[{'evidence_id':data['evidence_catalog'][0]['evidence_id']}]} for u in data['working_units']]}
+                'citations':[{'pdf_page': data['source_pages'][0]['pdf_page'], 'quote': data['source_pages'][0]['text']}]} for u in data['working_units']]}
             answers.append(copy.deepcopy(response));return response
         with tempfile.TemporaryDirectory() as directory:
             output=Path(directory)/'timing'
             summary=evaluation.run(output,'unused',model=SimpleNamespace(extract=model),case_ids=CASES)
-            self.assertEqual(len(calls),4)
+            self.assertEqual(len(calls),len(CASES))
             self.assertTrue(all(row['status']=='recorded' for row in summary))
             for data,answer in zip(calls,answers):
                 folder=output/data['source_key']
@@ -76,14 +82,15 @@ class TimingQualificationTests(unittest.TestCase):
         original=copy.deepcopy(case);timing=[]
         def model(prompt):
             phase=prompt.split('.',1)[0];data=decode_prompt(prompt)
-            citations=[{'evidence_id':entry['evidence_id']} for entry in data['evidence_catalog']]
+            citations=[{'evidence_id':entry['evidence_id']} for entry in data.get('evidence_catalog',[])]
             if phase=='PAGE_EXTRACTION':
                 return {'working_units':[{**case['working_units'][0],'citations':citations}],'carry_forward':''}
             if phase=='PAGE_OFFERS':return {'offers':[]}
             self.assertEqual(phase,'PAGE_TIMING')
             self.assertEqual([p['text'] for p in data['source_pages']],[p['text'] for p in case['pages']])
             answer={'assessments':[{'unit_id':data['working_units'][0]['id'],
-                'answer':'\n'.join(p['text'] for p in case['pages']),'citations':citations}]}
+                'answer':'\n'.join(p['text'] for p in case['pages']),
+                'citations':[{'pdf_page': p['pdf_page'], 'quote': p['text']} for p in data['source_pages']]}]}
             timing.append(copy.deepcopy(answer));return answer
         result=extract_page_units([doc],SimpleNamespace(extract=model),stop_after='PAGE_TIMING')
         self.assertEqual(result['review_findings'],[])

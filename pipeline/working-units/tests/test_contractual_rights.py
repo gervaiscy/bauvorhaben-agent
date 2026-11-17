@@ -278,6 +278,9 @@ class ContractualRightsTests(unittest.TestCase):
         for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
             data = payload(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de'))
             view = data['project_facts']
+            if phase == 'PAGE_TIMING':
+                self.assertEqual(view, {'facts': [{'id': f['id'], 'text': f['text']} for f in facts_view(result)['facts']]})
+                continue
             self.assertEqual(view['extraction_scope'], EXTRACTION_SCOPE)
             self.assertEqual(view['processing']['semantic_completeness'], 'not_verified')
             self.assertEqual(view['facts'][0]['interpretation'], raw['ansprueche'][0]['aussage'])
@@ -286,6 +289,11 @@ class ContractualRightsTests(unittest.TestCase):
             if phase == 'PAGE_EXTRACTION':
                 self.assertNotIn('source_documents', view)
                 self.assertEqual(view['facts'][0]['citations'][0]['quote'], doc.pages[0]['text'])
+            elif phase == 'PAGE_OFFERS':
+                self.assertNotIn('source_documents', view)
+                self.assertEqual(view['facts'][0]['evidence'][0]['quote'], doc.pages[0]['text'])
+                self.assertNotIn('source_documents', data)
+                self.assertEqual(data['source_pages'], [])
             else:
                 self.assertEqual(view['source_documents'][0]['pages'][0]['text'], doc.pages[0]['text'])
 
@@ -344,9 +352,13 @@ class ContractualRightsTests(unittest.TestCase):
         for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
             view = payload(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de'))['project_facts']
             with self.subTest(phase=phase):
+                if phase == 'PAGE_TIMING':
+                    self.assertEqual(view, {'facts': [{'id': f['id'], 'text': f['text']} for f in facts_view(result)['facts']]})
+                    continue
                 self.assertEqual(view['extraction_scope'], EXTRACTION_SCOPE)
                 self.assertEqual([f['interpretation'] for f in view['facts']], statements)
-                self.assertEqual([f['citations'][0]['quote'] for f in view['facts']],
+                evidence_key='evidence' if phase=='PAGE_OFFERS' else 'citations'
+                self.assertEqual([f[evidence_key][0]['quote'] for f in view['facts']],
                                  [statement+'\n' for statement in statements[:-1]]+statements[-1:])
 
     def test_blb_is_excluded_as_before_and_empty_package_makes_no_requests(self):

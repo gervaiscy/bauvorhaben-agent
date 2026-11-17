@@ -1,8 +1,9 @@
-"""Bind unchanged task quotations to this window, without inference or repair calls."""
+"""Bind task quotations locally and restore original text without changing raw answers."""
 import copy
 
 from ...citation_evidence import evidence_span
 from ...core import digest
+from .quote_matching import locate, PROTOCOL as MATCHING_PROTOCOL
 
 PROTOCOL = 'task-original-quote-v1'
 
@@ -18,27 +19,26 @@ def valid_quotation(item):
 
 
 def bind(quote, pages):
-    """Return one literal occurrence; never choose among repeated source locations.
+    citations, issue, _ = _bind(quote, pages)
+    return citations, issue
 
-    Pages follow document order, separated by one newline. A quotation crossing
-    that boundary is stored as exact per-page spans; the raw quotation is retained.
-    """
+
+def _bind(quote, pages):
+    """Restore a unique bounded match; retain exact offsets across page boundaries."""
     if not isinstance(quote, str) or not quote.strip():
-        return [], 'invalid_task_quote'
+        return [], 'invalid_task_quote', None
     text = '\n'.join(page['text'] for page in pages)
-    start = text.find(quote)
-    if start < 0:
-        return [], 'task_quote_not_found'
-    if text.find(quote, start + 1) >= 0:
-        return [], 'task_quote_ambiguous'
-    end = start + len(quote)
+    match, issue = locate(quote, text)
+    if issue:
+        return [], issue, None
+    start, end = match['start'], match['end']
     offset, citations = 0, []
     for page in pages:
         a, b = max(start, offset), min(end, offset + len(page['text']))
         if a < b:
             citations.append(evidence_span(page, a - offset, b - offset))
         offset += len(page['text']) + 1
-    return citations, None
+    return citations, None, {**match, 'source_text': text[start:end]}
 
 
 def resolve_quotations(response, pages):
@@ -53,13 +53,16 @@ def resolve_quotations(response, pages):
             if not is_quotation(row):
                 continue
             path = f'$.working_units[{n}].quote'
-            citations, issue = bind(row.get('quote'), pages)
+            citations, issue, match = _bind(row.get('quote'), pages)
             row['citations'] = citations
             if issue:
                 issues.append({'path': path, 'code': issue})
             else:
-                bindings.extend({'path': path, 'method': 'unique_literal_quote', **c} for c in citations)
-    return resolved, {'quote_protocol': PROTOCOL, 'source_pages_sha256': digest(pages),
+                row['source_text'] = match['source_text']
+                details = {k: v for k, v in match.items() if k not in ('start', 'end', 'source_text')}
+                bindings.extend({'path': path, **details, **c} for c in citations)
+    return resolved, {'quote_protocol': PROTOCOL, 'matching_protocol': MATCHING_PROTOCOL,
+                      'source_pages_sha256': digest(pages),
                       'bindings': bindings, 'original_findings': copy.deepcopy(issues),
                       'findings': copy.deepcopy(issues)}, issues
 
@@ -68,5 +71,5 @@ def derived_data(item, resolved):
     result = {'task_protocol': PROTOCOL, 'title': item.get('title'), 'actor': item.get('actor')}
     citations = resolved.get('citations') if isinstance(resolved, dict) else None
     if valid_quotation(item) and isinstance(citations, list) and citations:
-        result.update(citations=copy.deepcopy(citations), source_text=item['quote'])
+        result.update(citations=copy.deepcopy(citations), source_text=resolved['source_text'])
     return result

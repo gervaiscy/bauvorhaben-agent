@@ -107,6 +107,9 @@ class VersionedClauseIndexTests(unittest.TestCase):
             if phase == 'PAGE_EXTRACTION':
                 self.assertEqual([[c['quote'] for c in f['citations']] for f in data['project_facts']['facts']],
                                  [[c['quote'] for c in f['citations']] for f in facts_view(facts)['facts']])
+            elif phase == 'PAGE_OFFERS':
+                self.assertEqual([''.join(c['quote'] for c in f['evidence'])
+                                  for f in data['project_facts']['facts']],expected)
             else:
                 self.assertEqual([f['text'] for f in data['project_facts']['facts']],expected)
 
@@ -124,6 +127,11 @@ class VersionedClauseIndexTests(unittest.TestCase):
             if phase == 'PAGE_EXTRACTION':
                 self.assertEqual([c['quote'] for c in actual['project_facts']['facts'][0]['citations']],
                                  [c['quote'] for c in facts_view(facts)['facts'][0]['citations']])
+            elif phase == 'PAGE_OFFERS':
+                self.assertEqual(''.join(c['quote'] for c in actual['project_facts']['facts'][0]['evidence']),
+                                 ''.join(c['quote'] for c in facts_view(facts)['facts'][0]['citations']))
+                self.assertNotIn('source_documents',actual)
+                self.assertEqual(actual['source_pages'],[])
             else:
                 self.assertEqual(actual['project_facts']['facts'][0]['text'],doc.pages[0]['text'])
         self.assertEqual(facts,before)

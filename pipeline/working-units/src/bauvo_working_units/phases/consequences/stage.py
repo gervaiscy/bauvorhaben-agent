@@ -9,6 +9,7 @@ from ...fact_artifact import validate_facts
 from ...offer_stage import validate_input
 from ...page_flow import extract_page_units
 from ...project_flow import load_documents
+from ..timing.artifact import load_artifact
 
 PRIOR_PASSES = ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING')
 
@@ -28,7 +29,7 @@ def extract_consequences(baseline, documents, model, chunk_pages=10, overlap_pag
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--working-units', required=True, help='Full cumulative timing-stage working-units.json')
+    parser.add_argument('--working-units', required=True, help='Timing result.json with its audit sidecar, or a full cumulative artifact')
     parser.add_argument('--pages', required=True)
     parser.add_argument('--documents', required=True)
     parser.add_argument('--context-pages', action='append', default=[])
@@ -50,7 +51,7 @@ def main():
     trace = output.with_name(output.stem + '.trace')
     if any(p.exists() for p in (output, raw, compact, trace, raw.with_suffix('.attempts.json'))):
         parser.error('Outputs already exist; use a new output directory')
-    baseline = json.loads(Path(args.working_units).read_text())
+    baseline = load_artifact(args.working_units)
     kinds = {(s['source_key'], s['document_id']): s['source_type'] for s in baseline['source_snapshots']}
     documents = [replace(d, source_type=kinds.get((d.source_key, d.id), 'project'))
                  for d in load_documents(args.pages, args.documents)]

@@ -59,11 +59,19 @@ class FactContextCitationTests(unittest.TestCase):
             data = json.loads(_prompt(phase, {'source_pages':[], 'project_facts':facts_view(result)}, 'de')
                               .split('SOURCE DATA:\n',1)[1])
             projected = data['project_facts']['facts'][0]
+            if phase == 'PAGE_TIMING':
+                self.assertEqual(projected, {'id': fact['id'], 'text': fact['derived']['text']})
+                continue
             if phase == 'PAGE_EXTRACTION':
                 self.assertEqual([c['quote'] for c in projected['context_citations']],
                                  [c['quote'] for c in fact['derived']['context_citations']])
                 self.assertEqual([[c['quote'] for c in claim['verified_citations']] for claim in projected['claims']],
                                  [[c['quote'] for c in claim['verified_citations']] for claim in fact['derived']['claims']])
+            elif phase == 'PAGE_OFFERS':
+                self.assertEqual([c['quote'] for c in projected['context_evidence']],
+                                 [c['quote'] for c in fact['derived']['context_citations']])
+                self.assertEqual([''.join(c['quote'] for c in claim['evidence']) for claim in projected['claims']],
+                                 [claim['text'] for claim in fact['derived']['claims']])
             else:
                 self.assertEqual(projected['context_citations'], fact['derived']['context_citations'])
                 self.assertEqual(projected['claims'], fact['derived']['claims'])

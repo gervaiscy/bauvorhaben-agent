@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from bauvo_working_units.cache import CachedModel
 from bauvo_working_units.call_budget import BudgetedModel, CallBudget
@@ -121,7 +122,7 @@ class TaskQuotationTests(unittest.TestCase):
 
     def test_altered_or_joined_quotations_remain_findings_without_repair_calls(self):
         original = 'Der Bauherr\nbeantragt Baustrom.\n\nAndere Regelung.\n\nEr stellt einen Verteiler bereit.'
-        for quote in ('Der Bauherr beantragt Baustrom.', 'Der Bauherr beantragt Bauwasser.',
+        for quote in ('Der Bauherr beantragt Bauwasser.',
                       'beantragt Baustrom. Er stellt einen Verteiler bereit.'):
             with self.subTest(quote=quote):
                 raw = answer(task(quote)); calls = []
@@ -131,6 +132,80 @@ class TaskQuotationTests(unittest.TestCase):
                 self.assertIn('task_quote_not_found', {f['code'] for f in result['review_findings']})
                 self.assertNotIn('source_text', result['working_units'][0]['derived'])
                 self.assertEqual(result['gemini_responses'][0]['gemini'], raw)
+
+    def test_whitespace_and_linebreak_changes_restore_exact_original_source_and_audit(self):
+        original = 'Der Bauherr\r\n\tstellt\u00a0den Lagerplatz\n bereit.'
+        raw = answer(task('Der Bauherr stellt den Lagerplatz bereit.'))
+        result = extract(original, raw)
+        unit = result['working_units'][0]
+        self.assertEqual(result['review_findings'], [])
+        self.assertEqual(unit['gemini'], raw['working_units'][0])
+        self.assertEqual(unit['derived']['source_text'], original)
+        self.assertEqual(unit['derived']['citations'][0]['quote'], original)
+        self.assertEqual(_view(unit)['action'], original)
+        audit = result['gemini_responses'][0]['citation_evidence']
+        self.assertEqual(audit['matching_protocol'], 'task-quote-matching-v2')
+        self.assertEqual(audit['bindings'][0]['method'], 'unique_whitespace_quote')
+
+    def test_one_or_two_omitted_words_restore_the_complete_source_with_omissions_audited(self):
+        for omitted, original in [(['trockenen'], 'Der Bauherr stellt den trockenen Lagerplatz bereit.'),
+                                   (['trockenen', 'befestigten'], 'Der Bauherr stellt den trockenen befestigten Lagerplatz bereit.'),
+                                   (['nicht'], 'Der Bauherr darf nicht selbst bauen.')]:
+            with self.subTest(omitted=omitted):
+                quote = original
+                for word in omitted:
+                    quote = quote.replace(' '+word, '', 1)
+                raw = answer(task(quote)); before = copy.deepcopy(raw)
+                result = extract(original, raw)
+                self.assertEqual(result['review_findings'], [])
+                unit = result['working_units'][0]
+                self.assertEqual(unit['derived']['source_text'], original)
+                self.assertEqual(_view(unit)['action'], original)
+                self.assertEqual(unit['derived']['citations'][0]['quote'], original)
+                self.assertEqual(unit['gemini']['quote'], quote)
+                binding = result['gemini_responses'][0]['citation_evidence']['bindings'][0]
+                self.assertEqual(binding['method'], 'unique_omitted_words_quote')
+                self.assertEqual(binding['omitted_words'], omitted)
+                self.assertEqual(binding['omitted_word_count'], len(omitted))
+                self.assertEqual(raw, before)
+
+    def test_omissions_across_page_boundary_restore_canonical_per_page_spans(self):
+        doc = replace(document('unused'), pages=({'pdf_page': 4, 'text': 'Der Bauherr stellt den'},
+            {'pdf_page': 5, 'text': 'trockenen Lagerplatz rechtzeitig bereit.'}))
+        quote = 'Der Bauherr stellt den Lagerplatz bereit.'
+        result = extract_page_units([doc], SimpleNamespace(extract=lambda _: answer(task(quote))), stop_after='PAGE_EXTRACTION')
+        unit = result['working_units'][0]
+        self.assertEqual(result['review_findings'], [])
+        self.assertEqual(unit['derived']['source_text'], 'Der Bauherr stellt den\ntrockenen Lagerplatz rechtzeitig bereit.')
+        self.assertEqual([c['pdf_page'] for c in unit['derived']['citations']], [4, 5])
+        self.assertEqual(unit['gemini']['quote'], quote)
+
+    def test_changed_added_or_more_than_two_missing_words_numbers_and_punctuation_stay_unresolved(self):
+        for source, quote in [
+            ('Der Bauherr stellt den trockenen befestigten sicheren Lagerplatz bereit.', 'Der Bauherr stellt den Lagerplatz bereit.'),
+            ('Der Bauherr stellt den Lagerplatz bereit.', 'Der Bauherr stellt den trockenen Lagerplatz bereit.'),
+            ('Der Bauherr stellt den Lagerplatz bereit.', 'Der Lieferant stellt den Lagerplatz bereit.'),
+            ('Die Rate von 500 EUR wird bezahlt.', 'Die Rate wird bezahlt.'),
+            ('Die Rate von 500 EUR wird bezahlt.', 'Die Rate von 600 EUR wird bezahlt.'),
+            ('Der Bauherr liefert; er bezahlt.', 'Der Bauherr liefert er bezahlt.')]:
+            with self.subTest(source=source, quote=quote):
+                result = extract(source, answer(task(quote)))
+                self.assertIn('task_quote_not_found', {f['code'] for f in result['review_findings']})
+                self.assertNotIn('source_text', result['working_units'][0]['derived'])
+
+    def test_repeated_formatting_or_omission_matches_remain_ambiguous(self):
+        for source in ('Der Bauherr\n liefert. Der Bauherr\t liefert.',
+                       'Der Bauherr liefert heute. Der Bauherr liefert morgen.'):
+            with self.subTest(source=source):
+                result = extract(source, answer(task('Der Bauherr liefert.')))
+                self.assertIn('task_quote_ambiguous', {f['code'] for f in result['review_findings']})
+                self.assertNotIn('source_text', result['working_units'][0]['derived'])
+
+    def test_exact_word_match_takes_precedence_over_missing_word_candidates(self):
+        quote = 'Der Bauherr liefert.'
+        result = extract('Der Bauherr liefert heute. '+quote, answer(task(quote)))
+        self.assertEqual(result['review_findings'], [])
+        self.assertEqual(result['working_units'][0]['derived']['source_text'], quote)
 
     def test_repeated_quote_in_one_or_several_pages_is_ambiguous_not_guessed(self):
         for pages in ([{'pdf_page': 1, 'text': 'Liefern. Liefern.'}],
@@ -244,6 +319,63 @@ class TaskQuotationTests(unittest.TestCase):
             self.assertEqual(first, replay)
             self.assertEqual(len(calls), 1)
             self.assertEqual(saved, {p: p.read_bytes() for p in saved})
+
+    def test_previously_rejected_whitespace_quote_replays_from_cache_without_a_paid_call(self):
+        raw = answer(task('Der Bauherr liefert den Bericht.'))
+        doc = document('Der Bauherr\n liefert den Bericht.')
+        with TemporaryDirectory() as tmp:
+            calls = []
+            def provider(prompt):
+                calls.append(prompt)
+                return copy.deepcopy(raw)
+            cache = Path(tmp)/'cache'
+            with patch('bauvo_working_units.phases.aufgaben.quotations.locate',
+                       return_value=(None, 'task_quote_not_found')):
+                first = extract_page_units([doc], CachedModel(SimpleNamespace(extract=provider), cache, {}),
+                                           stop_after='PAGE_EXTRACTION')
+            self.assertNotIn('source_text', first['working_units'][0]['derived'])
+            offline = BudgetedModel(lambda: self.fail('Unexpected provider call'), CallBudget(0))
+            replay = extract_page_units([doc], CachedModel(offline, cache, {}), stop_after='PAGE_EXTRACTION')
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(replay['review_findings'], [])
+            self.assertEqual(replay['working_units'][0]['derived']['source_text'], doc.pages[0]['text'])
+            self.assertEqual(replay['gemini_responses'][0]['gemini'], first['gemini_responses'][0]['gemini'])
+
+    def test_saved_cumulative_result_rebinds_locally_preserving_raw_and_prior_findings(self):
+        from bauvo_working_units.citation_repair import repair_saved_result
+        original = 'Der Bauherr\n stellt den trockenen Lagerplatz bereit.'
+        raw = answer(task('Der Bauherr stellt den Lagerplatz bereit.'),
+                     task('Der Bauherr stellt den Lagerplatz rechtzeitig bereit.'))
+        doc = document(original)
+        with patch('bauvo_working_units.phases.aufgaben.quotations.locate',
+                   return_value=(None, 'task_quote_not_found')):
+            baseline = extract_page_units([doc], SimpleNamespace(extract=lambda p:
+                raw if p.startswith('PAGE_EXTRACTION.') else {'offers': []}), stop_after='PAGE_OFFERS')
+        before = copy.deepcopy(baseline)
+        result = repair_saved_result(baseline, [doc], model=SimpleNamespace(extract=lambda _: self.fail('No paid repair')))
+        self.assertEqual(baseline, before)
+        self.assertEqual(result['working_units'][0]['derived']['source_text'], original)
+        self.assertNotIn('source_text', result['working_units'][1]['derived'])
+        self.assertEqual([u['gemini'] for u in result['working_units']], raw['working_units'])
+        self.assertEqual([r['gemini'] for r in result['gemini_responses']],
+                         [r['gemini'] for r in before['gemini_responses']])
+        self.assertEqual(result['citation_repair']['original_review_findings'], before['review_findings'])
+        self.assertEqual(result['gemini_responses'][0]['citation_evidence_history'][-1],
+                         before['gemini_responses'][0]['citation_evidence'])
+        self.assertEqual(sum(f['code'] == 'task_quote_not_found' for f in result['review_findings']), 1)
+
+    def test_saved_rebinding_does_not_search_outside_original_window(self):
+        from bauvo_working_units.citation_repair import repair_saved_result
+        quote = 'Der Bauherr liefert den Bericht.'
+        doc = replace(document('unused'), pages=({'pdf_page': 1, 'text': 'Ein anderer Text.'},
+                                                 {'pdf_page': 2, 'text': quote}))
+        def provider(prompt):
+            return answer(task(quote)) if data(prompt)['source_pages'][0]['pdf_page'] == 1 else answer()
+        baseline = extract_page_units([doc], SimpleNamespace(extract=provider),
+            chunk_pages=1, overlap_pages=0, stop_after='PAGE_EXTRACTION')
+        result = repair_saved_result(baseline, [doc])
+        self.assertIn('task_quote_not_found', {f['code'] for f in result['review_findings']})
+        self.assertNotIn('source_text', result['working_units'][0]['derived'])
 
     def test_every_later_stage_receives_quoted_action_actor_and_source_location(self):
         text = 'Der Bauherr beantragt Baustrom. Er stellt einen Verteiler bereit.'

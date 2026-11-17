@@ -155,6 +155,39 @@ def decode_prompt(prompt):
     import json
     from bauvo_working_units.phases.project_facts.payload import expand_payload
     value = json.loads(prompt.split('SOURCE DATA:\n', 1)[1])
+    if prompt.startswith('PAGE_OFFERS.') and set(value) == {'source_pages', 'project_facts'}:
+        # Historical multi-phase test providers read a plain page and a primary
+        # marker. Reconstruct that test-only view; real wire tests use json.loads.
+        return {**value, 'source_pages': [{**p, 'primary': True,
+            'text': ''.join(part['text'] for part in p['passages'])} for p in value['source_pages']]}
+    if prompt.startswith('PAGE_OFFERS.') and value.get('reference_protocol') == 'offer-source-labels-v1':
+        # Test providers can read plain pages, but return the actual short labels.
+        # Original IDs/provenance are deliberately absent from the Gemini input.
+        scope = value['extraction_scope']
+        documents, entries = [], []
+        for document in value['source_documents']:
+            pages = []
+            for page in document['pages']:
+                pages.append({k: v for k, v in page.items() if k != 'segments'})
+                pages[-1]['text'] = ''.join(text for _, text in page['segments'])
+                for label, text in page['segments']:
+                    if label:
+                        entries.append({'evidence_id': label, 'document_id': document['id'],
+                                        'pdf_page': page['pdf_page'], 'quote': text})
+            documents.append({**document, 'pages': pages})
+        current = next(d for d in documents if d['id'] == scope['document'])
+        window = set(scope['primary_pages'] + scope['overlap_pages'])
+        return {**value, 'source_documents': documents,
+                'document': {'id': current['id'], 'title': current['title']},
+                'source_pages': [{**p, 'primary': p['pdf_page'] in scope['primary_pages']}
+                                 for p in current['pages'] if p['pdf_page'] in window],
+                'primary_pages': scope['primary_pages'], 'working_units': [],
+                'evidence_catalog': entries,
+                'offer_evidence_catalog': [e for e in entries if e['evidence_id'].startswith('S')],
+                'context_evidence_catalog': [e for e in entries if e['evidence_id'].startswith('C')]}
+    if prompt.startswith('PAGE_OFFERS.') and 'offer_evidence_catalog' in value:
+        # Older test doubles consume one catalog; production receives two roles.
+        return {**value, 'evidence_catalog': [*value['offer_evidence_catalog'], *value['context_evidence_catalog']]}
     if prompt.startswith('PAGE_EXTRACTION.') and all('text' in p for p in value['source_pages']):
         # Historical provider doubles still return source-ID responses. Construct
         # their old catalog locally; it is never part of the actual Gemini input.

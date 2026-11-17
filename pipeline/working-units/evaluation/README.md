@@ -1,5 +1,46 @@
 # Focused evaluations
 
+Twenty-seven fictional offer controls in `offer-cases.json` cover context-only proposals,
+existing contracted services, priced extras already commissioned by amendment,
+agreed conditional credits, data permissions, promotion, genuine new extras and
+conditional selectable services. Indirect formulations cover selectable variants,
+request-dependent separate agreements, conditionally commissioned work and choices
+without a fixed price or surcharge. Negative controls retain already agreed variants,
+general special-wish rules and cost duties that do not establish a service offer.
+Promotion surrounding a concrete option must not suppress that option.
+Additional controls distinguish separate services in one paragraph, an unidentified
+provider, and a reference sentence whose commissioning terms appear immediately before it.
+Held-out cases cover indirect execution of separately commissionable trades and
+an explicitly inseparable service package. They differ from the prompt's fictional
+garden-work and electronic-equipment demonstrations.
+Their expected answers are never sent to Gemini.
+Additional paired controls distinguish required-but-excluded accessories from
+explicitly orderable accessories, retain concrete services next to general
+special-wish rules, and distinguish a neighbouring trade's provider from an
+explicit provider of the additional service.
+Offline tests use authored responses to verify transport and preservation; they
+do not measure whether Gemini follows the revised classification prompt.
+The production Offers request sends only original primary-page text from the
+current window and compact project-fact interpretations with original supporting
+quotations. Each primary page is represented once by original paragraph slices
+labelled `P<page>-<paragraph>`. The simple German question and JSON schema request
+offer descriptions, providers, terms and `{passage}` citations. No known-items
+list or full-document context is sent. The application restores exact original
+source spans from selected labels, while raw responses remain unchanged. Technical compatibility alone does not establish a separately offered
+service; it is a held-out negative control.
+Unknown passage selections or invalid proposals do not stop the remaining extraction windows;
+the completed pass retains all findings and blocks downstream processing until resolved.
+Application-generated `derived.review_context` preserves original paragraph text
+separately from selected citations. Offline tests cover wrapped/blank lines, page
+and document boundaries, invalid bindings, unchanged raw answers, replay and audit.
+Historical quotation-based source-selection recovery has separate offline tests: original model
+errors remain in raw answers and audit history, only fingerprinted exact source
+spans may replace derived bindings, missing selections remain blocking, and a
+successful recovered result can enter the next stage without a provider call.
+Current label tests cover exact page reconstruction, repeated paragraphs, multiple
+selections and shared evidence, unknown/cross-window/fact labels, stale maps, raw
+preservation, zero-call replay, and cache separation from old quotation requests.
+
 The isolated [action anchor prototype](action_anchor_prototype/README.md) compares
 specific original action quotations with application-retained paragraph/window
 context. It jointly checks missing/extra actions, grouping and actors against
@@ -54,7 +95,7 @@ rewriting interpretations, or claiming that valid JSON means correct meaning.
   --output runs/manual/focused-new-run --project YOUR_PROJECT
 ```
 
-This runs thirty-four end-to-end action cases, twenty-four applicability controls and twenty-three
+This runs thirty-four end-to-end action cases, twenty-four applicability controls and thirty
 timing controls, including the qualification controls described below.
 Four `task-evidence-*` action controls cover complete split sentences and extension
 limits, alternative documentation, payment-table rows with a withholding exception,
@@ -116,7 +157,7 @@ to revisit the previously failed BLB applicability window without a full BLB run
 The production context selection and one-retry wrapper are used. Raw attempts and
 finish reasons remain separate from interpreted results, including recovered failures.
 
-The step-2 action/timing suite consists of the thirty-four action cases plus twenty-three timing
+The step-2 action/timing suite consists of the thirty-four action cases plus thirty-four timing
 controls. Added cases cover statements versus actions, checklist context across pages,
 performance versus commissioning, installation versus confirmation, negative timing,
 WITHIN_AFTER deadlines and durations with unknown starts. Expectations remain separate
@@ -212,3 +253,21 @@ Their `interpretation_expectations` stay outside model input and are saved separ
 `interpretation_checks` examines claim text and explicit status, not copied source
 quotes. These authored lexical controls can expose those omissions/overstatements;
 they do not certify semantic correctness or replace source review.
+
+Timing scope controls additionally distinguish an included rental period from
+installation duration, post-completion inspection from unrelated financing rules,
+and a heating qualification limited to a subset of trades. A five-task control
+retains separate confirmation and delivery timing, optional solar commissioning,
+alternative homeowner-work prerequisites and a selection deadline. These held-out
+cases use different wording and values from the prompt illustrations. Expected
+meanings stay outside model inputs; source-valid answers can still misinterpret
+these clauses and therefore require semantic review.
+
+Three further timing controls distinguish a planned subsection with no stated start
+from explicit common and individual start events. Their source wording and durations
+differ from the prompt illustration. Local regression tests also cover unique,
+audited I/l OCR binding, rejected ambiguous or substantive quote changes, lossless
+display compaction and compatibility with earlier readable timing artifacts.
+
+A composite-task control keeps two different phase durations separate and distinguishes
+a required completed state from the duration of the work producing it.

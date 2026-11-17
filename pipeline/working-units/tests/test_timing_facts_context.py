@@ -96,7 +96,7 @@ class TimingFactsContextTests(unittest.TestCase):
         self.facts['review_findings'].append(issue);self.facts['status']='needs_review'
         def timing(prompt):
             data=decode_prompt(prompt)
-            self.assertEqual(data['project_facts']['facts'][0]['review_findings'],[issue])
+            self.assertEqual(set(data['project_facts']['facts'][0]), {'id', 'text'})
             return self.timing_response(data)
         result=extract_timing(self.baseline,[self.doc],SimpleNamespace(extract=timing),project_facts=self.facts)
         self.assertEqual(result['previous_project_facts'],self.baseline['project_facts'])
@@ -134,9 +134,8 @@ class TimingFactsContextTests(unittest.TestCase):
                 def timing(prompt):
                     data=decode_prompt(prompt)
                     fact=data['project_facts']['facts'][0]
-                    self.assertEqual(fact['source_key'],'source-a')
-                    self.assertEqual(fact['document_id'],'D1')
-                    self.assertEqual(fact['citations'][0]['pdf_page'],1)
+                    self.assertEqual(set(fact), {'id', 'text'})
+                    self.assertEqual(fact['text'], self.quote)
                     self.assertEqual(data['source_pages'][0]['text'],blb.pages[0]['text'])
                     citation={'pdf_page':1,'quote':self.quote}
                     if mode!='unqualified':

@@ -11,6 +11,7 @@ from ...core import digest
 from ...page_flow import extract_page_units
 from ...project_flow import load_documents, make_page_chunks
 from ...schemas import PROTOCOL
+from .payload import PROTOCOL as OFFERS_PROTOCOL, LEGACY_PROTOCOL
 
 
 def validate_input(baseline, documents, chunk_pages=10, overlap_pages=1, expected_passes=('PAGE_EXTRACTION',)):
@@ -18,6 +19,10 @@ def validate_input(baseline, documents, chunk_pages=10, overlap_pages=1, expecte
         raise ValueError('Expected a current schema-18 working-units.json')
     if baseline.get('completed_passes') != list(expected_passes):
         raise ValueError('Expected completed passes: ' + ', '.join(expected_passes))
+    if any(f.get('code') == 'offer_validation_failed' for f in baseline.get('review_findings', [])):
+        raise ValueError('Resolve the preserved offer validation findings before continuing')
+    if 'PAGE_OFFERS' in expected_passes and baseline.get('offers_protocol') not in (OFFERS_PROTOCOL, LEGACY_PROTOCOL):
+        raise ValueError('Saved offers use an older extraction contract; rerun Offers from accepted Aufgaben')
     if expected_passes == ('PAGE_EXTRACTION',) and baseline.get('offers'):
         raise ValueError('Expected an Aufgaben-only result without existing offers')
     if any(f.get('code') == 'model_request_failed' and f.get('pass') in expected_passes
@@ -99,6 +104,8 @@ def main():
     print(f"Wrote {len(result['offers'])} offers; preserved {len(result['working_units'])} tasks: {output}")
     if result['status'] == 'request_failed':
         raise SystemExit('Unresolved offer requests; partial results and raw attempts preserved')
+    if result['status'] == 'incomplete':
+        raise SystemExit('Invalid offer proposals; raw answers and validation findings preserved; downstream stages blocked')
 
 
 if __name__ == '__main__':

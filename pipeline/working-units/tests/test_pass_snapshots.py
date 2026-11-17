@@ -34,7 +34,7 @@ class Model:
         if kind=='PAGE_EXTRACTION':return {'working_units':[{'name':'Planung','action':'Planung bestätigen',
             'actor':'Kunde','performed_by':'Kunde','citations':[c]}],'carry_forward':''}
         if kind=='PAGE_OFFERS':return {'offers':[{'name':'Zusatzpaket','provider':'Anbieter','description':'Zusatzpaket',
-                                               'terms':[],'citations':[c]}]}
+            'terms':[],'citations':[{'passage':data['source_pages'][-1]['passages'][0]['passage']}]}]}
         if kind=='PAGE_TIMING' and self.fail_timing:
             raise ModelRequestFailed([{'finish_reason':'MAX_TOKENS','raw_response':'{unfinished'}])
         rows=[]

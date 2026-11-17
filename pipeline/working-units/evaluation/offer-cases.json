@@ -1,0 +1,339 @@
+{
+  "purpose": "Fictional semantic review controls, kept out of model input. Offline authored responses test transport, not provider classification accuracy.",
+  "cases": [
+    {
+      "id": "context-is-not-an-extraction-source",
+      "primary_text": "Die Förderzusage ist dem Vertragspartner mitzuteilen.",
+      "context_text": "Ein Wetterschutzdach kann separat für 490 EUR beauftragt werden.",
+      "expected_offers": []
+    },
+    {
+      "id": "agreed-core-service-on-old-offer",
+      "primary_text": "Unser Angebot umfasst Lieferung und Montage einer Fertiggarage.",
+      "context_text": "Unterzeichneter Vertrag: Der Auftragnehmer liefert und montiert die Fertiggarage nach dem beigefügten Angebot.",
+      "expected_offers": []
+    },
+    {
+      "id": "priced-extra-already-in-signed-amendment",
+      "primary_text": "Zusätzliche Außensteckdose: Mehrpreis 85 EUR.",
+      "context_text": "Unterzeichneter Nachtrag: Die zusätzliche Außensteckdose wird für 85 EUR verbindlich beauftragt.",
+      "expected_offers": []
+    },
+    {
+      "id": "agreed-conditional-credit-is-not-a-service",
+      "primary_text": "Vereinbarter Nachtrag: Bei vollständiger Zahlung erhält der Kunde eine Gutschrift von 750 EUR.",
+      "context_text": "Der Nachtrag wurde von beiden Vertragsparteien unterzeichnet.",
+      "expected_offers": []
+    },
+    {
+      "id": "data-permission-is-not-a-service-offer",
+      "primary_text": "Ich gestatte dem Projektservice Elbe, meine angegebenen Daten zur Vertragsabwicklung zu speichern. Die Gestattung ist widerruflich.",
+      "context_text": "Der Projektservice ist mit der Vertragsverwaltung beauftragt.",
+      "expected_offers": []
+    },
+    {
+      "id": "capability-is-not-a-selectable-offer",
+      "primary_text": "Mit unserer Erfahrung können wir viele individuelle Wohnideen verwirklichen.",
+      "context_text": "Vertraglich vereinbart ist die Standardausführung.",
+      "expected_offers": []
+    },
+    {
+      "id": "genuinely-open-service-with-existing-main-contract",
+      "primary_text": "Der Anbieter liefert die vertraglich vereinbarte Garage. Zusätzlich kann der Kunde beim Anbieter eine Baustellenkamera für 240 EUR gesondert beauftragen.",
+      "context_text": "Unterzeichneter Hauptvertrag: Lieferung der Garage in Standardausführung. Eine Baustellenkamera ist nicht Bestandteil des Auftrags.",
+      "expected_offers": [
+        {
+          "name": "Baustellenkamera",
+          "provider": "Anbieter",
+          "description": "Eine Baustellenkamera ist gesondert beauftragbar.",
+          "terms": [
+            "240 EUR"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "conditional-open-service-remains-an-offer",
+      "primary_text": "Bei geeigneter Dachfläche können Sie beim Auftragnehmer eine Begrünungsplanung für 360 EUR gesondert beauftragen.",
+      "context_text": "Der Hauptvertrag umfasst die Dachabdichtung. Die Begrünungsplanung ist bisher nicht beauftragt.",
+      "expected_offers": [
+        {
+          "name": "Begrünungsplanung",
+          "provider": "Auftragnehmer",
+          "description": "Eine Begrünungsplanung ist gesondert beauftragbar.",
+          "terms": [
+            "360 EUR",
+            "Geeignete Dachfläche erforderlich."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "indirect-surcharge-variant-without-fixed-price",
+      "primary_text": "Statt der Standardabdeckung kann auf Wunsch beim Auftragnehmer eine Abdeckung aus Edelstahl gegen Mehrpreis gewählt werden.",
+      "context_text": "Vereinbart ist bisher die Standardabdeckung.",
+      "expected_offers": [
+        {
+          "name": "Edelstahlabdeckung",
+          "provider": "Auftragnehmer",
+          "description": "Eine Abdeckung aus Edelstahl ist statt der Standardabdeckung wählbar.",
+          "terms": [
+            "Auf Wunsch.",
+            "Gegen Mehrpreis; kein fester Betrag genannt."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "passive-request-dependent-separate-agreement",
+      "primary_text": "Der Auftragnehmer liefert standardmäßig einen Briefkasten. Wird ein größerer Briefkasten gewünscht, wird dieser gesondert vereinbart und vergütet.",
+      "context_text": "Im Auftrag ist der Standardbriefkasten enthalten.",
+      "expected_offers": [
+        {
+          "name": "Größerer Briefkasten",
+          "provider": "Auftragnehmer",
+          "description": "Ein größerer Briefkasten ist auf Wunsch gesondert vereinbar.",
+          "terms": [
+            "Gesondert zu vereinbaren und zu vergüten."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "conditional-description-of-separately-commissioned-work",
+      "primary_text": "Die Reinigung der Pflasterflächen übernimmt der Auftragnehmer, sofern sie separat beauftragt wird.",
+      "context_text": "Der Auftrag umfasst das Verlegen der Pflasterflächen; ihre Reinigung ist nicht beauftragt.",
+      "expected_offers": [
+        {
+          "name": "Reinigung der Pflasterflächen",
+          "provider": "Auftragnehmer",
+          "description": "Die Reinigung der Pflasterflächen ist separat beauftragbar.",
+          "terms": [
+            "Separate Beauftragung erforderlich."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general-special-wishes-rule-without-concrete-service",
+      "primary_text": "Sonderwünsche sind gesondert zu vereinbaren.",
+      "context_text": "Der Vertrag umfasst die beschriebene Standardausführung.",
+      "expected_offers": []
+    },
+    {
+      "id": "cost-duty-alone-does-not-establish-a-service-offer",
+      "primary_text": "Die Kosten einer eventuell erforderlichen Baugrunduntersuchung trägt der Bauherr.",
+      "context_text": "Der Auftrag betrifft die Errichtung des Hauses auf dem vorbereiteten Grundstück.",
+      "expected_offers": []
+    },
+    {
+      "id": "indirect-variant-already-agreed-remains-excluded",
+      "primary_text": "Größere Briefkästen können beim Auftragnehmer gegen Aufpreis gesondert vereinbart werden.",
+      "context_text": "Unterzeichneter Nachtrag: Der größere Briefkasten ist zum vereinbarten Aufpreis verbindlich beauftragt.",
+      "expected_offers": []
+    },
+    {
+      "id": "explicit-selectable-variant-without-surcharge",
+      "primary_text": "Auf Wunsch kann beim Auftragnehmer eine geräuschgedämmte Ausführung der Abdeckung ohne Aufpreis statt der Standardabdeckung bestellt werden.",
+      "context_text": "Bisher ist nur die Standardabdeckung vereinbart; die alternative Ausführung wurde nicht gewählt.",
+      "expected_offers": [
+        {
+          "name": "Geräuschgedämmte Abdeckung",
+          "provider": "Auftragnehmer",
+          "description": "Eine geräuschgedämmte Ausführung ist statt der Standardabdeckung bestellbar.",
+          "terms": [
+            "Auf Wunsch.",
+            "Ohne Aufpreis."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "promotion-does-not-hide-a-concrete-selectable-service",
+      "primary_text": "Wir schaffen Wohlfühlorte. Der Bauherr kann beim Auftragnehmer einen zusätzlichen Außenwasserhahn gegen gesonderte Vergütung beauftragen.",
+      "context_text": "Ein Außenwasserhahn ist nicht Bestandteil des bisherigen Auftrags.",
+      "expected_offers": [
+        {
+          "name": "Zusätzlicher Außenwasserhahn",
+          "provider": "Auftragnehmer",
+          "description": "Ein zusätzlicher Außenwasserhahn ist gesondert beauftragbar.",
+          "terms": [
+            "Gegen gesonderte Vergütung."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "technical-compatibility-without-separate-offer",
+      "primary_text": "Das Warmwassersystem kann technisch mit einer Lüftungseinheit kombiniert werden.",
+      "context_text": "Der Bauvertrag beschreibt das Warmwassersystem in seiner Standardausführung.",
+      "expected_offers": []
+    },
+    {
+      "id": "distinct-extras-in-one-paragraph",
+      "primary_text": "Beim Auftragnehmer können ein Gartenwasserhahn für 120 EUR und eine zusätzliche Außensteckdose für 90 EUR jeweils gesondert beauftragt werden.",
+      "context_text": "Beide Zusatzleistungen sind bisher nicht beauftragt.",
+      "expected_offers": [
+        {
+          "name": "Gartenwasserhahn",
+          "provider": "Auftragnehmer",
+          "description": "Ein Gartenwasserhahn ist gesondert beauftragbar.",
+          "terms": [
+            "120 EUR"
+          ]
+        },
+        {
+          "name": "Zusätzliche Außensteckdose",
+          "provider": "Auftragnehmer",
+          "description": "Eine zusätzliche Außensteckdose ist gesondert beauftragbar.",
+          "terms": [
+            "90 EUR"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "separate-work-without-identifiable-provider",
+      "primary_text": "Eine gewünschte Regenwasserzisterne ist vom Bauherrn gesondert zu beauftragen und zu bezahlen.",
+      "context_text": "Der Auftragnehmer errichtet das Haus; ein Lieferant für die Zisterne ist nicht genannt.",
+      "expected_offers": [
+        {
+          "name": "Regenwasserzisterne",
+          "provider": null,
+          "description": "Eine Regenwasserzisterne ist auf Wunsch gesondert beauftragbar.",
+          "terms": [
+            "Vom Bauherrn gesondert zu beauftragen und zu bezahlen."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reference-sentence-needs-its-antecedent",
+      "primary_text": "Beim Auftragnehmer kann eine Pergola nur mit gesonderter Leistungsbeschreibung beauftragt werden. Gleiches gilt für einen Pavillon.",
+      "context_text": "Pergola und Pavillon sind nicht beauftragt.",
+      "expected_offers": [
+        {
+          "name": "Pergola",
+          "provider": "Auftragnehmer",
+          "description": "Eine Pergola ist gesondert beauftragbar.",
+          "terms": [
+            "Gesonderte Leistungsbeschreibung erforderlich."
+          ]
+        },
+        {
+          "name": "Pavillon",
+          "provider": "Auftragnehmer",
+          "description": "Ein Pavillon ist ebenfalls gesondert beauftragbar.",
+          "terms": [
+            "Gesonderte Leistungsbeschreibung erforderlich."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "conditional-execution-with-two-independent-trades",
+      "primary_text": "Der Auftragnehmer führt die Balkonarbeiten aus, sofern sie gesondert vereinbart wurden: Abdichtung erneuern und ein Geländer montieren. Beide Arbeiten können einzeln beauftragt werden.",
+      "context_text": "Die vereinbarte Standardleistung umfasst weder die Abdichtung noch das Geländer.",
+      "expected_offers": [
+        {
+          "name": "Balkonabdichtung erneuern",
+          "provider": "Auftragnehmer",
+          "description": "Die Erneuerung der Balkonabdichtung ist gesondert beauftragbar.",
+          "terms": [
+            "Gesonderte Vereinbarung erforderlich."
+          ]
+        },
+        {
+          "name": "Balkongeländer montieren",
+          "provider": "Auftragnehmer",
+          "description": "Die Montage eines Balkongeländers ist gesondert beauftragbar.",
+          "terms": [
+            "Gesonderte Vereinbarung erforderlich."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "explicit-package-not-individually-commissionable",
+      "primary_text": "Beim Anbieter kann ein Sicherheitspaket aus Zutrittskontrolle und Rauchmeldern für 950 EUR gesondert bestellt werden. Die Bestandteile werden ausschließlich gemeinsam angeboten.",
+      "context_text": "Das Sicherheitspaket ist bisher nicht beauftragt.",
+      "expected_offers": [
+        {
+          "name": "Sicherheitspaket",
+          "provider": "Anbieter",
+          "description": "Zutrittskontrolle und Rauchmelder sind als gemeinsames Sicherheitspaket beauftragbar.",
+          "terms": [
+            "950 EUR",
+            "Nur gemeinsam als Paket erhältlich."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "required-accessory-excluded-without-supply-offer",
+      "primary_text": "Für die Fernsteuerung ist ein zusätzliches Funkmodul erforderlich. Es gehört nicht zum Leistungsumfang des Auftragnehmers.",
+      "context_text": "Vereinbart ist die Anlage ohne Fernsteuerung.",
+      "expected_offers": []
+    },
+    {
+      "id": "excluded-accessory-explicitly-orderable",
+      "primary_text": "Für die Fernsteuerung ist ein zusätzliches Funkmodul erforderlich. Es gehört nicht zum Leistungsumfang des Auftragnehmers, kann aber bei ihm gesondert bestellt werden.",
+      "context_text": "Vereinbart ist die Anlage ohne Fernsteuerung.",
+      "expected_offers": [
+        {
+          "name": "Funkmodul",
+          "provider": "Auftragnehmer",
+          "description": "Ein Funkmodul für die Fernsteuerung ist gesondert bestellbar.",
+          "terms": [
+            "Nicht im Leistungsumfang enthalten."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "concrete-extra-under-special-wishes-rule",
+      "primary_text": "Sonderwünsche sind gesondert schriftlich zu vereinbaren. Eine zusätzliche Gartenleuchte kann beim Auftragnehmer auf dieser Grundlage beauftragt werden.",
+      "context_text": "Eine Gartenleuchte ist bisher nicht beauftragt.",
+      "expected_offers": [
+        {
+          "name": "Zusätzliche Gartenleuchte",
+          "provider": "Auftragnehmer",
+          "description": "Eine zusätzliche Gartenleuchte ist gesondert beauftragbar.",
+          "terms": [
+            "Gesonderte schriftliche Vereinbarung erforderlich."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adjacent-trade-does-not-identify-extra-provider",
+      "primary_text": "Der Auftragnehmer montiert das Garagentor. Eine gewünschte Beschichtung der Zufahrt muss der Bauherr gesondert beauftragen und bezahlen.",
+      "context_text": "Der Vertrag umfasst die Garage.",
+      "expected_offers": [
+        {
+          "name": "Beschichtung der Zufahrt",
+          "provider": null,
+          "description": "Eine Beschichtung der Zufahrt ist auf Wunsch gesondert beauftragbar.",
+          "terms": [
+            "Vom Bauherrn gesondert zu beauftragen und zu bezahlen."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "same-contractor-explicitly-supplies-extra",
+      "primary_text": "Der Auftragnehmer montiert das Garagentor. Eine gewünschte Beschichtung der Zufahrt führt ebenfalls der Auftragnehmer aus, sofern der Bauherr sie gesondert bei ihm beauftragt und bezahlt.",
+      "context_text": "Der Vertrag umfasst die Garage.",
+      "expected_offers": [
+        {
+          "name": "Beschichtung der Zufahrt",
+          "provider": "Auftragnehmer",
+          "description": "Eine Beschichtung der Zufahrt ist beim Auftragnehmer gesondert beauftragbar.",
+          "terms": [
+            "Vom Bauherrn gesondert zu beauftragen und zu bezahlen."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -48,7 +48,8 @@ class PromotionWorkflowTests(unittest.TestCase):
         answer={'working_units':[],'offers':[],'carry_forward':'Introduction'}
         calls=[]
         def extract(prompt):
-            calls.append(prompt.split('.',1)[0]);return copy.deepcopy(answer)
+            calls.append(prompt.split('.',1)[0])
+            return {'offers':[]} if prompt.startswith('PAGE_OFFERS.') else copy.deepcopy(answer)
         result=extract_page_units([doc],SimpleNamespace(extract=extract),chunk_pages=2,overlap_pages=1)
         self.assertEqual(calls,['PAGE_EXTRACTION','PAGE_OFFERS'])
         self.assertEqual(result['working_units'],[]);self.assertEqual(result['offers'],[])

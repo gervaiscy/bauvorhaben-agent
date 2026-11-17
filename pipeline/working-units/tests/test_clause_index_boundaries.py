@@ -120,6 +120,10 @@ class ClauseIndexBoundaryTests(unittest.TestCase):
                 return {'working_units':[{'action':'Plan bestätigen','citations':[
                     {'pdf_page':1,'quote':blb.pages[0]['text']}]}],'carry_forward':''}
             if phase=='PAGE_OFFERS':return {'offers':[]}
+            if phase == 'PAGE_TIMING':
+                self.assertEqual(data['project_facts'], {'facts': []})
+                self.assertNotIn('evidence_catalog', data)
+                return {'assessments': [{'unit_id': u['id'], 'answer': 'NOT_STATED', 'citations': []} for u in data['working_units']]}
             excluded=data['project_facts']['excluded_passages'][0]
             self.assertEqual(excluded['document_title'],'Contract')
             self.assertTrue(excluded['reason'])

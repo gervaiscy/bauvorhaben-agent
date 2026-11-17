@@ -138,7 +138,9 @@ def run(contracts, blbs, output, project, location='global', model_name='gemini-
             entry.update(artifact=str(path.relative_to(output)),sha256=sha(path),
                          result_status=result.get('status','recorded'))
             if result.get('status') == 'incomplete':
-                raise RuntimeError('Incomplete project facts; raw output and validation findings preserved')
+                phase = 'offers' if any(f.get('code') == 'offer_validation_failed'
+                                       for f in result.get('review_findings', [])) else 'project facts'
+                raise RuntimeError(f'Incomplete {phase}; raw output and validation findings preserved')
             if result.get('status') == 'request_failed':
                 raise RuntimeError('Unresolved model requests; phase output and raw attempts preserved')
             entry['status'] = 'complete'
@@ -160,6 +162,9 @@ def run(contracts, blbs, output, project, location='global', model_name='gemini-
         recorder = RetryingModel(TracingModel(RawRunRecorder(recovery, folder/'raw.json'), folder/'trace'))
         result = operation(recorder)
         path = folder/'result.json'
+        if result.get('completed_passes', [])[-1:] == ['PAGE_TIMING']:
+            from .phases.timing.artifact import write_outputs
+            return write_outputs(path, result)
         write(path, result)
         return path
 

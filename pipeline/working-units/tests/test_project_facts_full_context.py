@@ -78,9 +78,17 @@ class FullContractFactsTests(unittest.TestCase):
             payload={'source_pages':[], 'project_facts':facts_view(result)}
             actual=json.loads(_prompt(phase,payload,'de').split('SOURCE DATA:\n')[1])
             selected=actual['project_facts']['facts'][0]
-            self.assertEqual(selected['sources'],fact['derived']['sources'])
+            if phase == 'PAGE_TIMING':
+                self.assertEqual(selected, {'id': fact['id'], 'text': fact['derived']['text']})
+                continue
             self.assertEqual(selected['interpretation'],raw['verpflichtungen'][0]['interpretation'])
-            self.assertEqual(len(selected['citations']),2)
+            if phase=='PAGE_OFFERS':
+                self.assertEqual({c['document'] for c in selected['evidence']},{'D1','D2'})
+                self.assertEqual([c['quote'] for c in selected['evidence']],
+                                 [c['quote'] for c in fact['derived']['verified_citations']])
+            else:
+                self.assertEqual(selected['sources'],fact['derived']['sources'])
+                self.assertEqual(len(selected['citations']),2)
 
     def test_changed_or_partial_package_and_forged_cross_document_scope_are_rejected(self):
         docs,result,_=self.cross_document_result()

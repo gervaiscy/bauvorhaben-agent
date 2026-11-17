@@ -7,7 +7,12 @@ def run(ctx, phase):
     for doc in ctx.documents:
         grouped = {chunk.pages: [] for chunk in ctx.chunks[doc.id]}
         for unit in ctx.units:
-            if unit['derived']['document_id'] != doc.id or not isinstance(unit['gemini'], dict) or not isinstance(_view(unit).get('action'), str):
+            if unit['derived']['document_id'] != doc.id:
+                continue
+            action = _view(unit).get('action') if isinstance(unit['gemini'], dict) else None
+            if not isinstance(action, str) or not action.strip():
+                ctx.findings.append({'unit_id': unit['id'], 'pass': phase.PASS,
+                                     'code': 'assessment_task_unusable'})
                 continue
             original = next(c for c in ctx.chunks[doc.id] if list(c.pages) == unit['derived']['window_pages'])
             selected, reason = phase.select_window(unit, original, ctx.chunks[doc.id])

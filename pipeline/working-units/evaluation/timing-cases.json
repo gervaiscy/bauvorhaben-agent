@@ -811,6 +811,425 @@
         "All plans receive an unrestricted extension after any question.",
         "The unrelated fourteen-calendar-day deadline replaces or extends plan approval."
       ]
+    },
+    {
+      "id": "unrelated-withdrawal-period-is-not-a-commissioning-deadline",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer beauftragt eine Tragwerksplanerin. Der Bauherr kann seine Vertragserklärung binnen vierzehn Tagen nach Vertragsschluss widerrufen."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Tragwerksplanerin beauftragen",
+          "action": "Der Auftragnehmer beauftragt eine Tragwerksplanerin.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer beauftragt eine Tragwerksplanerin."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "NOT_STATED: no timing is stated for commissioning the structural designer."
+      ],
+      "forbidden": [
+        "Assigning the homeowner withdrawal period to commissioning the designer."
+      ]
+    },
+    {
+      "id": "optional-and-included-installations-share-only-overall-completion-framework",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer baut eine Holztreppe ein. Auf Wunsch wird stattdessen eine Stahltreppe eingebaut. Das gesamte Gebäude ist binnen 32 Wochen ab Beginn der Erdarbeiten abnahmefähig herzustellen. Eigene Ausführungstermine für die Treppen sind nicht vereinbart."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Holztreppe einbauen",
+          "action": "Der Auftragnehmer baut eine Holztreppe ein.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer baut eine Holztreppe ein."
+            }
+          ]
+        },
+        {
+          "id": "U2",
+          "name": "Optional Stahltreppe einbauen",
+          "action": "Auf Wunsch wird stattdessen eine Stahltreppe eingebaut.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Auf Wunsch wird stattdessen eine Stahltreppe eingebaut."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Both installations have no individual execution deadline; distinguish the 32-week overall completion framework.",
+        "The steel staircase timing remains conditional on the homeowner selecting that variant."
+      ],
+      "forbidden": [
+        "Treating the optional steel staircase as already commissioned.",
+        "Presenting 32 weeks as a separately agreed staircase installation deadline."
+      ]
+    },
+    {
+      "id": "specific-selection-deadline-is-distinct-from-overall-execution-period",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Bauherr wählt die Fassadenfarbe spätestens bei Freigabe der Ausführungsplanung. Die Gesamtfertigstellung erfolgt binnen 32 Wochen ab Beginn der Erdarbeiten."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "U1",
+          "name": "Fassadenfarbe wählen",
+          "action": "Der Bauherr wählt die Fassadenfarbe spätestens bei Freigabe der Ausführungsplanung.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr wählt die Fassadenfarbe spätestens bei Freigabe der Ausführungsplanung."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Selection is due by approval of the execution plans."
+      ],
+      "forbidden": [
+        "Assigning the overall 32-week construction period as the deadline for choosing the colour."
+      ]
+    },
+    {
+      "id": "contained-rental-limit-is-not-installation-duration",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Fachbetrieb richtet den Baustellenverteiler ein, einschließlich der Miete für höchstens sieben Monate. Für die Einrichtung ist kein Termin vereinbart."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "INSTALLATION",
+          "name": "Baustellenverteiler einschließlich Miete einrichten",
+          "action": "Der Fachbetrieb richtet den Baustellenverteiler ein, einschließlich der Miete für höchstens sieben Monate.",
+          "actor": "Fachbetrieb",
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Fachbetrieb richtet den Baustellenverteiler ein, einschließlich der Miete für höchstens sieben Monate."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Seven months limits only the included rental; no installation date or installation duration is stated."
+      ],
+      "forbidden": [
+        "Installation takes or must finish within seven months.",
+        "Extending the rental limit to the whole service."
+      ]
+    },
+    {
+      "id": "post-completion-inspection-does-not-recite-financing",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Eine erforderliche Abschlussprüfung beauftragt der Eigentümer nach Fertigstellung der gesamten Anlage. Die Anlage ist innerhalb von 30 Wochen nach Montagebeginn fertigzustellen. Zur Finanzierung tritt der Eigentümer seine Mittel spätestens neun Wochen vor Montagebeginn ab; alternativ darf er vor Montagebeginn eine Bankgarantie stellen. Der Förderantrag ist binnen 18 Tagen nach Vertragsschluss einzureichen."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "INSPECTION",
+          "name": "Erforderliche Abschlussprüfung beauftragen",
+          "action": "Eine erforderliche Abschlussprüfung beauftragt der Eigentümer nach Fertigstellung der gesamten Anlage.",
+          "actor": "Eigentümer",
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Eine erforderliche Abschlussprüfung beauftragt der Eigentümer nach Fertigstellung der gesamten Anlage."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "After completion of the whole installation, only if the inspection is required; no finer date stated."
+      ],
+      "forbidden": [
+        "Financing, guarantee or grant application timing in the inspection answer.",
+        "30-week period treated as the inspection deadline.",
+        "The assignment of funds becomes an unconditional obligation."
+      ]
+    },
+    {
+      "id": "weather-qualifications-apply-only-to-named-subset",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Der Auftragnehmer stellt die Halle innerhalb von 24 Wochen ab Beginn seiner Erdarbeiten fertig. Die Frist verlängert sich um die Tage mit nächtlichen Temperaturen unter +2 °C, solange Bodenplatte, Tragwerk, Innenputz und Trockenbau noch nicht abgeschlossen sind. Für die beiden letzten Gewerke gilt dies nur, solange keine ordnungsgemäße Beheizung möglich ist. Nach Wiedererreichen von +2 °C kommen zwei Tage zur Wiederaufnahme hinzu. Die Verlängerung einschließlich Wiederaufnahme ist auf fünf Wochen begrenzt."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "COMPLETION",
+          "name": "Halle fertigstellen",
+          "action": "Der Auftragnehmer stellt die Halle innerhalb von 24 Wochen ab Beginn seiner Erdarbeiten fertig.",
+          "actor": "Auftragnehmer",
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftragnehmer stellt die Halle innerhalb von 24 Wochen ab Beginn seiner Erdarbeiten fertig."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Retain the 24-week period and its contractor-earthworks start.",
+        "Retain the +2-degree night threshold, unfinished-trade restriction, two restart days and combined five-week cap.",
+        "The heating condition applies only to interior plaster and drywall, not slab or structure.",
+        "Copy the complex applicable original rule with all qualifications instead of a scope-changing paraphrase."
+      ],
+      "forbidden": [
+        "Applying the heating condition to all four trades.",
+        "Omitting the heating condition, restart allowance or combined cap."
+      ]
+    },
+    {
+      "id": "direct-timing-and-alternative-paths-remain-task-specific",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens vier Wochen vor Montagebeginn geliefert werden.\nWünscht der Kunde eine Solaranlage, muss er sie spätestens fünf Wochen vor Montagebeginn bei einem Partnerbetrieb beauftragen, damit der Hauptauftragnehmer die Montage kostenfrei koordiniert.\nMit eigenen Montagearbeiten darf der Kunde erst nach Abnahme der Hauptleistung oder nach schriftlicher Zustimmung mit Zustandsprotokoll beginnen.\nDer Anlagenstandort ist spätestens bei Freigabe des Entwurfs zu wählen."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "DELIVERY",
+          "name": "Bauteile liefern",
+          "action": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens vier Wochen vor Montagebeginn geliefert werden.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens vier Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        },
+        {
+          "id": "CONFIRMATION",
+          "name": "Verbindliche Bestätigung vorlegen",
+          "action": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens vier Wochen vor Montagebeginn geliefert werden.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Die Bauteile sind acht Wochen vor Montagebeginn zu liefern. Alternativ kann der Kunde eine verbindliche Bestätigung vorlegen, dass die Bauteile spätestens vier Wochen vor Montagebeginn geliefert werden."
+            }
+          ]
+        },
+        {
+          "id": "OPTION",
+          "name": "Optionale Solaranlage beauftragen",
+          "action": "Wünscht der Kunde eine Solaranlage, muss er sie spätestens fünf Wochen vor Montagebeginn bei einem Partnerbetrieb beauftragen, damit der Hauptauftragnehmer die Montage kostenfrei koordiniert.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Wünscht der Kunde eine Solaranlage, muss er sie spätestens fünf Wochen vor Montagebeginn bei einem Partnerbetrieb beauftragen, damit der Hauptauftragnehmer die Montage kostenfrei koordiniert."
+            }
+          ]
+        },
+        {
+          "id": "OWNER_WORK",
+          "name": "Eigenarbeiten beginnen",
+          "action": "Mit eigenen Montagearbeiten darf der Kunde erst nach Abnahme der Hauptleistung oder nach schriftlicher Zustimmung mit Zustandsprotokoll beginnen.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Mit eigenen Montagearbeiten darf der Kunde erst nach Abnahme der Hauptleistung oder nach schriftlicher Zustimmung mit Zustandsprotokoll beginnen."
+            }
+          ]
+        },
+        {
+          "id": "SELECTION",
+          "name": "Anlagenstandort wählen",
+          "action": "Der Anlagenstandort ist spätestens bei Freigabe des Entwurfs zu wählen.",
+          "actor": null,
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Anlagenstandort ist spätestens bei Freigabe des Entwurfs zu wählen."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "DELIVERY: eight weeks before assembly, alternatively four weeks before assembly with binding confirmation.",
+        "CONFIRMATION: no submission deadline stated; do not copy the delivery deadline.",
+        "OPTION: only if selected, commission the partner five weeks before assembly for free coordination.",
+        "OWNER_WORK: acceptance OR written consent with condition record; preserve both paths.",
+        "SELECTION: by approval of the draft."
+      ],
+      "forbidden": [
+        "Moving a delivery date to confirmation submission.",
+        "Turning optional commissioning into an unconditional duty.",
+        "Making acceptance AND consent cumulative, or omitting the condition record.",
+        "Copying unrelated task deadlines."
+      ]
+    },
+    {
+      "id": "phase-duration-without-its-own-start-event",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Für den Zeitraum vom Vertragsschluss bis zur Montage sind folgende Teilphasen geplant: a) Entwurf und Antrag (sechs Wochen), b) Genehmigung und Zufahrt (elf Wochen), c) Montagevorbereitung (zwei Wochen). Der Bauherr stellt die Zufahrt in Teilphase b bereit."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "ACCESS",
+          "name": "Zufahrt in Teilphase b bereitstellen",
+          "action": "Der Bauherr stellt die Zufahrt in Teilphase b bereit.",
+          "actor": "Bauherr",
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr stellt die Zufahrt in Teilphase b bereit."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Access belongs to planned subsection b with eleven weeks; its start is not explicitly stated.",
+        "Do not turn planned phase length into an anchored deadline."
+      ],
+      "forbidden": [
+        "Eleven weeks after contract signing.",
+        "Seventeen weeks after contract signing.",
+        "Assuming phase b starts after phase a or all phases start together."
+      ]
+    },
+    {
+      "id": "explicit-common-phase-start-is-retained",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Alle folgenden Fristen beginnen ausdrücklich am Tag des Vertragsschlusses: a) Entwurf nach sechs Wochen, b) Zufahrt spätestens nach elf Wochen. Die Teilphasen laufen teilweise parallel. Der Bauherr stellt die Zufahrt in Teilphase b bereit."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "ACCESS",
+          "name": "Zufahrt in Teilphase b bereitstellen",
+          "action": "Der Bauherr stellt die Zufahrt in Teilphase b bereit.",
+          "actor": "Bauherr",
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr stellt die Zufahrt in Teilphase b bereit."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Access is due eleven weeks after contract signing because that shared start is explicit."
+      ],
+      "forbidden": [
+        "Claiming the start is unknown despite the express common start.",
+        "Adding durations of the parallel phases."
+      ]
+    },
+    {
+      "id": "explicit-specific-phase-start-is-retained",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Für den Zeitraum vom Vertragsschluss bis zur Montage sind mehrere Teilphasen vorgesehen. Phase a ist mit sechs Wochen geplant. Teilphase b beginnt ausdrücklich mit der schriftlichen Freigabe des Entwurfs und dauert elf Wochen. Der Bauherr stellt die Zufahrt in Teilphase b bereit."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "ACCESS",
+          "name": "Zufahrt in Teilphase b bereitstellen",
+          "action": "Der Bauherr stellt die Zufahrt in Teilphase b bereit.",
+          "actor": "Bauherr",
+          "performed_by": null,
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Bauherr stellt die Zufahrt in Teilphase b bereit."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Access belongs to subsection b: planned eleven weeks starting with written draft approval."
+      ],
+      "forbidden": [
+        "Using contract signing as start.",
+        "Adding the six weeks from phase a to form an invented seventeen-week deadline."
+      ]
+    },
+    {
+      "id": "composite-task-keeps-separate-phase-durations",
+      "pages": [
+        {
+          "pdf_page": 1,
+          "text": "Für den Zeitraum vom Vertragsschluss bis zur Übergabe sind geplant: a) Entwurf (sechs Wochen), b) Aufmaß und Materialwahl (elf Wochen), c) Endreinigung (zwei Wochen). Die Räume müssen vor der Übergabe gereinigt sein. Der Auftraggeber veranlasst Aufmaß und Endreinigung."
+        }
+      ],
+      "working_units": [
+        {
+          "id": "COMBINED",
+          "name": "Aufmaß und Endreinigung veranlassen",
+          "actor": "Auftraggeber",
+          "action": "Der Auftraggeber veranlasst Aufmaß und Endreinigung.",
+          "citations": [
+            {
+              "pdf_page": 1,
+              "quote": "Der Auftraggeber veranlasst Aufmaß und Endreinigung."
+            }
+          ]
+        }
+      ],
+      "expected": [
+        "Aufmaß belongs to planned phase b with eleven weeks; its start is unspecified.",
+        "Endreinigung belongs to planned phase c with two weeks; its start is unspecified.",
+        "Clean rooms are required before handover, distinct from the planned cleaning duration."
+      ],
+      "forbidden": [
+        "Assign eleven weeks to the entire combined task.",
+        "Treat either planned duration as a deadline after contract signing.",
+        "Add durations or invent a sequence start."
+      ]
     }
   ]
 }

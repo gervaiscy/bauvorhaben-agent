@@ -64,6 +64,12 @@ def main() -> None:
         parser.error("--raw-output, --output and derived project-facts output must be different files")
     if output.exists() or raw_output.exists() or facts_output.exists() or snapshots_dir.exists() or (units_output and units_output.exists()):
         parser.error('Output/raw-output already exists; use new output paths and reuse --cache-dir for resume')
+    if args.stop_after == 'timing':
+        from .phases.timing.artifact import output_paths
+        if any(path.exists() for path in output_paths(output)):
+            parser.error('Timing output/audit/validation already exists; use new output paths')
+        if raw_output.resolve() in {path.resolve() for path in output_paths(output)}:
+            parser.error('--raw-output must differ from timing output/audit/validation paths')
     documents = [replace(doc, source_type=args.source_type) for doc in load_documents(args.pages, args.documents)]
     context_types = args.context_type or ['project'] * len(args.context_pages)
     context_documents = [replace(doc, source_type=kind)
@@ -125,7 +131,11 @@ def main() -> None:
         print("Plan only: reached requests replayed offline; status=" + result.get("status", "unknown") + "; 0 new calls")
         return
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if args.stop_after == 'timing':
+        from .phases.timing.artifact import write_outputs
+        write_outputs(output, result)
+    else:
+        output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if args.stop_after == 'project-facts':
         print(f"Wrote {len(result['facts'])} project facts to {output}")
     else:
@@ -135,7 +145,9 @@ def main() -> None:
           f"{len(result['gemini_responses'])} preserved Gemini responses to {output}")
 
     if result.get('status') == 'incomplete':
-        raise SystemExit('Incomplete project facts; output, raw answer and validation findings preserved')
+        phase = 'offers' if any(f.get('code') == 'offer_validation_failed'
+                               for f in result.get('review_findings', [])) else 'project facts'
+        raise SystemExit(f'Incomplete {phase}; output, raw answer and validation findings preserved')
     if result.get("status") == "request_failed":
         raise SystemExit("Unresolved model requests; partial output and raw attempts preserved")
 

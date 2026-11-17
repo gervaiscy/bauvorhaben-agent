@@ -139,8 +139,10 @@ class FivePassTests(unittest.TestCase):
             if kind=='PAGE_EXTRACTION':
                 out={'working_units':[{'action':'Planung bestätigen','actor':'Kunde','performed_by':'Kunde',
                     'modality':'REQUIRED','timing_text':None,'citations':[citation]}],'carry_forward':''}
-            elif kind=='PAGE_OFFERS':out={'offers':[{'provider':'Anbieter','description':'Zusatzplanung',
-                  'terms':['100 Euro'],'citations':[citation]}]}
+            elif kind=='PAGE_OFFERS':
+                primary=next(p for p in data['source_pages'] if p['primary'])
+                out={'offers':[{'name':'Zusatzplanung','provider':'Anbieter','description':'Zusatzplanung',
+                    'terms':['100 Euro'],'citations':[{'passage':primary['passages'][0]['passage']}]}]}
             else:out={'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','timing_rules':[],
                                       'consequences':[],'citations':[]} for u in data['working_units']]}
             answers.append(copy.deepcopy(out));return out
@@ -152,7 +154,8 @@ class FivePassTests(unittest.TestCase):
         self.assertEqual([r['gemini'] for r in result['gemini_responses']],answers)
         for kind,data in calls:
             self.assertLessEqual(len(data['source_pages']),10)
-            if data['document']['id']=='D2':self.assertEqual([p['pdf_page'] for p in data['source_pages']],[21])
+            if kind!='PAGE_OFFERS' and data['document']['id']=='D2':
+                self.assertEqual([p['pdf_page'] for p in data['source_pages']],[21])
             if kind in ('PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
                 self.assertTrue(all('reviews' not in u for u in data['working_units']))
 

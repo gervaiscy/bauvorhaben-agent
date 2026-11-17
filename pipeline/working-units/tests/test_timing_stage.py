@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from bauvo_working_units.page_flow import extract_page_units
+from bauvo_working_units.page_flow import _view, extract_page_units
 from bauvo_working_units.project_flow import Document
 from bauvo_working_units.timing_stage import extract_timing, main
 from bauvo_working_units.trace import ModelRequestFailed
@@ -26,7 +26,7 @@ class TimingStageTests(unittest.TestCase):
                         'actor':'Bauherr', 'performed_by':None,
                         'citations':[{'pdf_page':1,'quote':self.text}]}], 'carry_forward':''}
             return {'offers':[{'name':'Option', 'provider':None,'description':self.text,
-                              'terms':[], 'citations':[{'pdf_page':1,'quote':self.text}]}]}
+                              'terms':[], 'citations':[{'passage':'P1-1'}]}]}
         self.baseline = extract_page_units(self.docs, SimpleNamespace(extract=earlier), stop_after='PAGE_OFFERS')
 
     def test_only_timing_runs_and_prior_proposals_offers_and_raw_responses_stay_unchanged(self):
@@ -86,3 +86,120 @@ class TimingStageTests(unittest.TestCase):
             with patch('sys.argv',[*argv,'--max-new-calls','100']),patch('sys.stderr',new=io.StringIO()),self.assertRaises(SystemExit):
                 main()
             self.assertEqual(output.read_text(),'original evidence')
+
+
+class QuotedTaskTimingHandoffTests(unittest.TestCase):
+    def setUp(self):
+        # Changed words remain unresolved even with whitespace-tolerant binding.
+        self.quotations = [
+            {'title': f'Anschluss {n} bereitstellen', 'actor': 'Bauherr' if n else None,
+             'quote': f'Der Bauherr stellt Anschluss {n} zwei Wochen vor Baubeginn bereit.'}
+            for n in range(6)]
+        self.exact = {'title': 'Lagerplatz bereitstellen', 'actor': 'Bauherr',
+                      'quote': 'Der Bauherr stellt einen Lagerplatz bereit.'}
+        first = '\n\n'.join(q['quote'].replace(' stellt ', ' hält ').replace(' zwei Wochen', '\nzwei Wochen')
+                             for q in self.quotations) + '\n\n' + self.exact['quote']
+        self.second = {'title': 'Planung besprechen', 'actor': 'Beide Parteien',
+                       'quote': 'Beide Parteien besprechen die Planung.'}
+        self.docs = [Document('D1', 'Fiktive Vereinbarung', 'source.pdf', schema_version=6,
+            source_key='source', pages=({'pdf_page': 1, 'text': first},
+                                       {'pdf_page': 2, 'text': self.second['quote']}))]
+        def earlier(prompt):
+            data = decode_prompt(prompt)
+            if prompt.startswith('PAGE_OFFERS.'):
+                return {'offers': []}
+            return {'working_units': copy.deepcopy(
+                self.quotations + [self.exact] if data['source_pages'][0]['pdf_page'] == 1
+                else [self.second])}
+        self.baseline = extract_page_units(self.docs, SimpleNamespace(extract=earlier),
+            chunk_pages=1, overlap_pages=0, stop_after='PAGE_OFFERS')
+
+    def test_every_task_reaches_timing_with_original_window_and_honest_evidence_status(self):
+        before = copy.deepcopy(self.baseline)
+        calls = []
+        def timing(prompt):
+            self.assertTrue(prompt.startswith('PAGE_TIMING.'))
+            data = decode_prompt(prompt); calls.append(data)
+            return {'assessments': [{'unit_id': u['id'], 'answer': 'NOT_STATED',
+                                     'citations': []} for u in data['working_units']]}
+        result = extract_timing(self.baseline, self.docs, SimpleNamespace(extract=timing),
+                                chunk_pages=1, overlap_pages=0)
+        self.assertEqual(self.baseline, before)
+        self.assertEqual(len(calls), 3)
+        views = [u for data in calls for u in data['working_units']]
+        self.assertCountEqual([u['id'] for u in views], [u['id'] for u in before['working_units']])
+        self.assertTrue(all(len(data['working_units']) <= 5 for data in calls))
+        for data in calls:
+            page = data['source_pages'][0]
+            self.assertEqual(page['text'], self.docs[0].pages[page['pdf_page'] - 1]['text'])
+        for n, unit in enumerate(before['working_units']):
+            view = next(v for v in views if v['id'] == unit['id'])
+            self.assertEqual(view['action'], unit['gemini']['quote'])
+            self.assertEqual(view['actor'], unit['gemini']['actor'])
+            if n < 6:
+                self.assertEqual(view['action_source'], 'unverified_task_quote')
+                self.assertEqual(view['citations'], [])
+                self.assertNotIn('source_text', result['working_units'][n]['derived'])
+            else:
+                self.assertNotIn('action_source', view)
+                self.assertTrue(view['citations'])
+        for old, new in zip(before['working_units'], result['working_units']):
+            self.assertEqual(old['gemini'], new['gemini'])
+            self.assertEqual(old['derived']['citations'], new['derived']['citations'])
+            self.assertEqual(len(new['reviews']), 1)
+        self.assertEqual(result['offers'], before['offers'])
+        self.assertEqual(result['project_facts'], before['project_facts'])
+        self.assertEqual(result['gemini_responses'][:len(before['gemini_responses'])], before['gemini_responses'])
+        self.assertEqual(result['review_findings'][:len(before['review_findings'])], before['review_findings'])
+        self.assertEqual(sum(f['code'] == 'assessment_context_unresolved'
+                             for f in result['review_findings']), 6)
+
+    def test_proposed_quote_never_becomes_validated_evidence_or_uses_the_generated_title(self):
+        task = copy.deepcopy(self.baseline['working_units'][0])
+        task['gemini']['quote'] = 'Eine vom Modell veränderte Aufgabenbeschreibung.'
+        before = copy.deepcopy(task)
+        view = _view(task)
+        self.assertEqual(view['action'], task['gemini']['quote'])
+        self.assertNotEqual(view['action'], task['gemini']['title'])
+        self.assertEqual(view['action_source'], 'unverified_task_quote')
+        self.assertEqual(view['citations'], [])
+        self.assertNotIn('source_text', task['derived'])
+        self.assertEqual(task, before)
+
+    def test_unusable_task_is_reported_instead_of_silently_skipped(self):
+        for gemini in (None, {'title': 'Nur ein Titel', 'actor': None, 'quote': ''}):
+            with self.subTest(gemini=gemini):
+                baseline = copy.deepcopy(self.baseline)
+                task = baseline['working_units'][0]
+                task['gemini'] = gemini
+                seen = []
+                def timing(prompt):
+                    data = decode_prompt(prompt)
+                    seen.extend(u['id'] for u in data['working_units'])
+                    return {'assessments': [{'unit_id': u['id'], 'answer': 'NOT_STATED',
+                                             'citations': []} for u in data['working_units']]}
+                result = extract_timing(baseline, self.docs, SimpleNamespace(extract=timing),
+                                        chunk_pages=1, overlap_pages=0)
+                self.assertNotIn(task['id'], seen)
+                self.assertCountEqual(seen, [u['id'] for u in baseline['working_units'][1:]])
+                self.assertIn({'unit_id': task['id'], 'pass': 'PAGE_TIMING',
+                               'code': 'assessment_task_unusable'}, result['review_findings'])
+                self.assertEqual(result['status'], 'needs_review')
+
+    def test_same_task_view_keeps_later_assessment_stages_from_skipping_unbound_quotes(self):
+        def assess(prompt):
+            data = decode_prompt(prompt)
+            fields = ({'status': 'NOT_STATED', 'consequences': [], 'citations': []}
+                      if prompt.startswith('PAGE_CONSEQUENCES.') else
+                      {'applicability': 'UNCLEAR', 'reason': 'Fiktiver Transporttest', 'citations': []}
+                      if prompt.startswith('PAGE_APPLICABILITY.') else
+                      {'answer': 'NOT_STATED', 'citations': []})
+            return {'assessments': [{'unit_id': u['id'], **fields} for u in data['working_units']]}
+        for stop, expected in [('PAGE_CONSEQUENCES', ['PAGE_TIMING', 'PAGE_CONSEQUENCES']),
+                               ('PAGE_APPLICABILITY', ['PAGE_APPLICABILITY'])]:
+            with self.subTest(stop=stop):
+                result = extract_page_units(self.docs, SimpleNamespace(extract=assess),
+                    chunk_pages=1, overlap_pages=0, stop_after=stop,
+                    aufgaben_result=self.baseline, project_facts=self.baseline['project_facts'])
+                self.assertTrue(all([r['kind'] for r in u['reviews']] == expected
+                                    for u in result['working_units']))

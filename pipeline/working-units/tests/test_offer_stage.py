@@ -33,12 +33,12 @@ class OfferStageTests(unittest.TestCase):
         def offers(prompt):
             self.assertTrue(prompt.startswith('PAGE_OFFERS.'))
             data = decode_prompt(prompt); calls.append(data)
-            self.assertEqual(data['prior_context'], 'Original context')
-            p = next(p for p in data['source_pages'] if p['primary'])
-            return {'offers': [{'name': 'Angebot', 'provider': None, 'description': p['text'],
-                    'terms': [], 'citations': [{'pdf_page': p['pdf_page'], 'quote': p['text']}]}]}
+            self.assertNotIn('prior_context', data)
+            p = data['source_pages'][0]
+            return {'offers': [{'name': 'Angebot', 'provider': None, 'description': p['passages'][0]['text'],
+                    'terms': [], 'citations': [{'passage': p['passages'][0]['passage']}]}]}
         result = extract_offers(self.baseline, self.docs, SimpleNamespace(extract=offers), chunk_pages=3)
-        self.assertEqual([([p['pdf_page'] for p in d['source_pages']]) for d in calls], [[1,2,3], [3,4,5], [6]])
+        self.assertEqual([([p['pdf_page'] for p in d['source_pages']]) for d in calls], [[1,2,3], [4,5], [6]])
         self.assertEqual(result['working_units'], original['working_units'])
         self.assertEqual(result['project_facts'], original['project_facts'])
         self.assertEqual(result['gemini_responses'][:3], original['gemini_responses'])

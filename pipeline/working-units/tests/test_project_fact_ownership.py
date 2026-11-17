@@ -98,8 +98,15 @@ class ProvisionOwnershipTests(unittest.TestCase):
             self.assertEqual(facts_view(result)['facts'][0]['status'], status)
             for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
                 data = payload(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de'))
+                if phase == 'PAGE_TIMING':
+                    self.assertEqual(data['project_facts'], {'facts': [{'id': f['id'], 'text': f['text']} for f in facts_view(result)['facts']]})
+                    continue
                 self.assertEqual(data['project_facts']['facts'][0]['status'], status)
-                self.assertEqual(data['project_facts']['facts'][0]['provision_id'], 'P1')
+                if phase=='PAGE_OFFERS':
+                    self.assertNotIn('provision_id',data['project_facts']['facts'][0])
+                    self.assertTrue(data['project_facts']['facts'][0]['evidence'])
+                else:
+                    self.assertEqual(data['project_facts']['facts'][0]['provision_id'], 'P1')
         for status, code in [(None, 'missing_or_invalid_fact_status'), ('APPROVED', 'missing_or_invalid_fact_status'),
                              ('UNRESOLVED', 'unresolved_fact_without_uncertainty')]:
             def invalid(prompt):

@@ -46,11 +46,18 @@ class FactClaimsTests(unittest.TestCase):
         for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
             data = json.loads(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de')
                               .split('SOURCE DATA:\n', 1)[1])
+            if phase == 'PAGE_TIMING':
+                self.assertEqual(data['project_facts'], {'facts': [{'id': f['id'], 'text': f['text']} for f in facts_view(result)['facts']]})
+                continue
             projected = data['project_facts']['facts'][0]['claims']
             if phase == 'PAGE_EXTRACTION':
                 self.assertEqual([c['statement'] for c in projected], [c['statement'] for c in claims])
                 self.assertEqual([[q['quote'] for q in c['verified_citations']] for c in projected],
                                  [[q['quote'] for q in c['verified_citations']] for c in claims])
+            elif phase == 'PAGE_OFFERS':
+                self.assertEqual([c['statement'] for c in projected], [c['statement'] for c in claims])
+                self.assertEqual([''.join(q['quote'] for q in c['evidence']) for c in projected],
+                                 [c['text'] for c in claims])
             else:
                 self.assertEqual(projected, claims)
         self.assertEqual(result, before)

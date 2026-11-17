@@ -158,13 +158,20 @@ class EvidenceFlowTests(unittest.TestCase):
         answers=[];calls=[]
         def model(prompt):
             phase=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((phase,data))
-            evidence=data['evidence_catalog'][0]['evidence_id']
+            evidence=data['evidence_catalog'][0]['evidence_id'] if phase not in ('PAGE_OFFERS','PAGE_TIMING') else None
             if phase=='PAGE_PROJECT_FACTS':
                 response=index_answer(data)
             elif phase=='PAGE_EXTRACTION':response=unit({'evidence_id':evidence})
             elif phase=='PAGE_OFFERS':response={'offers':[]}
             else:
-                if phase in ('PAGE_TIMING','PAGE_APPLICABILITY'):
+                if phase == 'PAGE_TIMING':
+                    fact = data['project_facts']['facts'][0]
+                    self.assertEqual(set(fact), {'id', 'text'})
+                    response = {'assessments': [{'unit_id': u['id'], 'answer': 'Regelung beachten',
+                        'citations': [{'fact_id': fact['id']}]} for u in data['working_units']]}
+                    answers.append(copy.deepcopy(response))
+                    return response
+                if phase == 'PAGE_APPLICABILITY':
                     fact=data['project_facts']['facts'][0]
                     self.assertEqual((fact['source_key'],fact['document_id']),('contract','D1'))
                     self.assertEqual(fact['citations'][0]['pdf_page'],1)
@@ -201,7 +208,7 @@ class EvidenceFlowTests(unittest.TestCase):
         changed=copy.deepcopy(facts);changed['gemini_responses'][0]['coverage']['missing_ids']=[]
         with self.assertRaises(ValueError):validate_facts(changed,[doc])
 
-    def test_repair_raw_trace_and_recovery_reuse_completed_requests_after_interruption(self):
+    def test_invalid_offer_raw_trace_and_recovery_replay_without_a_paid_repair(self):
         doc=document();calls=[]
         class Provider:
             last_raw_response=None;last_finish_reason=None
@@ -224,15 +231,17 @@ class EvidenceFlowTests(unittest.TestCase):
             root=Path(directory);provider=Provider();identity={'project':'unused','location':'global','model':'fixture'}
             def recorded(folder,previous):
                 return TracingModel(RawRunRecorder(RequestRecovery(provider,folder,previous,identity),folder/'raw.json'),folder/'trace')
-            with self.assertRaises(KeyboardInterrupt):
-                extract_page_units([doc],recorded(root/'first',[]),stop_after='PAGE_OFFERS')
+            first=extract_page_units([doc],recorded(root/'first',[]),stop_after='PAGE_OFFERS')
+            self.assertEqual(first['status'],'incomplete')
             original={p:p.read_bytes() for p in (root/'first').rglob('*') if p.is_file()}
             result=extract_page_units([doc],recorded(root/'second',[root/'first']),stop_after='PAGE_OFFERS')
             self.assertEqual(sum(prompt.startswith('PAGE_EXTRACTION.') for prompt in calls),1)
             self.assertEqual(sum(prompt.startswith('PAGE_OFFERS.') for prompt in calls),1)
-            self.assertEqual(result['review_findings'],[])
+            self.assertEqual(result['review_findings'],first['review_findings'])
+            self.assertEqual(result['status'],'incomplete')
+            self.assertFalse(any(p.startswith('PAGE_CITATION_REPAIR.') for p in calls))
             self.assertEqual(json.loads((root/'second/raw.json').read_text())[-1],
-                result['gemini_responses'][-1]['citation_evidence']['repair']['gemini'])
+                result['gemini_responses'][-1]['gemini'])
             self.assertEqual(original,{p:p.read_bytes() for p in (root/'first').rglob('*') if p.is_file()})
 
     def test_saved_result_correction_keeps_raw_proposals_findings_and_input_fingerprints(self):
@@ -257,7 +266,7 @@ class EvidenceFlowTests(unittest.TestCase):
         for phase,key,field in (('PAGE_OFFERS','offers','citations'),):
             citations=RESPONSE_SCHEMAS[phase]['properties'][key]['items']['properties'][field]
             self.assertEqual(citations['minItems'],1)
-            self.assertEqual(citations['items']['required'],['evidence_id'])
+            self.assertEqual(citations['items']['required'],['passage'])
         quote=RESPONSE_SCHEMAS['PAGE_EXTRACTION']['properties']['working_units']['items']['properties']['quote']
         self.assertEqual(quote['minLength'],1)
         self.assertEqual(quote['type'],'string')

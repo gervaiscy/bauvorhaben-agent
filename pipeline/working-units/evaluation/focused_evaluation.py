@@ -40,6 +40,12 @@ def record_response(responses, response, pass_name, document, payload, **metadat
     if pass_name == 'PAGE_EXTRACTION':
         from bauvo_working_units.phases.aufgaben.response import resolve_response
         resolved, audit, findings, reference_map = resolve_response(response, payload)
+    elif pass_name == 'PAGE_TIMING' and isinstance(response, dict) and isinstance(response.get('assessments'), list) and not any(
+            isinstance(row, dict) and 'timing_rules' in row for row in response['assessments']):
+        from bauvo_working_units.phases.timing.response import resolve_response
+        pages = [{**p, 'source_key': payload['source_key'], 'document_id': document.id}
+                 for p in payload['source_pages']]
+        resolved, audit, findings = resolve_response(response, pages, payload.get('project_facts', {}))
     else:
         resolved, audit, findings = resolve(response, payload['source_pages'], [],
                                            payload['source_key'], document.id)

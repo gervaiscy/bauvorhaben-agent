@@ -76,6 +76,11 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                     self.assertEqual(citation['quote'], text)
                     self.assertEqual([page['text'] for page in data['source_pages']], [text])
                     self.assertNotIn('reference_protocol', data)
+                elif prompt.startswith('PAGE_OFFERS.'):
+                    self.assertEqual(data['project_facts']['facts'][0]['evidence'][0]['quote'],text)
+                    self.assertNotIn('source_documents',data['project_facts'])
+                    self.assertEqual(data['source_pages'],[{'pdf_page':1,'passages':[{'passage':'P1-1','text':text}]}])
+                    self.assertNotIn('source_documents',data)
                 else:
                     self.assertEqual(data['project_facts']['facts'][0]['text'],text)
             self.assertEqual(result['working_units'][0]['gemini'],proposal)

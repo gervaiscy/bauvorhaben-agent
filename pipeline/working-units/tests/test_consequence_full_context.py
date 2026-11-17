@@ -100,4 +100,5 @@ class ConsequenceFullContextTests(unittest.TestCase):
         self.assertEqual(set(citation['required']),{'evidence_id'})
         # All phases now select IDs instead of regenerating source coordinates.
         timing=RESPONSE_SCHEMAS['PAGE_TIMING']['properties']['assessments']['items']
-        self.assertEqual(set(timing['properties']['citations']['items']['required']),{'evidence_id'})
+        self.assertEqual([set(s['required']) for s in timing['properties']['citations']['items']['anyOf']],
+                         [{'pdf_page', 'quote'}, {'fact_id'}])

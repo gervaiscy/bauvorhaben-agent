@@ -12,6 +12,7 @@ from ...page_flow import extract_page_units
 from ...project_flow import load_documents
 from ...date_calculation import validate_anchors
 from ...fact_artifact import load_facts, validate_facts
+from .artifact import output_paths, write_outputs
 
 PRIOR_PASSES = ('PAGE_EXTRACTION', 'PAGE_OFFERS')
 
@@ -46,7 +47,7 @@ def main():
     parser.add_argument('--working-units', required=True, help='Full cumulative Aufgaben-and-offers working-units.json')
     parser.add_argument('--pages', required=True)
     parser.add_argument('--documents', required=True)
-    parser.add_argument('--output', required=True, help='New cumulative working-units.json')
+    parser.add_argument('--output', required=True, help='Readable tasks with timing; full data saved in <stem>.audit.json')
     parser.add_argument('--project', required=True)
     parser.add_argument('--model', default='gemini-3.5-flash')
     parser.add_argument('--location', default='global')
@@ -68,7 +69,9 @@ def main():
     compact = output.with_name(output.stem + '.timing-only.json')
     trace = output.with_name(output.stem + '.trace')
     checkpoints = output.with_name(output.stem + '.checkpoints')
-    if any(p.exists() for p in (output, raw, compact, trace, checkpoints, raw.with_suffix('.attempts.json'))):
+    partial = output.with_name(output.stem + '.partial.json')
+    if any(p.exists() for p in (*output_paths(output), raw, compact, trace, checkpoints,
+                               partial, raw.with_suffix('.attempts.json'))):
         parser.error('Outputs already exist; use a new output directory')
     baseline = json.loads(Path(args.working_units).read_text())
     kinds = {(s['source_key'], s['document_id']): s['source_type'] for s in baseline['source_snapshots']}
@@ -85,7 +88,6 @@ def main():
         {'project':args.project, 'location':args.location, 'model':args.model}, args.resume_from,
         trace_directory=trace)
     model = RetryingModel(TracingModel(RawRunRecorder(backend, raw), trace))
-    partial = output.with_name(output.stem + '.partial.json')
     def save_partial(result):
         result['status'] = 'incomplete'
         temp = partial.with_suffix('.tmp')
@@ -93,7 +95,7 @@ def main():
         temp.replace(partial)
     result = extract_timing(baseline, documents, model, args.chunk_pages, args.overlap_pages,
                             anchors, facts, context_documents, on_batch=save_partial)
-    output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+    write_outputs(output, result)
     compact.write_text(json.dumps({'assessments': [review['gemini'] for unit in result['working_units']
                       for review in unit['reviews'] if review['kind'] == 'PAGE_TIMING']},
                       ensure_ascii=False, indent=2) + '\n')

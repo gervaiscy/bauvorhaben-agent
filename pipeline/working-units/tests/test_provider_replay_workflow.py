@@ -98,7 +98,11 @@ class ProviderReplayWorkflowTests(unittest.TestCase):
         for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
             prompt = _prompt(phase, {'source_pages':[], 'project_facts':facts_view(result)}, 'de')
             self.assertNotIn('WRONG OLD SUMMARY', prompt)
-            self.assertIn(row['claims'][0]['statement'], prompt)
+            if phase == 'PAGE_TIMING':
+                self.assertEqual(json.loads(prompt.split('SOURCE DATA:\n', 1)[1])['project_facts'],
+                                 {'facts': [{'id': f['id'], 'text': f['text']} for f in facts_view(result)['facts']]})
+            else:
+                self.assertIn(row['claims'][0]['statement'], prompt)
         self.assertEqual(raw, before)
 
     def _prompt_for(self, doc):

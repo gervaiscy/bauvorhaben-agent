@@ -56,10 +56,15 @@ class SourceBackedInterpretationTests(unittest.TestCase):
             data=json.loads(_prompt(phase,{'source_pages':[], 'project_facts':facts_view(facts)},'de')
                             .split('SOURCE DATA:\n')[1])
             fact=data['project_facts']['facts'][0]
+            if phase == 'PAGE_TIMING':
+                self.assertEqual(fact, {'id': facts['facts'][0]['id'], 'text': doc.pages[0]['text']})
+                continue
             self.assertEqual(fact['interpretation'],interpretation)
             self.assertEqual(fact['uncertainty'],uncertainty)
             if phase == 'PAGE_EXTRACTION':
                 self.assertEqual([c['quote'] for c in fact['citations']], doc.pages[0]['text'].splitlines(keepends=True))
+            elif phase == 'PAGE_OFFERS':
+                self.assertEqual(''.join(c['quote'] for c in fact['evidence']),doc.pages[0]['text'])
             else:
                 self.assertEqual(fact['text'],doc.pages[0]['text'])
         self.assertEqual(facts,before)
@@ -78,12 +83,20 @@ class SourceBackedInterpretationTests(unittest.TestCase):
             phase=prompt.split('.',1)[0]
             self.assertNotEqual(phase,'PAGE_CITATION_REPAIR')
             data=decode_prompt(prompt);calls.append(phase)
+            if phase == 'PAGE_TIMING':
+                self.assertNotIn('source_documents', data['project_facts'])
+                return {'assessments': [{'unit_id': u['id'], 'answer': 'NOT_STATED', 'citations': []} for u in data['working_units']]}
             self.assertEqual(data['project_facts']['facts'][0]['interpretation'],'Der Kunde bestätigt den Plan.')
             if phase=='PAGE_EXTRACTION':
                 self.assertNotIn('source_documents', data['project_facts'])
                 self.assertNotIn('Ein abweichender Nachweis', prompt)
                 ref={'evidence_id':data['source_pages'] and data['evidence_catalog'][0]['evidence_id']}
                 return {'working_units':[{'action':'Plan bestätigen','citations':[ref]}],'carry_forward':''}
+            if phase=='PAGE_OFFERS':
+                self.assertNotIn('source_documents',data)
+                self.assertEqual(data['project_facts']['facts'][0]['evidence'][0]['quote'],entries[0]['quote'])
+                self.assertNotIn(entries[-1]['quote'],prompt)
+                return {'offers':[]}
             source=data['project_facts']['source_documents'][0]
             self.assertEqual(source['source_key'],'contract')
             self.assertEqual(source['pages'],[{'pdf_page':1,'text':contract.pages[0]['text']}])

@@ -66,8 +66,22 @@ class ProjectFactsPromptContractTests(unittest.TestCase):
             with self.subTest(phase=phase):
                 prompt = _prompt(phase,request,'de')
                 instructions,data = prompt.split('SOURCE DATA:\n',1)
-                self.assertIn(RULES,instructions)
-                self.assertEqual(json.loads(data)['evidence_catalog'],source['evidence_catalog'])
+                wire = json.loads(data)
+                if phase == 'PAGE_TIMING':
+                    self.assertNotIn('evidence_catalog', wire)
+                    self.assertEqual(wire['project_facts'], {'facts': []})
+                    self.assertEqual(wire['source_pages'], request['source_pages'])
+                    continue
+                if phase == 'PAGE_OFFERS':
+                    self.assertEqual(wire['source_pages'],[{'pdf_page':1,'passages':[
+                        {'passage':'P1-1','text':source['source_pages'][0]['text']}]}])
+                    self.assertNotIn('source_documents',wire)
+                    self.assertNotIn('offer_evidence_catalog',wire)
+                    self.assertNotIn('context_evidence_catalog',wire)
+                    self.assertNotIn('evidence_catalog',wire)
+                else:
+                    self.assertIn(RULES,instructions)
+                    self.assertEqual(wire['evidence_catalog'],source['evidence_catalog'])
 
     def test_independent_provisions_can_share_one_original_span_without_losing_either_claim(self):
         case = next(c for c in json.loads(CASES.read_text())['cases']

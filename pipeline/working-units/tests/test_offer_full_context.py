@@ -1,5 +1,4 @@
-from clause_fixtures import decode_prompt
-"""Offers see complete project sources without extracting context as extra windows."""
+"""Only the current window and compact fact evidence cross the provider boundary."""
 import copy
 import json
 from pathlib import Path
@@ -12,93 +11,97 @@ from bauvo_working_units.core import digest
 from bauvo_working_units.page_flow import extract_page_units
 from bauvo_working_units.phases.offers.stage import extract_offers, main
 from bauvo_working_units.project_flow import Document
-from bauvo_working_units.shared.source_documents import full_source_documents
+from test_offer_boundaries import wire, offer, citation
 
 
-def document(identifier, key, pages, kind='project'):
-    return Document(identifier, identifier, key+'.pdf', schema_version=6, source_key=key,
-                    source_snapshot=key+'-hash', source_type=kind,
-                    pages=tuple({'pdf_page':n, 'text':text, 'checkboxes':[]} for n,text in pages))
+def document(identifier,key,pages,kind='project'):
+    return Document(identifier,identifier,key+'.pdf',schema_version=6,source_key=key,
+                    source_snapshot=key+'-hash',source_type=kind,
+                    pages=tuple({'pdf_page':n,'text':text,'checkboxes':[]} for n,text in pages))
 
 
-class OfferFullContextTests(unittest.TestCase):
-    def baseline(self, docs):
-        return extract_page_units(docs, SimpleNamespace(extract=lambda _: {
-            'working_units':[], 'carry_forward':'Original extraction context'}),
-            stop_after='PAGE_EXTRACTION', chunk_pages=3)
+class OfferWindowContextTests(unittest.TestCase):
+    def baseline(self,docs):
+        return extract_page_units(docs,SimpleNamespace(extract=lambda _:{'working_units':[]}),
+                                  stop_after='PAGE_EXTRACTION',chunk_pages=3)
 
-    def test_full_documents_reach_every_window_and_qualified_context_citations_are_checked(self):
-        target=document('D1','specification',[(n,f'Quelltext der Leistungsbeschreibung Seite {n}.')
-                                            for n in range(1,14)],'blb')
-        other=document('D2','specification',[(14,'Weitere Leistungen.')],'blb')
-        amendment=document('D1','amendment',[(1,'Die optionale Leistung ist bereits verbindlich beauftragt.')])
-        context=[amendment];docs=[target,other]
-        baseline=self.baseline(docs);original=copy.deepcopy((docs,context,baseline))
-        calls=[];responses=[]
-        def model(prompt):
-            self.assertTrue(prompt.startswith('PAGE_OFFERS.'))
-            data=decode_prompt(prompt);calls.append(data)
-            self.assertEqual(data['source_documents'],full_source_documents([*docs,*context]))
-            self.assertEqual(sum(len(d['pages']) for d in data['source_documents']),15)
-            self.assertEqual(data['prior_context'],'Original extraction context')
-            self.assertEqual(data['working_units'],[])
-            page=next(p for p in data['source_pages'] if p['primary'])
-            # Preserve provider answers and validate their evidence, including colliding IDs/pages.
-            citation={'source_key':'amendment','document_id':'D1','pdf_page':1,
-                      'quote':amendment.pages[0]['text']}
-            if len(calls)==2:
-                citation['source_key']='specification'
-            response={'offers':[{'name':'Zusatzleistung','provider':None,'description':'Angebot',
-                       'terms':[], 'citations':[{'pdf_page':page['pdf_page'],'quote':page['text']},citation]}]}
-            responses.append(copy.deepcopy(response));return response
-        result=extract_offers(baseline,docs,SimpleNamespace(extract=model),3,1,context)
-        self.assertEqual([([p['pdf_page'] for p in c['source_pages']]) for c in calls],
-                         [[1,2,3],[3,4,5],[5,6,7],[7,8,9],[9,10,11],[11,12,13],[14]])
-        self.assertEqual([r['gemini'] for r in result['gemini_responses'][-7:]],responses)
-        self.assertEqual([f['code'] for f in result['review_findings']],['citation_quote_not_found'])
+    def test_every_primary_page_is_sent_once_and_context_is_never_an_extraction_source(self):
+        target=document('D1','blb',[(n,f'BLB Seite {n}.') for n in range(1,14)],'blb')
+        other=document('D2','blb',[(14,'Weitere Leistungen.')],'blb')
+        context=document('D1','contract',[(1,'Anderer Text auf gleicher Seite.')])
+        baseline=self.baseline([target,other]);before=copy.deepcopy(baseline);calls=[]
+        def provider(prompt):
+            data=wire(prompt);calls.append(data)
+            self.assertNotIn(context.pages[0]['text'],prompt)
+            self.assertEqual(set(data),{'source_pages','project_facts'})
+            return {'offers':[offer([citation(data['source_pages'][0])])]}
+        result=extract_offers(baseline,[target,other],SimpleNamespace(extract=provider),3,1,[context])
+        self.assertEqual([p['pdf_page'] for d in calls for p in d['source_pages']],list(range(1,15)))
+        self.assertEqual(result['status'],'recorded')
         self.assertEqual(result['working_units'],baseline['working_units'])
         self.assertEqual(result['project_facts'],baseline['project_facts'])
-        self.assertEqual(result['context_snapshots'],[{'source_key':'amendment','document_id':'D1',
-                         'source_type':'project','document_sha256':digest(list(amendment.pages))}])
-        self.assertEqual((docs,context,baseline),original)
+        self.assertEqual(result['context_snapshots'],[{'source_key':'contract','document_id':'D1',
+                         'source_type':'project','document_sha256':digest(list(context.pages))}])
+        self.assertEqual(baseline,before)
 
-    def test_conflicting_context_identity_is_rejected_before_offer_requests(self):
+    def test_conflicting_context_identity_stops_before_requests(self):
         target=document('D1','source',[(1,'Optionale Leistung.')])
         conflict=document('D1','source',[(1,'Anderer Inhalt.')])
-        baseline=self.baseline([target])
         with self.assertRaisesRegex(ValueError,'Conflicting.*source'):
-            extract_offers(baseline,[target],SimpleNamespace(extract=lambda _:self.fail('No call')),
-                           3,1,[conflict])
+            extract_offers(self.baseline([target]),[target],SimpleNamespace(extract=lambda _:self.fail('No call')),3,1,[conflict])
 
-    def test_standalone_cli_loads_context_and_explicit_source_types(self):
+    def test_cli_contract_request_excludes_blb_context(self):
         target=document('D1','contract',[(1,'Vertragsleistung.')])
-        context=document('D1','specification',[(1,'Optionale Leistung.')])
+        context=document('D1','specification',[(1,'Optionale Leistung.')],'blb')
         baseline=self.baseline([target]);calls=[]
-        def model(prompt):
-            calls.append(decode_prompt(prompt));return {'offers':[]}
+        def provider(prompt):calls.append(wire(prompt));return {'offers':[]}
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);saved=root/'tasks.json';saved.write_text(json.dumps(baseline))
             output=root/'offers.json'
-            argv=['offers','--working-units',str(saved),'--pages','main-pages','--documents','main-docs',
-                  '--context-pages','extra-pages','--context-documents','extra-docs','--context-type','blb',
-                  '--project','unused','--chunk-pages','3','--output',str(output)]
-            with patch('sys.argv',[*argv,'--max-new-calls','100']), patch('bauvo_working_units.phases.offers.stage.load_documents',
-                    side_effect=[[target],[context]]), patch('bauvo_working_units.gemini.GeminiModel',
-                    return_value=SimpleNamespace(extract=model)):
+            argv=['offers','--working-units',str(saved),'--pages','main','--documents','main-docs',
+                  '--context-pages','extra','--context-documents','extra-docs','--context-type','blb',
+                  '--project','unused','--chunk-pages','3','--output',str(output),'--max-new-calls','1']
+            with patch('sys.argv',argv),patch('bauvo_working_units.phases.offers.stage.load_documents',side_effect=[[target],[context]]),\
+                 patch('bauvo_working_units.gemini.GeminiModel',return_value=SimpleNamespace(extract=provider)):
                 main()
-            result=json.loads(output.read_text())
             self.assertEqual(len(calls),1)
-            self.assertEqual([d['source_type'] for d in calls[0]['source_documents']],['project','blb'])
-            self.assertEqual(result['context_snapshots'][0]['source_type'],'blb')
+            self.assertEqual(calls[0]['source_pages'],[{'pdf_page':1,'passages':[{'passage':'P1-1','text':'Vertragsleistung.'}]}])
+            self.assertNotIn('Optionale Leistung.',json.dumps(calls))
             self.assertEqual(json.loads(saved.read_text()),baseline)
 
-    def test_standalone_cli_rejects_unpaired_context_before_provider_initialization(self):
+    def test_cli_rejects_unpaired_context_before_provider_initialization(self):
         required=['offers','--working-units','tasks','--pages','pages','--documents','docs',
                   '--project','unused','--output','out']
         for extra in (['--context-pages','extra'],['--context-type','blb']):
-            with self.subTest(extra=extra), patch('sys.argv',required+extra), \
-                    patch('bauvo_working_units.gemini.GeminiModel') as provider:
-                with self.assertRaises(SystemExit) as error:
-                    main()
-                self.assertEqual(error.exception.code,2)
-                provider.assert_not_called()
+            with self.subTest(extra=extra),patch('sys.argv',required+extra),patch('bauvo_working_units.gemini.GeminiModel') as provider:
+                with self.assertRaises(SystemExit) as error:main()
+                self.assertEqual(error.exception.code,2);provider.assert_not_called()
+
+    def test_cli_blb_gets_interpretations_and_supporting_quotes_without_full_contract(self):
+        from bauvo_working_units.project_facts import collect_project_facts
+        target=document('D1','blb',[(1,'Eine Zusatzleistung ist gesondert beauftragbar.')],'blb')
+        contract=document('D1','contract',[(1,'Vertraglich vereinbarte Leistung.\nNicht zitierter Vertragstext.')])
+        baseline=self.baseline([target])
+        baseline['project_facts']=collect_project_facts([contract],SimpleNamespace(extract=lambda _: {
+            'ansprueche':[{'aussage':'Diese Leistung ist vereinbart.','belege':['S1']}]}))
+        captured=[]
+        def provider(prompt):
+            captured.append(prompt);data=wire(prompt)
+            self.assertNotIn('Nicht zitierter Vertragstext.',prompt)
+            self.assertNotIn('source_documents',data)
+            self.assertEqual(data['project_facts']['facts'][0]['interpretation'],'Diese Leistung ist vereinbart.')
+            self.assertEqual(data['project_facts']['facts'][0]['evidence'][0]['quote'],'Vertraglich vereinbarte Leistung.\n')
+            return {'offers':[]}
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);saved=root/'tasks.json';saved.write_text(json.dumps(baseline));before=saved.read_bytes()
+            output=root/'offers.json'
+            argv=['offers','--working-units',str(saved),'--pages','blb','--documents','blb-docs',
+                  '--project','unused','--chunk-pages','3','--output',str(output),'--max-new-calls','1']
+            with patch('sys.argv',argv),patch('bauvo_working_units.phases.offers.stage.load_documents',return_value=[target]),\
+                 patch('bauvo_working_units.gemini.GeminiModel',return_value=SimpleNamespace(extract=provider)):
+                main()
+            result=json.loads(output.read_text())
+            self.assertEqual(len(captured),1)
+            self.assertEqual(result['project_facts'],baseline['project_facts'])
+            self.assertEqual(result['working_units'],baseline['working_units'])
+            self.assertEqual(saved.read_bytes(),before)

@@ -24,6 +24,8 @@ def run(ctx, phase):
             rows = response.get(key) if isinstance(response, dict) else None
             if not isinstance(rows, list):
                 ctx.findings.append({'response_id': rid, 'code': 'missing_or_invalid_' + key})
+                if hasattr(phase, 'after_window') and not phase.after_window(ctx):
+                    return
                 continue
             for position, item in enumerate(rows):
                 resolved = ctx.resolved_response(rid)[key][position]
@@ -37,3 +39,5 @@ def run(ctx, phase):
                                 'response_id': rid, 'response_position': position}, 'reviews': []})
                 if not phase.valid_proposal(item):
                     ctx.findings.append({'response_id': rid, 'row': position, 'code': 'invalid_' + kind})
+            if hasattr(phase, 'after_window') and not phase.after_window(ctx):
+                return

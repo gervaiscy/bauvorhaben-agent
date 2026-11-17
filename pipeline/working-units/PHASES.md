@@ -20,7 +20,95 @@ is explicitly separate from semantic completeness. Empty extraction is valid and
 does not remove any original source text. All downstream phases retain source
 access and receive `extraction_scope: homeowner_contractual_position`. Older artifacts replay under
 their own protocols; they are never converted to rights by renaming fields.
-The units cache protocol is 111; the PDF extraction protocol is unchanged.
+The units cache protocol is 127; the PDF extraction protocol is unchanged.
+
+Timing uses `timing-page-quotes-v1`. It sends the original `source_pages` window
+unchanged and project facts only as `project_facts.facts: [{id, text}]`, where text
+is the original supporting wording, not the model interpretation. Gaps between
+selected passages remain visibly marked. The model input has no evidence catalog,
+full contract source documents, fact-level provenance metadata or repeated fact
+citations. The application retains those sources and provenance in saved artifacts.
+
+Timing answers keep `{unit_id, answer, citations}`. Citations select either a
+current-window `{pdf_page, quote}` or a supplied `{fact_id}`. Page quotations bind
+uniquely with whitespace tolerance to the original page; fact IDs restore their
+verified source references, including source/document identities for colliding page
+numbers. Unknown facts, missing fact evidence, wrong pages and altered/ambiguous
+quotations remain findings. No automatic Gemini citation-repair call is made for
+this timing contract. A narrow local fallback also accepts one uppercase-I/lowercase-l
+OCR difference inside a word, only when the source span is unique. It never changes
+digits, punctuation, standalone letters, Roman numerals or more than one character.
+The binding audit records this fallback, and resolved evidence restores the original
+source spelling. Raw answers are preserved alongside derived resolved evidence.
+Legacy structured timing artifacts remain readable. Earlier timing request caches
+and checkpoints do not satisfy the new prompt/schema identity; OCR, grouping,
+settled facts and accepted Tasks/Offers do not need to be rerun.
+
+The timing prompt distinguishes task-specific timing from the overall completion
+framework and keeps optional execution conditional on selection or commissioning.
+Unrelated withdrawal/funding/selection periods do not become deadlines for other
+actions. Generic timing controls cover irrelevant withdrawal periods, optional and
+included installations sharing a project timeframe, and a selection deadline that
+differs from overall construction completion. These held-out expectations are never
+sent to Gemini; offline tests verify transport, while the isolated five-task live
+trial is retained under manual runs rather than incorporated as project evidence.
+
+The timing prompt binds each date or duration to the particular action or included
+service it modifies, distinguishing confirmation submission, promised delivery,
+installation and included rental. Two fictional illustrations use unrelated sources
+and values. A task-specific answer omits independent project obligations. When only
+a general completion framework applies to a construction service, the answer refers
+to the fully cited framework without rewriting weather clauses for every trade.
+When a complex time rule is itself assessed, its operative original wording and
+qualifications are retained. NOT_STATED and AMBIGUOUS are exact standalone answers.
+The schema, original-window input and source-backed facts remain unchanged. There
+is no new model pass, keyword filter, inferred schedule or answer rewrite.
+
+A planned subsection duration does not inherit the contract date as its start from
+an overall schedule heading. Without an explicit subsection start, the answer keeps
+the planned duration and leaves its start unspecified. Explicit common or individual
+start events remain applicable. Citations support the returned rule and its relevant
+qualifications; general completion answers do not accumulate independent financing,
+funding or construction-start requirements. Four held-out controls distinguish an
+unstated start, an explicit common start, an explicit individual start and separate
+phase durations within a combined task. A combined task does not give its components
+a shared duration or turn a required completed state into an execution period.
+
+Four additional held-out cases cover contained rental periods, post-completion
+inspection amid unrelated financing/funding clauses, heating conditions restricted
+to particular trades, and competing confirmation/delivery/selection/optional-work
+rules. Their expectations are separate from model inputs. Offline tests verify
+source delivery, routing and preservation; they do not prove interpretation quality.
+
+Timing review output separates the task result from internal audit data:
+
+- `<output>.json`: `status` and `working_units`, each with `id`, `title`, `actor`,
+  `quote` and `timing: {answer, citations}`. Bound task quotes use original source
+  text; unbound proposals are marked `quote_verified: false`. Missing assessments
+  remain `timing: null`. Unexpected duplicate assessments remain visible under
+  `additional_timing_assessments`. No missing result is presented as NOT_STATED.
+- `<output>.audit.json`: the complete cumulative artifact, including original
+  model responses, provenance, earlier stages and all validation findings.
+- `<output>.validation.json`: findings with working-unit IDs where the finding
+  identifies a task or assessment row. Request-wide findings remain request-wide.
+- `<output>.gemini-raw.json`: unchanged provider answers, as before.
+
+Timing citations show document titles, PDF pages and original supporting text;
+internal offsets, hashes and repeated response envelopes stay in the audit file.
+The readable projection removes duplicate selections of the same exact source span
+and combines adjacent spans from the same source page, copying only original
+intervening whitespace. It never bridges omitted substantive text. All individual
+selections remain in the audit. Existing uncombined readable projections remain
+accepted when they match their sibling audit.
+Unknown references remain visible and retain their validation findings. The
+standalone command also retains the existing timing-only export and checkpoints.
+Consequences and applicability accept the readable timing output and automatically
+load its sibling audit, checking that the readable projection matches. Keep those
+two files together. Legacy cumulative inputs remain accepted. The sequential
+pipeline records the audit as its internal handoff and also writes the readable
+`result.json` in the timing attempt folder. Generic CLI `--stop-after timing` uses
+the same output format. Provider prompts and request identities are unchanged, so
+saved exact timing requests remain reusable without paid regeneration.
 
 Aufgaben sends the current document-local window of at most ten pages as plain
 original page text, with page numbers, overlap markers and checkbox metadata.
@@ -42,29 +130,159 @@ executable tasks are separate rows and may share the same original quotation.
 The title is an orientation aid; actor is Gemini's source-based interpretation or
 null. The task text is the original quotation, not the title.
 
-The application binds each quote to a unique literal occurrence within the supplied
-window of the current document. It does not search contractual context or other
-documents to validate a task quote. Exact whitespace and wording must match; no fuzzy
-matching, whitespace rewriting or semantic repair is performed. Repeated occurrences
-are ambiguous and remain findings. Gemini can include more surrounding original text
+The application binds each quote within the supplied window of the current document.
+Whitespace and line breaks may differ. If no formatting-only match exists, it also
+accepts a unique source span with at most two words omitted from Gemini's quotation.
+It does not substitute or add words, skip numbers or punctuation, or search other
+documents. Matching words are case-sensitive. Derived text always restores the
+complete original source span, including omitted words; raw JSON remains unchanged.
+The binding audit records the matching policy, method and omitted words. Repeated
+candidate locations are ambiguous and remain findings. Gemini can include more surrounding original text
 to disambiguate them. Cross-page quotes use the document's supplied page order with
 one newline between pages; canonical citations retain exact per-page spans.
 
 Every provider row and complete raw response remain unchanged, including invalid
 proposals. Derived source locations contain application-owned IDs, page, offsets
 and exact quotations. Derived task records use `task-original-quote-v1` and retain
-`title`, `actor`, `source_text` and canonical `citations`. Downstream views use the
+`title`, `actor`, `source_text` and canonical `citations`. Saved raw task responses can
+be rebound offline through the citation audit, retaining prior audits and findings
+in its history without calling Gemini. Downstream views use the
 original `source_text` as `action` and the generated title as `name`; conditions,
 timing, consequences and applicability retain their separate stages and source
 access. Invalid quotes remain visible with findings and do not trigger an additional
 model verification or repair request. Local checks establish source binding and
 structure, not semantic extraction completeness or actor correctness.
 
+If a quotation-based task lacks bound `source_text`, downstream assessment views
+still send its unchanged model-proposed quotation as `action`, explicitly marked
+`action_source: unverified_task_quote`. This identifies the task without treating
+its quotation as verified evidence. Timing retains the original extraction window
+when source locations are unresolved, and receives the original pages and evidence
+catalog for its own citations. Existing task findings and raw answers are preserved;
+no quote repair or Tasks rerun is required. Structurally unusable task records receive
+an `assessment_task_unusable` finding instead of disappearing silently.
+
+For quotation-based tasks without a bound `source_text`, assessment requests retain
+Gemini's unchanged task quotation as the proposed `action`, explicitly marked
+`action_source: unverified_task_quote`. The original document window remains the
+assessment source; the fallback creates no citations or validated source text and
+does not clear extraction findings. This applies to timing, consequences and
+applicability through their shared task view. Records without any usable action
+receive a per-stage `assessment_task_unusable` finding instead of disappearing
+silently from assessment traversal.
+
 The same document windows, raw-response storage, request budgeting and offline
 cache replay remain available. A distinct prompt/schema identity prevents the
 new requests from reusing old extraction answers. Settled project-facts artifacts
 remain reusable. Historical ID-selection and action/citation records remain readable
 through their existing compatibility paths; they are not new provider output schemas.
+
+Offers uses `window-additional-offers-v7` and `offer-passage-labels-v1`.
+Its German question is:
+
+> Welche konkreten zusätzlichen Leistungen beschreibt der Auszug als gesondert beauftragbar, gesondert zu vereinbaren oder gegen zusätzliche Vergütung erhältlich?
+
+The prompt includes the approved JSON schema. The same schema is applied by the
+provider adapter. Gemini returns `offers: [{name, provider, description, terms,
+citations: [{passage: "P58-1"}]}]`. Gemini selects short source labels instead of copying quotations.
+Short clarifications exclude already agreed services using the project facts,
+separate distinct extras, distinguish explicit commissioning from cost duties or
+technical compatibility, require source-supported providers, and retain necessary
+supporting reference sentences through additional passage selections.
+Fictional examples demonstrate indirectly commissioned work and three independent
+offers sharing one passage label. An explicitly inseparable package stays one offer.
+Examples are instructions, not extraction sources; held-out evaluation cases differ
+from these demonstrations.
+
+Each request contains only `source_pages: [{pdf_page, passages: [{passage, text}]}]`
+for the current window's primary pages and `project_facts`. Documents stay grouped according to
+`documents.json`, with at most ten pages per request. The existing ten-page/one-page
+overlap planning metadata is preserved for accepted Aufgaben handoffs, but Offers
+does not resend the overlap page: each primary page is processed once. Empty
+primary windows are skipped. Full BLB/contract context, other documents, previous
+offers (`known_items`), task records and evidence catalogs are not sent.
+
+Project facts retain interpretations and compact literal supporting quotations,
+with document/page references and a document-label/title list, without complete
+contract pages or private application IDs. Repeated fact quotes are deduplicated;
+only adjoining verified spans are joined. Gaps remain distinct. Existing fact
+scope/qualifications remain available. Original project-fact artifacts and all
+source snapshots stay unchanged.
+
+The application labels original paragraphs `P<PDF page>-<paragraph number>` within
+this request. Blank lines define paragraph boundaries; wrapped lines and table
+content stay together. The passage slices include separators and leading/trailing
+whitespace, so concatenating them reproduces each original page exactly. The page
+text is sent once, without duplicated full-page text. A paragraph may contain
+multiple independently selectable services, which can share its label.
+
+Gemini returns only passage labels under `citations`. The application resolves
+these against the current document's primary pages and builds `derived.citations`
+from original text, source/document identity, page hashes and offsets. Hashes and
+offsets never enter the source-selection wire payload. Full reference maps are
+saved with each response and checked against the original sources during offline
+audits. Labels are request-local; a label reused in another document cannot bind
+to that document's text. Project-fact references are not selectable offer sources.
+
+A missing `P` prefix is normalized only for a positive ASCII `page-paragraph`
+identifier whose exact `P<page>-<paragraph>` label exists in this request's map.
+The binding audit records `missing_prefix_normalization`, `original_passage` and
+the canonical `passage`. Raw responses are unchanged. No other spelling, case,
+whitespace, numeric or cross-window corrections are inferred. Saved responses can
+replay this local normalization without a new provider request.
+
+Raw provider JSON remains unchanged. Unknown labels, citations with copied quotes
+or extra provenance fields, malformed responses and exact duplicate offer records
+remain visible and block downstream stages. Shared evidence alone never merges
+independently described offers. No requirement to account for every passage, extra
+verification call, fuzzy matching or citation-repair call is introduced.
+
+Each offer also has application-generated `derived.review_context`, marked with
+`review_context_protocol: offer-paragraph-context-v1`. For each successfully bound
+citation it stores the entire containing paragraph(s), with exact original text,
+source/document/page identity, page hash and offsets. Blank lines delimit paragraphs;
+wrapped lines stay together. If the quotation starts a paragraph (ignoring leading
+whitespace), the preceding paragraph is included. At the start of a page this can
+include the last paragraph on the immediately preceding page of the same document,
+even outside the extraction window. Page-number gaps and document boundaries are
+not crossed. Paragraph boundaries are layout-based; context is not guaranteed to
+resolve every semantic reference.
+
+This field is surrounding source context, not Gemini-selected evidence. It never
+enters the model payload or the selected-citation list, expands an evidence claim,
+repairs an invalid quotation, or overwrites raw JSON. Invalid citations get no
+context. Cached responses rebuild context locally; offline citation audits refresh
+it from the original sources without an Offers review call.
+
+Unknown passage selections and malformed proposals do not stop the remaining Offers
+windows. The application collects every window response, then validates the
+complete pass once. Findings and raw responses remain visible; unresolved offers
+still make the output incomplete and block downstream stages.
+
+All exact window requests are planned before contacting Gemini, including saved
+answers and the new-call limit. Completed answers replay independently of local
+validation. Offers makes no verification or citation-repair call. Local checks
+establish source binding and structure, not semantic correctness or completeness.
+Existing v6 quote-based Offers remain readable and valid completed results can
+continue downstream. Their completed responses cannot satisfy new v7 requests:
+the prompt and schema have different request identities. Accepted v69 Aufgaben,
+settled facts and source extraction remain reusable.
+
+Historical v6 quote-based Offers runs can also use the offline `bauvo_working_units.offer_recovery`
+entry point. It requires an explicit source-selection manifest bound to the full
+input digest. Each selection identifies an existing failed quotation, its model
+citation digest and an exact original source span (source/document/page identity,
+page hash, offsets and literal text), plus an inspection reason. All source and
+window bindings are checked before writing a separate result. This is an explicit
+source selection following inspection, not fuzzy matching or automatic acceptance
+of changed wording. No provider is constructed or called.
+
+The recovered result preserves original provider JSON, original findings and
+previous citation audits. It records `explicit_original_source_selection` bindings
+in the new audit and regenerates derived citations, paragraph context and offer
+validation. Unresolved failures remain blocking. A successful recovery establishes
+source binding only; it does not approve classifications, completeness or customer
+publication. The original run and provider cache are never overwritten.
 
 The following paragraphs describe earlier revisions of the historical selection
 protocol; their complex evidence-selection rules are no longer the live prompt.

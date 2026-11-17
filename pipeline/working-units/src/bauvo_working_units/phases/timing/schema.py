@@ -69,7 +69,10 @@ def legacy_timing_findings(response):
 
 
 # Current timing contract: preserve the answer, without inferring a schedule.
-TIMING = obj({'unit_id': TEXT, 'answer': TEXT, 'citations': CITATIONS})
+TIMING_CITATIONS = array({'anyOf': [obj({'pdf_page': {'type': 'integer', 'minimum': 1},
+                                       'quote': {**TEXT, 'minLength': 1}}),
+                                   obj({'fact_id': {**TEXT, 'minLength': 1}})]})
+TIMING = obj({'unit_id': TEXT, 'answer': TEXT, 'citations': TIMING_CITATIONS})
 
 
 def timing_findings(response):

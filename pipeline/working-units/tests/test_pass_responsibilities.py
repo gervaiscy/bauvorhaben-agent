@@ -212,7 +212,8 @@ class OverlapIdentityTests(unittest.TestCase):
                 c={'pdf_page':page,'quote':data['source_pages'][0]['text']}
                 if kind=='PAGE_EXTRACTION':return {'working_units':[{'name':'Planen','action':'Planen',
                     'actor':'Kunde','performed_by':'Kunde','citations':[c]}],'carry_forward':''}
-                return {'offers':[{'name':'Zusatzpaket','description':'Zusatzpaket','provider':None,'terms':[],'citations':[c]}]}
+                return {'offers':[{'name':'Zusatzpaket','description':'Zusatzpaket','provider':None,'terms':[],
+                    'citations':[{'passage':data['source_pages'][0]['passages'][0]['passage']}]}]}
             return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
         result=extract_page_units([source],SimpleNamespace(extract=extract))
         self.assertEqual(len(result['working_units']),2)
@@ -221,5 +222,6 @@ class OverlapIdentityTests(unittest.TestCase):
             if kind=='PAGE_EXTRACTION':
                 self.assertTrue(all(':working_unit:' in u['id'] for u in data['known_items']))
                 self.assertTrue(all('dedupe_key' not in u for u in data['known_items']))
-            if kind=='PAGE_OFFERS':self.assertTrue(all(':offer:' in u['id'] for u in data['known_items']))
+            if kind=='PAGE_OFFERS':
+                self.assertNotIn('known_items',data)
         self.assertTrue(all('dedupe_key' not in u['gemini'] for u in result['working_units']))

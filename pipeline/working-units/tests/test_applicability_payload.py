@@ -38,7 +38,7 @@ class ApplicabilityPayloadTests(unittest.TestCase):
         self.assertNotIn('supported_anchors',prompt)
         self.assertEqual(data,before)
         timing=json.loads(_prompt('PAGE_TIMING',data,'de').split('SOURCE DATA:\n')[1])
-        self.assertEqual(timing['project_facts'],actual['project_facts'])
+        self.assertEqual(timing['project_facts'], {'facts': [{'id': 'F1', 'text': ''}]})
         self.assertEqual(data,before)
 
     def test_all_window_units_are_sent_once_including_overlap_citations_without_crossing_documents(self):
