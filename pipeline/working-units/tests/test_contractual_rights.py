@@ -275,7 +275,7 @@ class ContractualRightsTests(unittest.TestCase):
         raw = answer('Bedingte Gutschrift bei fristgerechter Zahlung. Die vertragliche Höhe bleibt offen.')
         result = recorded([doc], raw)
         self.assertNotIn('uncertainty', result['facts'][0]['derived'])
-        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_APPLICABILITY'):
             data = payload(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de'))
             view = data['project_facts']
             if phase == 'PAGE_TIMING':
@@ -349,7 +349,7 @@ class ContractualRightsTests(unittest.TestCase):
         self.assertEqual(result['evidence_protocol'], 'contractual-rights-v3')
         self.assertEqual(validate_facts(result, [doc]), result)
         self.assertEqual(result['gemini_responses'][0]['gemini'], raw)
-        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_APPLICABILITY'):
             view = payload(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de'))['project_facts']
             with self.subTest(phase=phase):
                 if phase == 'PAGE_TIMING':

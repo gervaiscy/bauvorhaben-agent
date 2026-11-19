@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 import copy
 import json
@@ -65,17 +66,21 @@ class TimingContractTests(unittest.TestCase):
         calls=[];answers=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append(kind)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             if kind=='PAGE_EXTRACTION':out={'working_units':[{'action':'Do work','citations':[{'pdf_page':1,'quote':'Source text'}]}],'offers':[],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
             elif kind=='PAGE_TIMING':out=assessment([rule('PREREQUISITE',offset='four weeks')]);out['assessments'][0]['unit_id']=data['working_units'][0]['id']
             else:out={'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
             answers.append(copy.deepcopy(out));return out
-        out=extract_page_units([doc],SimpleNamespace(extract=extract))
-        self.assertEqual(calls,['PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'])
+        out=extract_page_units([doc],SimpleNamespace(extract=extract),stop_after='PAGE_TIMING')
+        self.assertEqual(calls,['PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING'])
         self.assertEqual(out['schema_version'],18);self.assertEqual(out['status'],'needs_review')
         self.assertTrue(any(f['code']=='inconsistent_timing_rule' for f in out['review_findings']))
         self.assertEqual([r['gemini'] for r in out['gemini_responses']],answers)
-        self.assertEqual(out['working_units'][0]['reviews'][1]['gemini'],answers[3]['assessments'][0])
+        self.assertEqual(out['working_units'][0]['reviews'][0]['gemini'],answers[2]['assessments'][0])
 
     def test_timing_schema_sent_to_provider_keeps_simple_answers(self):
         calls=[]

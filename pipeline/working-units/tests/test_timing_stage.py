@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 import copy
 import io
@@ -189,6 +190,8 @@ class QuotedTaskTimingHandoffTests(unittest.TestCase):
     def test_same_task_view_keeps_later_assessment_stages_from_skipping_unbound_quotes(self):
         def assess(prompt):
             data = decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                return assessment_answer(json.loads(prompt.split('SOURCE DATA:\n')[1]))
             fields = ({'status': 'NOT_STATED', 'consequences': [], 'citations': []}
                       if prompt.startswith('PAGE_CONSEQUENCES.') else
                       {'applicability': 'UNCLEAR', 'reason': 'Fiktiver Transporttest', 'citations': []}

@@ -28,7 +28,7 @@ class PhaseThinkingTests(unittest.TestCase):
         model._types=SimpleNamespace(GenerateContentConfig=lambda **kwargs:kwargs)
         model._model='gemini-3.5-flash'
         for name,level in expected.items():
-            model.extract(name+'. source')
+            model.extract(name+'. source'+('\nSOURCE DATA:\n'+json.dumps({'working_units':{'U1':{}}}) if name=='PAGE_CONSEQUENCES' else ''))
             self.assertEqual(calls[-1]['config']['thinking_config'],{'thinking_level':level})
             self.assertEqual(calls[-1]['config']['max_output_tokens'],65536)
         changed=generation_for('PAGE_TIMING');changed['thinking_config']['thinking_level']='HIGH'

@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from historical_facts import collect_historical_facts
 from clause_fixtures import decode_prompt
 from clause_fixtures import index_answer
@@ -158,6 +159,10 @@ class EvidenceFlowTests(unittest.TestCase):
         answers=[];calls=[]
         def model(prompt):
             phase=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((phase,data))
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             evidence=data['evidence_catalog'][0]['evidence_id'] if phase not in ('PAGE_OFFERS','PAGE_TIMING') else None
             if phase=='PAGE_PROJECT_FACTS':
                 response=index_answer(data)
@@ -219,6 +224,10 @@ class EvidenceFlowTests(unittest.TestCase):
                 if prompt.startswith('PAGE_CITATION_REPAIR.') and self.interrupt:
                     self.interrupt=False;raise KeyboardInterrupt()
                 data=decode_prompt(prompt)
+                if prompt.startswith('PAGE_CONSEQUENCES.'):
+                    out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                    self.last_raw_response = json.dumps(out); self.last_finish_reason = 'STOP'
+                    return out
                 if prompt.startswith('PAGE_EXTRACTION.'):
                     value={'working_units':[],'carry_forward':''}
                 elif prompt.startswith('PAGE_OFFERS.'):

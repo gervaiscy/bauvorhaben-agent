@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 from clause_fixtures import index_answer
 """Offline end-to-end handoffs, phase isolation, prompt locks and safe pipeline resume."""
@@ -20,6 +21,9 @@ class FakeModel:
     def extract(self,prompt):
         kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
         self.calls.append((kind,data))
+        if prompt.startswith('PAGE_CONSEQUENCES.'):
+            out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+            return out
         page=data['source_pages'][0];citation={'pdf_page':page['pdf_page'],'quote':page['text']}
         if kind=='PAGE_PROJECT_FACTS':
             return index_answer(data)
@@ -87,7 +91,7 @@ class ModularPipelineTests(unittest.TestCase):
             else:
                 self.assertEqual(windows,expected*2)
         for kind,data in model.calls:
-            if kind != 'PAGE_PROJECT_FACTS':self.assertLessEqual(len(data['source_pages']),10)
+            if kind not in ('PAGE_PROJECT_FACTS','PAGE_CONSEQUENCES'):self.assertLessEqual(len(data['source_pages']),10)
         for step in manifest['steps']:
             if not step.startswith(('04-','05-','06-','07-','08-')):
                 continue
@@ -106,12 +110,13 @@ class ModularPipelineTests(unittest.TestCase):
         expected={digest({'source':str(path.resolve()),'pdf_sha256':pipeline.sha(path)})[:16]
                   for path in (self.contract,self.blb)}
         calls=[data for phase,data in model.calls if phase=='PAGE_CONSEQUENCES']
-        self.assertEqual(len(calls),2)
+        self.assertEqual(len(calls),1)  # Identical task/timing/context input replays across PDFs.
         for data in calls:
-            self.assertEqual({d['source_key'] for d in data['source_documents']},expected)
-            self.assertEqual({d['source_type'] for d in data['source_documents']},{'project','blb'})
-            self.assertEqual(sum(len(d['pages']) for d in data['source_documents']),2)
-            self.assertLessEqual(len(data['working_units']),5)
+            self.assertEqual(sum(len(d['pages']) for d in data['source_documents']),1)
+            self.assertEqual(data['source_documents'][0]['document'],'B1')
+            self.assertTrue(data['project_facts'])
+            self.assertTrue(all(set(f)=={'id','text'} for f in data['project_facts']))
+            self.assertLessEqual(len(data['working_units']),10)
         for name in ('contract-01','blb-01'):
             before=pipeline.read(self.output/manifest['steps']['06-timing/'+name]['artifact'])
             after=pipeline.read(self.output/manifest['steps']['07-consequences/'+name]['artifact'])
@@ -150,11 +155,26 @@ class ModularPipelineTests(unittest.TestCase):
             self.run_pipeline(model,resume=True)
         self.assertEqual(model.calls,[])
 
+    def test_pipeline_sol_switch_routes_only_consequences_to_sol(self):
+        from unittest.mock import patch
+        gemini = FakeModel(); sol = FakeModel()
+        with patch.dict('os.environ', {'OPENAI_API_KEY': 'synthetic-not-real'}), \
+             patch('bauvo_working_units.pipeline.GeminiModel', return_value=gemini), \
+             patch('bauvo_working_units.sol.SolModel', return_value=sol) as constructor:
+            result = pipeline.run([self.contract], [self.blb], self.output, 'unused',
+                command_runner=self.command, max_new_calls=1000, consequence_provider='sol')
+        self.assertTrue(sol.calls)
+        self.assertEqual({phase for phase, _ in sol.calls}, {'PAGE_CONSEQUENCES'})
+        self.assertNotIn('PAGE_CONSEQUENCES', {phase for phase, _ in gemini.calls})
+        constructor.assert_called_once_with('gpt-6.1-sol', 'medium')
+        self.assertEqual(result['binding']['consequences']['identity'],
+                         {'provider': 'sol', 'model': 'gpt-6.1-sol', 'reasoning': 'medium'})
+
     def test_all_phases_run_in_order_with_separate_artifacts_and_no_blb_fact_calls(self):
         model=FakeModel();result=self.run_pipeline(model)
         self.assertEqual([k for k,d in model.calls],['PAGE_PROJECT_FACTS']+
             [kind for kind in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY')
-             for _ in range(1 if kind=='PAGE_OFFERS' else 2)])
+             for _ in range(1 if kind in ('PAGE_OFFERS','PAGE_CONSEQUENCES') else 2)])
         self.assertEqual(len(self.commands),4)
         self.assertEqual(result['status'],'recorded')
         self.assertEqual(len(result['steps']),15)

@@ -7,7 +7,7 @@ name = "bauvo-working-unit-extractor"
 version = "0.1.0"
 description = "Reviewable working-unit candidates from authoritative OCR pages"
 requires-python = ">=3.10"
-dependencies = ["google-genai>=1.0"]
+dependencies = ["google-genai>=1.0", "openai>=3.55.1,<4"]
 
 [project.scripts]
 bauvo-working-units = "bauvo_working_units.cli:main"

@@ -171,6 +171,8 @@ def execute_stage(stage,run,case,config):
                 raise ValueError('Existing working units use a different schema/protocol; start a fresh run to preserve evidence')
             if target.exists() and read(target).get('status')=='request_failed':
                 raise ValueError('Existing working units contain unresolved model requests; preserve them and start a fresh run')
+            if target.exists() and read(target).get('status')=='incomplete':
+                raise ValueError('Existing working units contain an incomplete stage; preserve them and replay in a fresh output')
             # Do not overwrite incomplete evidence; attempts have distinct trace directories.
             if not target.exists():
                 attempt=output/('attempt-'+uuid.uuid4().hex[:8]);attempt.mkdir()

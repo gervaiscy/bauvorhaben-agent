@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 from clause_fixtures import index_answer, answer_for
 import hashlib
@@ -21,12 +22,15 @@ class FocusedEvaluationTests(unittest.TestCase):
             def extract(self,prompt):
                 data=decode_prompt(prompt);kind=prompt.split('.',1)[0]
                 calls.append((kind,data))
+                if prompt.startswith('PAGE_CONSEQUENCES.'):
+                    out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                    return out
                 if kind=='PAGE_PROJECT_FACTS':return index_answer(data)
                 if kind=='PAGE_OFFERS':return {'offers':[]}
                 if kind=='PAGE_EXTRACTION':
                     return {'working_units':[{'name':'Task','dedupe_key':'task','action':'Do task','actor':'Owner',
                            'performed_by':None,'modality':'REQUIRED','citations':[]}],'offers':[],'carry_forward':''}
-                return {'assessments':[{'unit_id':u['id'],'unchanged':'Provider output','citations':[{'pdf_page':999,'quote':'bad citation'}]} for u in data['working_units']]}
+                return {'assessments':[{'unit_id':u['id'],**({'answer':'NOT_STATED'} if kind=='PAGE_TIMING' else {}),'unchanged':'Provider output','citations':[{'pdf_page':999,'quote':'bad citation'}]} for u in data['working_units']]}
         with tempfile.TemporaryDirectory() as tmp:
             output=Path(tmp)/'evaluation'
             summary=evaluation.run(output,'unused',model=Model())
@@ -35,9 +39,9 @@ class FocusedEvaluationTests(unittest.TestCase):
             self.assertTrue(all(row['status']=='needs_review' for row in summary))
             for kind,data in calls:
                 self.assertIn(kind,('PAGE_PROJECT_FACTS','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'))
-                self.assertLessEqual(len(data['source_pages']),10)
+                if kind!='PAGE_CONSEQUENCES': self.assertLessEqual(len(data['source_pages']),10)
                 self.assertFalse(set(data)&{'expected_units','expectations','forbidden_inferences','checks'})
-                self.assertLessEqual(len(data.get('working_units',[])),5)
+                self.assertLessEqual(len(data.get('working_units',[])),10 if kind=='PAGE_CONSEQUENCES' else 5)
             for path in output.rglob('raw.json'):
                 raw=json.loads(path.read_text());folder=path.parent
                 if (folder/'working-units.json').exists():

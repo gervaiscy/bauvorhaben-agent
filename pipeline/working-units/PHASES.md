@@ -531,9 +531,9 @@ Each source's later phases receive the saved facts plus their own source windows
 Working units use ten-page windows with one-page overlap inside document
 boundaries. Applicability receives all working units from their original window,
 all facts and the lean source payload. Timing retains its existing assessment
-window selection and five-working-unit batches. Offers and consequences additionally
-receive the full text of all project sources in every request, with source/document
-identities for cross-document citations.
+window selection and five-working-unit batches. Consequences uses ten-task batches
+with each task’s timing assessment, full BLB text and compact project facts, as
+described below.
 
 ## Outputs and resume
 
@@ -631,58 +631,66 @@ new response schema. Downstream consequences and applicability extend the saved
 artifact without rewriting its timing reviews. Source citation checks still apply.
 
 
-### Consequence source context
+### Consequences: timed tasks, compact assessments
 
-Every consequence request includes `source_documents` containing the complete text
-of all supplied documents, including other logical documents and context sources.
-The integrated pipeline supplies contracts, amendments and BLB sources to this phase.
-The local `source_pages` excerpt and window metadata identify the target tasks; they
-do not limit consequence evidence. Batches still contain at most five working units.
-All citations require `source_key`, `document_id`, `pdf_page` and an unchanged quote,
-and are checked against the same complete context. Duplicate source/document IDs
-with conflicting content are rejected before consequence calls.
+The current phase uses `timed-task-consequences-v1`. Both providers run the same
+German role/context/question prompt. The standalone switch is `--provider sol` or
+`--provider gemini` (default). Sol uses `gpt-6.1-sol` with medium reasoning by default;
+Gemini uses `gemini-3.5-flash` with MEDIUM thinking. `--reasoning-effort` changes Sol
+reasoning only. The sequential pipeline and general analysis CLI expose
+`--consequence-provider`, `--consequence-model` and `--consequence-reasoning`.
 
-The German prompt distinguishes EXPLICIT, DERIVED, MIXED and NOT_STATED, preserves
-alternatives and requires a brief explanation of each derived dependency. Standalone
-callers must supply all additional sources through `context_documents` (or matching
-`--context-pages` and `--context-documents`); unsupplied sources cannot be inferred.
+Every task must already have exactly one timing assessment. Missing, empty or
+ambiguous duplicate assessments block submission before any consequence request.
+An assessment of `NOT_STATED` is valid: it means there is no stated timing, not
+that noncompletion has no consequences. Historical structured timing assessments
+remain readable. Tasks, actors, original quotations and timing results are preserved.
 
-### Consequence extraction (schema 18, protocol v48)
+Each request contains up to **ten tasks**, batched across extraction windows and
+logical documents. Thus 110 tasks require 11 primary requests, with no action-scope
+or independent-verification passes. Existing bounded transport retries can repeat
+an unchanged failed/incomplete request and consume the same attempt budget.
 
-Each batch of at most five tasks is sent once as `PAGE_CONSEQUENCES`, with all
-original supplied project documents and amendments in `source_documents` and the
-full source-bound evidence catalog. There is no source-only assessment, comparison
-request, correction request, or reverification. There is no model-based citation
-repair for this stage either: invalid references are recorded as findings without
-another Gemini call. Existing transport retries may resend the unchanged request
-when the provider fails or returns an incomplete generation.
+The model receives only:
 
-The extraction prompt asks Gemini to inspect the complete document context for
-all consequences of each supplied task being omitted or late, check overriding
-agreements, and preserve conditions, exceptions, alternatives and modality. It
-separates explicit consequences from supported deductions and excludes ordinary
-responsibilities, included prices, positive benefits and unsupported inverse
-reasoning from failure consequences. NOT_STATED remains a valid result when no
-consequence is documented. The prompt requires exactly one assessment for each
-provided task ID; it must not invent additional tasks.
+- `working_units`: short keys U1…U10, each containing `title`, `actor`, `quote`, `timing`.
+- `source_documents`: all supplied BLB pages once, with document labels, titles,
+  original PDF page numbers and unchanged text.
+- `project_facts`: compact `{id, text}` entries, using source-backed fact text.
+- `source_scope`: whether BLB and facts or facts only were supplied.
 
-Each consequence retains its ID, classification, claim, failure trigger,
-conditions, exceptions, alternatives, citations, cited premises and reasoning.
-Original answers remain unchanged in `gemini_responses` and review `gemini`;
-canonical evidence bindings are stored separately in derived output. No
-`consequence_verification` state or model-verified label is produced. The
-standalone `*.consequences-only.json` contains the extracted assessments.
-Other stages retain their existing behavior.
+Raw contract pages are used locally to validate saved facts, but are not copied
+into the model request. BLB documents are selected by their explicit `blb` source
+role; when supplying a BLB through context CLI arguments, include `--context-type blb`.
+No evidence catalog, hashes, offsets, action graph or duplicated window is sent.
 
-The generic controls are in `evaluation/consequences/cases.json` at repository
-root. Offline tests verify complete context delivery, five-task batching,
-unchanged responses, local evidence findings without follow-up calls and exact
-request recovery. These tests do not measure Gemini's interpretation accuracy.
+The provider's schema is generated for the exact batch keys, including a final
+partial batch. Its output is simply:
 
-The units cache protocol is bumped. All prompt files participate in fingerprints;
-historical outputs are not rewritten or silently upgraded. Current stage entry
-points require schema 18 / v48 inputs. Completed batches in a failed current-
-protocol attempt can be replayed by the existing exact-request recovery mechanism.
+```json
+{"U1": {"classification": "DERIVED", "reasoning": "Bedingte Folge mit Fundstelle und wesentlichen Einschränkungen."}}
+```
+
+The only classifications are EXPLICIT, DERIVED and NOT_STATED. DERIVED also covers
+an answer combining expressly stated and derived consequences. The reasoning is
+the answer itself, including relevant conditions and alternatives. The prompt asks
+for a page/fact reference in prose. Those references are **not machine-validated**;
+there are no separate citation fields or claim-level source checks for this stage.
+
+Application validation checks exact task mapping, exact two-field objects, allowed
+classifications and nonempty reasoning. Invalid batches remain in raw history and
+block downstream processing; later independent batches still run. No semantic
+repair or verification request is issued. Structural completion does not establish
+legal correctness or semantic completeness.
+
+`result.json` is a readable working-unit list with the existing timing and one extra
+`consequences` object. `result.audit.json` retains the cumulative pipeline state,
+short-label mappings and input/prompt fingerprints. `result.validation.json` retains
+findings. Raw provider JSON, native diagnostics, exact prompts and partial results
+remain separate. Completed responses are cached before local validation; replay
+with the same `--cache-dir --max-new-calls 0` in a new output directory. Provider,
+model, reasoning effort, exact prompt and actual per-batch schema bind cache identity.
+Old high-effort or retired-schema responses are not relabelled as new responses.
 
 The 9 November 2026 facts protocol v7 (collection schema 11) requests one authoritative
 interpretation as cited claim statements. Readable interpretation is assembled locally;

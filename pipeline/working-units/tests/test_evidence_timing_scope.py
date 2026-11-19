@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 """Evidence and the activity it describes keep independent timing assessments."""
 import copy
@@ -52,6 +53,9 @@ class EvidenceTimingScopeTests(unittest.TestCase):
         calls=[];timing=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];calls.append(kind);data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             if kind=='PAGE_EXTRACTION':return {'working_units':copy.deepcopy(proposals),'offers':[],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
             ids=[u['id'] for u in data['working_units']]
@@ -65,5 +69,5 @@ class EvidenceTimingScopeTests(unittest.TestCase):
         delivery,evidence=result['working_units']
         self.assertEqual(delivery['reviews'][0]['gemini']['timing_rules'],rules)
         self.assertEqual(evidence['reviews'][0]['gemini']['timing_rules'],[])
-        self.assertEqual(evidence['reviews'][1]['gemini']['status'],'NOT_STATED')
+        self.assertEqual(evidence['reviews'][1]['gemini']['classification'],'NOT_STATED')
         self.assertEqual(result['gemini_responses'][2]['gemini'],timing[0])

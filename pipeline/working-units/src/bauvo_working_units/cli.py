@@ -42,6 +42,10 @@ def main() -> None:
     stages = {'project-facts':'PAGE_PROJECT_FACTS', 'aufgaben':'PAGE_EXTRACTION', 'offers':'PAGE_OFFERS',
               'timing':'PAGE_TIMING', 'consequences':'PAGE_CONSEQUENCES', 'applicability':'PAGE_APPLICABILITY'}
     parser.add_argument('--stop-after', choices=tuple(stages), default='applicability', help='Stop after this pass; later passes make no requests')
+    parser.add_argument('--consequence-provider', choices=('gemini', 'sol'), default='gemini')
+    parser.add_argument('--consequence-model')
+    parser.add_argument('--consequence-reasoning', choices=('low', 'medium', 'high'), default='medium')
+    parser.add_argument('--consequence-budget-usd', default='30')
     args = parser.parse_args()
     if args.max_new_calls < 0:
         parser.error('--max-new-calls must be nonnegative')
@@ -64,7 +68,7 @@ def main() -> None:
         parser.error("--raw-output, --output and derived project-facts output must be different files")
     if output.exists() or raw_output.exists() or facts_output.exists() or snapshots_dir.exists() or (units_output and units_output.exists()):
         parser.error('Output/raw-output already exists; use new output paths and reuse --cache-dir for resume')
-    if args.stop_after == 'timing':
+    if args.stop_after in ('timing', 'consequences'):
         from .phases.timing.artifact import output_paths
         if any(path.exists() for path in output_paths(output)):
             parser.error('Timing output/audit/validation already exists; use new output paths')
@@ -100,6 +104,15 @@ def main() -> None:
                           {'project':args.project, 'location':args.location, 'model':args.model},
                           budget=budget, plan_path=output.with_name(output.stem+'.request-plan.json'),
                           refresh_requests=args.refresh_request, plan_only=args.plan_only)
+    if args.stop_after in ('consequences', 'applicability'):
+        from .phases.consequences.backend import backend as consequence_backend, PhaseRouter
+        consequence_model = args.consequence_model or (args.model if args.consequence_provider == 'gemini' else None)
+        backend = PhaseRouter(backend, consequence_backend(output, args.cache_dir, budget,
+            provider=args.consequence_provider, project=args.project, location=args.location,
+            model=consequence_model, reasoning=args.consequence_reasoning,
+            max_cost_usd=args.consequence_budget_usd, plan_only=args.plan_only,
+            factory=(lambda: GeminiModel(args.project, args.location, consequence_model))
+                    if args.consequence_provider == 'gemini' else None))
     if args.replay_project_facts:
         from .phases.project_facts.revalidation import replay_project_facts
         source = Path(args.replay_project_facts)
@@ -131,8 +144,11 @@ def main() -> None:
         print("Plan only: reached requests replayed offline; status=" + result.get("status", "unknown") + "; 0 new calls")
         return
     output.parent.mkdir(parents=True, exist_ok=True)
-    if args.stop_after == 'timing':
-        from .phases.timing.artifact import write_outputs
+    if args.stop_after in ('timing', 'consequences'):
+        if args.stop_after == 'timing':
+            from .phases.timing.artifact import write_outputs
+        else:
+            from .phases.consequences.artifact import write_outputs
         write_outputs(output, result)
     else:
         output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -146,7 +162,9 @@ def main() -> None:
 
     if result.get('status') == 'incomplete':
         phase = 'offers' if any(f.get('code') == 'offer_validation_failed'
-                               for f in result.get('review_findings', [])) else 'project facts'
+                               for f in result.get('review_findings', [])) else (
+            'consequences' if any(f.get('code', '').startswith('consequence_')
+                                  for f in result.get('review_findings', [])) else 'project facts')
         raise SystemExit(f'Incomplete {phase}; output, raw answer and validation findings preserved')
     if result.get("status") == "request_failed":
         raise SystemExit("Unresolved model requests; partial output and raw attempts preserved")

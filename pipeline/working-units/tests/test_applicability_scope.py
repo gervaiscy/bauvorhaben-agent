@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 """Scope decisions stay provider-owned; timing/progress are not application filters."""
 import copy
@@ -22,6 +23,10 @@ class ApplicabilityScopeTests(unittest.TestCase):
         def extract(prompt):
             kind=prompt.split('.',1)[0];calls.append(kind)
             data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             if kind=='PAGE_EXTRACTION':
                 out={'working_units':copy.deepcopy(units),'offers':[],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
@@ -64,6 +69,9 @@ class ApplicabilityScopeTests(unittest.TestCase):
                 def extract(prompt):
                     kind=prompt.split('.',1)[0];calls.append(kind)
                     data=decode_prompt(prompt)
+                    if prompt.startswith('PAGE_CONSEQUENCES.'):
+                        out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                        return out
                     if kind=='PAGE_EXTRACTION':
                         return {'working_units':[{'action':'Prüfgebühren und Lieferkosten tragen',
                             'actor':'Kunde','citations':[{'pdf_page':1,'quote':pages[0]['text']}]}],
@@ -123,6 +131,9 @@ class ApplicabilityScopeTests(unittest.TestCase):
                 supplied=[]
                 def extract(prompt):
                     data=decode_prompt(prompt)
+                    if prompt.startswith('PAGE_CONSEQUENCES.'):
+                        out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                        return out
                     if prompt.startswith('PAGE_EXTRACTION.'):
                         return {'working_units':[{'action':'Beschriebene Aufgabe', 'actor':None,
                                 'performed_by':None, 'citations':[citation]}],'carry_forward':''}

@@ -55,7 +55,7 @@ class FactContextCitationTests(unittest.TestCase):
         self.assertEqual(fact['derived']['claims'][0]['verified_citations'], fact['derived']['verified_citations'][1:])
         self.assertEqual(fact['derived']['text'], self.doc.pages[0]['text'])
         self.assertEqual(result['gemini_responses'][0]['coverage']['missing_ids'], [])
-        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_APPLICABILITY'):
             data = json.loads(_prompt(phase, {'source_pages':[], 'project_facts':facts_view(result)}, 'de')
                               .split('SOURCE DATA:\n',1)[1])
             projected = data['project_facts']['facts'][0]

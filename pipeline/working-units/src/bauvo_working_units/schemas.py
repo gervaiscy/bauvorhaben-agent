@@ -20,12 +20,21 @@ RESPONSE_SCHEMAS = {
     'PAGE_OFFERS': obj({'offers': array(OFFER)}),
     'PAGE_APPLICABILITY': obj({'assessments': array(APPLICABILITY)}),
     'PAGE_TIMING': obj({'assessments': array(TIMING)}),
-    'PAGE_CONSEQUENCES': obj({'assessments': array(CONSEQUENCES)}),
+    'PAGE_CONSEQUENCES': CONSEQUENCES,
     'PAGE_CITATION_REPAIR': obj({'decisions': array(obj({
         'path': TEXT, 'status': {'type': 'string', 'enum': ['SUPPORTED', 'UNSUPPORTED', 'AMBIGUOUS']},
         'citations': CITATIONS, 'reason': TEXT}))}),
 }
 
+
+def response_schema_for(prompt):
+    """Strict per-request task keys for consequences; other phases are unchanged."""
+    import copy
+    phase = prompt.split('.', 1)[0]
+    if phase == 'PAGE_CONSEQUENCES':
+        from .phases.consequences.schema import schema_for_prompt
+        return copy.deepcopy(schema_for_prompt(prompt))
+    return copy.deepcopy(RESPONSE_SCHEMAS.get(phase))
 
 
 # Per-phase reasoning settings are owned alongside each phase response contract.

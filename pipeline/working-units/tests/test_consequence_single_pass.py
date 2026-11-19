@@ -1,5 +1,4 @@
-from clause_fixtures import decode_prompt
-"""One generation per consequence batch, with full sources and no model review/repair."""
+"""Consequence batching, strict timing preconditions, raw preservation and recovery."""
 import copy
 import json
 from pathlib import Path
@@ -7,166 +6,130 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
 
-from bauvo_working_units.page_flow import extract_page_units, PASS_RULES
 from bauvo_working_units.phases.consequences.stage import extract_consequences
-from bauvo_working_units.project_facts import collect_project_facts
-from bauvo_working_units.recovery import RequestRecovery
-from bauvo_working_units.schemas import RESPONSE_SCHEMAS, PHASE_THINKING_LEVELS
+from bauvo_working_units.phases.consequences.validation import response_findings
+from bauvo_working_units.phases.consequences.artifact import review_view, write_outputs, load_artifact
+from bauvo_working_units.cache import CachedModel
+from bauvo_working_units.call_budget import BudgetedModel, CallBudget, CallLimitExceeded
 from bauvo_working_units.trace import ModelRequestFailed, RawRunRecorder
-from consequence_fixtures import claim
-from test_consequence_full_context import document
+from consequence_fixtures import baseline, assessment_answer
 
 
 class ConsequenceSinglePassTests(unittest.TestCase):
-    def setUp(self):
-        self.docs = [document('D1', 'contract', [(1, 'Der Kunde reicht den Antrag ein.')])]
-        self.context = [document('D1', 'amendment', [(1, 'Ein gleichwertiger Nachweis genügt ebenfalls.')]),
-                        document('D1', 'blb', [(n, f'Vollständige Quellseite {n}.') for n in range(1, 13)], 'blb')]
-
-    def baseline(self, count=1):
-        def earlier(prompt):
-            data = decode_prompt(prompt); kind = prompt.split('.', 1)[0]
-            if kind == 'PAGE_EXTRACTION':
-                ref = {'evidence_id': data['evidence_catalog'][0]['evidence_id']}
-                return {'working_units': [{'name': 'Antrag', 'action': 'Antrag einreichen',
-                    'actor': 'Kunde', 'performed_by': 'Kunde', 'citations': [ref]} for _ in range(count)], 'carry_forward': ''}
-            if kind == 'PAGE_OFFERS': return {'offers': []}
-            return {'assessments': [{'unit_id': u['id'], 'answer': 'NOT_STATED', 'citations': []}
-                                    for u in data['working_units']]}
-        return extract_page_units(self.docs, SimpleNamespace(extract=earlier),
-            context_documents=self.context, stop_after='PAGE_TIMING',
-            project_facts=collect_project_facts([], SimpleNamespace(extract=lambda _: None)))
-
-    def run_stage(self, baseline, provider):
-        before = copy.deepcopy(baseline)
-        result = extract_consequences(baseline, self.docs, SimpleNamespace(extract=provider), context_documents=self.context)
-        self.assertEqual(baseline, before)
-        return result
-
-    def test_exactly_one_request_per_five_unit_batch_receives_all_full_documents(self):
-        baseline = self.baseline(6); calls = []; answers = []
+    def test_110_tasks_use_11_calls_across_documents_with_timing_and_full_blb_once(self):
+        saved, docs, context = baseline((55,55)); before = copy.deepcopy(saved); calls = []
         def provider(prompt):
             self.assertTrue(prompt.startswith('PAGE_CONSEQUENCES.'))
-            data = decode_prompt(prompt); calls.append(data)
-            self.assertFalse({'proposed_assessments', 'independent_assessments', 'verification'} & data.keys())
-            self.assertEqual(sum(len(d['pages']) for d in data['source_documents']), 14)
-            self.assertEqual({d['source_key'] for d in data['source_documents']}, {'contract', 'amendment', 'blb'})
-            for original in [*self.docs, *self.context]:
-                sent = next(d for d in data['source_documents'] if d['source_key'] == original.source_key)
-                self.assertEqual([p['text'] for p in sent['pages']], [p['text'] for p in original.pages])
-            self.assertTrue(all('reviews' not in u for u in data['working_units']))
-            answer = {'assessments': [{'unit_id': u['id'], 'status': 'NOT_STATED', 'consequences': []}
-                                      for u in data['working_units']]}
-            answers.append(copy.deepcopy(answer)); return answer
-        result = self.run_stage(baseline, provider)
-        self.assertEqual([len(c['working_units']) for c in calls], [5, 1])
-        added = result['gemini_responses'][len(baseline['gemini_responses']):]
-        self.assertEqual([r['pass'] for r in added], ['PAGE_CONSEQUENCES'] * 2)
-        self.assertEqual([r['gemini'] for r in added], answers)
-        self.assertEqual(result['review_findings'], [])
-        for before, after in zip(baseline['working_units'], result['working_units']):
-            self.assertEqual(before['gemini'], after['gemini'])
-            self.assertEqual(before['reviews'], after['reviews'][:-1])
-            self.assertNotIn('consequence_verification', after['derived'])
-            self.assertNotIn('verification', after['reviews'][-1]['derived'])
+            data = json.loads(prompt.split('SOURCE DATA:\n')[1]); calls.append(data)
+            self.assertEqual(len(data['working_units']), 10)
+            self.assertEqual(list(data['working_units']), [f'U{i+1}' for i in range(10)])
+            self.assertEqual(sum(len(d['pages']) for d in data['source_documents']), 26)
+            self.assertEqual([p['text'] for d in data['source_documents'] for p in d['pages']],
+                             [p['text'] for d in docs for p in d.pages])
+            self.assertNotIn(context[0].pages[0]['text'], [p['text'] for d in data['source_documents'] for p in d['pages']])
+            self.assertTrue(data['project_facts'])
+            for fact in data['project_facts']: self.assertEqual(set(fact), {'id','text'})
+            self.assertEqual(set(data), {'working_units','source_documents','project_facts','source_scope'})
+            for row in data['working_units'].values():
+                self.assertEqual(set(row), {'title','actor','quote','timing'})
+                self.assertEqual(row['timing'], {'answer':'NOT_STATED','citations':[]})
+            return assessment_answer(data)
+        result = extract_consequences(saved, docs, SimpleNamespace(extract=provider), context_documents=context)
+        self.assertEqual(len(calls), 11); self.assertEqual(result['status'], 'recorded')
+        self.assertEqual(saved, before)
+        for prior, after in zip(saved['working_units'], result['working_units']):
+            self.assertEqual(prior['reviews'], after['reviews'][:-1])
+            self.assertEqual(prior['gemini'], after['gemini'])
+            self.assertEqual(after['reviews'][-1]['gemini']['classification'], 'NOT_STATED')
+        self.assertEqual({r['pass'] for r in result['gemini_responses'][len(saved['gemini_responses']):]}, {'PAGE_CONSEQUENCES'})
 
-    def test_invalid_evidence_is_flagged_without_any_repair_or_review_call(self):
-        baseline = self.baseline(); calls = []; answer = None
-        def provider(prompt):
-            nonlocal answer
-            calls.append(prompt)
-            self.assertTrue(prompt.startswith('PAGE_CONSEQUENCES.'))
-            data = decode_prompt(prompt)
-            answer = {'assessments': [{'unit_id': data['working_units'][0]['id'], 'status': 'DERIVED',
-                                      'consequences': [claim({'evidence_id': 'E-not-in-the-catalog'})]}]}
-            return copy.deepcopy(answer)
-        result = self.run_stage(baseline, provider)
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(result['status'], 'needs_review')
-        self.assertIn('unknown_evidence_id', {f['code'] for f in result['review_findings']})
-        self.assertEqual(result['gemini_responses'][-1]['gemini'], answer)
-        self.assertEqual(result['working_units'][0]['reviews'][-1]['gemini'], answer['assessments'][0])
-        self.assertNotIn('repair', result['gemini_responses'][-1]['citation_evidence'])
-
-    def test_missing_and_unknown_task_results_are_preserved_without_regeneration(self):
-        for mode in ('missing', 'unknown', 'duplicate'):
+    def test_missing_empty_or_duplicate_timing_anywhere_blocks_all_calls(self):
+        saved, docs, context = baseline((11,))
+        for mode in ('missing','empty','duplicate'):
             with self.subTest(mode=mode):
-                baseline = self.baseline(); calls = []
-                def provider(prompt):
-                    calls.append(prompt); data = decode_prompt(prompt)
-                    row = {'unit_id': data['working_units'][0]['id'], 'status': 'NOT_STATED', 'consequences': []}
-                    if mode == 'unknown': row['unit_id'] = 'invented-task'
-                    return {'assessments': [] if mode == 'missing' else [row, row] if mode == 'duplicate' else [row]}
-                result = self.run_stage(baseline, provider)
-                self.assertEqual(len(calls), 1)
-                self.assertEqual(result['status'], 'needs_review')
-                self.assertIn({'missing': 'missing_review', 'unknown': 'unknown_review_target',
-                               'duplicate': 'duplicate_review_target'}[mode], {f['code'] for f in result['review_findings']})
+                broken = copy.deepcopy(saved); unit = broken['working_units'][-1]
+                timing = next(r for r in unit['reviews'] if r['kind']=='PAGE_TIMING')
+                if mode=='missing': unit['reviews'].remove(timing)
+                elif mode=='duplicate': unit['reviews'].append(copy.deepcopy(timing))
+                else: timing['gemini']['answer']='  '
+                with self.assertRaisesRegex(ValueError, 'requires exactly one timing'):
+                    extract_consequences(broken, docs, SimpleNamespace(extract=lambda _: self.fail('No provider calls')),
+                                         context_documents=context)
 
-    def test_failed_generation_keeps_failure_without_launching_another_analysis_pass(self):
-        baseline = self.baseline(); calls = []
+    def test_existing_timing_answer_and_citations_are_carried_into_each_task(self):
+        saved, docs, context = baseline(); timing=next(r for r in saved['working_units'][0]['reviews'] if r['kind']=='PAGE_TIMING')
+        timing['gemini']['answer']='Vor Baubeginn.'
         def provider(prompt):
-            calls.append(prompt); raise ModelRequestFailed([{'finish_reason': 'MAX_TOKENS'}])
-        result = self.run_stage(baseline, provider)
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(result['status'], 'request_failed')
-        self.assertEqual(result['gemini_responses'][-1]['status'], 'request_failed')
-        self.assertEqual(result['working_units'], baseline['working_units'])
-
-    def test_successful_batch_is_recovered_after_later_batch_interruption(self):
-        baseline = self.baseline(6); calls = []
-        class Provider:
-            last_raw_response = None
-            last_finish_reason = None
-            interrupt = True
-            def extract(self, prompt):
-                self.last_raw_response = None; self.last_finish_reason = None
-                data = decode_prompt(prompt); calls.append(data)
-                if len(data['working_units']) == 1 and self.interrupt: raise KeyboardInterrupt()
-                answer = {'assessments': [{'unit_id': u['id'], 'status': 'NOT_STATED', 'consequences': []}
-                                          for u in data['working_units']]}
-                self.last_raw_response = json.dumps(answer); self.last_finish_reason = 'STOP'
-                return answer
+            data=json.loads(prompt.split('SOURCE DATA:\n')[1]);self.assertEqual(data['working_units']['U1']['timing']['answer'],'Vor Baubeginn.')
+            return assessment_answer(data,'DERIVED','Fehlt das Bauwasser, bleibt die Startvoraussetzung unerfüllt (BLB-PDF-Seite 1).')
+        result=extract_consequences(saved,docs,SimpleNamespace(extract=provider),context_documents=context)
         with TemporaryDirectory() as tmp:
-            root = Path(tmp); old = root/'old'; provider = Provider()
-            identity = {'project': 'unused', 'location': 'global', 'model': 'fixture'}
-            model = RawRunRecorder(RequestRecovery(provider, old, [], identity), old/'raw.json')
-            with self.assertRaises(KeyboardInterrupt):
-                extract_consequences(baseline, self.docs, model, context_documents=self.context)
-            before = {p: p.read_bytes() for p in old.rglob('*') if p.is_file()}
-            provider.interrupt = False
-            recovery = RequestRecovery(provider, root/'new', [old], identity)
-            result = extract_consequences(baseline, self.docs, recovery, context_documents=self.context)
-            self.assertEqual(recovery.reused, 1)
-            self.assertEqual([len(c['working_units']) for c in calls], [5, 1, 1])
-            self.assertEqual(result['status'], 'recorded')
-            self.assertEqual(before, {p: p.read_bytes() for p in old.rglob('*') if p.is_file()})
+            output=Path(tmp)/'result.json';write_outputs(output,result)
+            view=json.loads(output.read_text());self.assertEqual(set(view['working_units'][0]['consequences']),{'classification','reasoning'})
+            self.assertEqual(load_artifact(output),result)
+            view['working_units'][0]['consequences']['reasoning']='Modified';output.write_text(json.dumps(view))
+            with self.assertRaisesRegex(ValueError,'does not match'):load_artifact(output)
 
-    def test_only_generation_contract_is_registered_for_consequences(self):
-        for registry in (RESPONSE_SCHEMAS, PHASE_THINKING_LEVELS, PASS_RULES):
-            self.assertEqual([name for name in registry if name.startswith('PAGE_CONSEQUENCES')], ['PAGE_CONSEQUENCES'])
-        row = RESPONSE_SCHEMAS['PAGE_CONSEQUENCES']['properties']['assessments']['items']
-        self.assertEqual(set(row['required']), {'unit_id', 'status', 'consequences'})
-        fields = row['properties']['consequences']['items']['properties']
-        self.assertTrue({'trigger', 'conditions', 'exceptions', 'alternatives', 'citations', 'premises', 'reasoning'} <= fields.keys())
+    def test_invalid_completed_answer_is_preserved_and_replayed_without_regeneration(self):
+        saved, docs, context=baseline(); calls=[]
+        answer={'U1':{'classification':'EXPLICIT','reasoning':'Supported wording','extra':'not allowed'}}
+        def provider(prompt):calls.append(prompt);return copy.deepcopy(answer)
+        with TemporaryDirectory() as tmp:
+            cached=CachedModel(SimpleNamespace(extract=provider),tmp,{'model':'fixture'})
+            for _ in range(2):
+                result=extract_consequences(saved,docs,cached,context_documents=context)
+                self.assertEqual(result['status'],'incomplete')
+                self.assertEqual(result['gemini_responses'][-1]['gemini'],answer)
+                self.assertEqual(result['working_units'],saved['working_units'])
+            self.assertEqual(len(calls),1)
 
-    def test_generic_controls_send_only_original_sources_and_tasks_with_the_current_prompt(self):
-        root = Path(__file__).resolve().parents[3]
-        cases = json.loads((root/'evaluation/consequences/cases.json').read_text())['cases']
-        for case in cases:
-            with self.subTest(case=case['id']):
-                baseline = self.baseline()
-                self.context = [document('D1', f'source-{i}', [(1, text)]) for i, text in enumerate(case['sources'])]
-                baseline['working_units'][0]['gemini']['action'] = case['task']
-                calls = []
-                def provider(prompt):
-                    self.assertTrue(prompt.startswith('PAGE_CONSEQUENCES.'))
-                    self.assertIn(PASS_RULES['PAGE_CONSEQUENCES'], prompt)
-                    data = decode_prompt(prompt); calls.append(data)
-                    self.assertFalse({'expected', 'expected_review', 'reason', 'corrected', 'proposed'} & data.keys())
-                    self.assertEqual(data['working_units'][0]['action'], case['task'])
-                    texts = [p['text'] for d in data['source_documents'] for p in d['pages']]
-                    self.assertTrue(all(source in texts for source in case['sources']))
-                    return {'assessments': [{'unit_id': data['working_units'][0]['id'], 'status': 'NOT_STATED', 'consequences': []}]}
-                self.run_stage(baseline, provider)
-                self.assertEqual(len(calls), 1)
+    def test_wrong_keys_classification_and_empty_reasoning_are_blocking(self):
+        for answer in ([],{}, {'U2':{'classification':'EXPLICIT','reasoning':'X'}},
+                       {'U1':{'classification':'MIXED','reasoning':'X'}},
+                       {'U1':{'classification':'DERIVED','reasoning':'  '}}):
+            self.assertTrue(response_findings(answer,{'U1':'original-task'}))
+
+    def test_standalone_downstream_cannot_bypass_incomplete_consequences(self):
+        from bauvo_working_units.phases.applicability.stage import extract_applicability
+        saved,docs,context=baseline()
+        result=extract_consequences(saved,docs,SimpleNamespace(extract=lambda _: {}),context_documents=context)
+        self.assertEqual(result['status'],'incomplete')
+        with self.assertRaisesRegex(ValueError,'Complete consequences'):
+            extract_applicability(result,docs,SimpleNamespace(extract=lambda _: self.fail('No downstream call')),
+                                  context_documents=context)
+
+    def test_entire_plan_is_checked_before_provider_calls(self):
+        saved, docs, context=baseline((11,))
+        with TemporaryDirectory() as tmp:
+            budget=CallBudget(1); backend=CachedModel(BudgetedModel(lambda:self.fail('No provider creation'),budget),tmp,{'model':'fixture'},budget=budget)
+            with self.assertRaises(CallLimitExceeded):extract_consequences(saved,docs,backend,context_documents=context)
+            self.assertEqual(budget.used,0)
+
+    def test_failed_batch_does_not_discard_later_success_or_trigger_other_passes(self):
+        saved,docs,context=baseline((11,));calls=[]
+        def provider(prompt):
+            calls.append(prompt)
+            if len(calls)==1:raise ModelRequestFailed([{'reason':'timeout'}])
+            return assessment_answer(json.loads(prompt.split('SOURCE DATA:\n')[1]))
+        result=extract_consequences(saved,docs,SimpleNamespace(extract=provider),context_documents=context)
+        self.assertEqual(len(calls),2);self.assertEqual(result['status'],'request_failed')
+        self.assertEqual(sum(any(r['kind']=='PAGE_CONSEQUENCES' for r in u['reviews']) for u in result['working_units']),1)
+        self.assertEqual(result['gemini_responses'][-2]['status'],'request_failed')
+
+    def test_recovery_reuses_completed_batch_after_interruption_with_exact_raw_json(self):
+        saved,docs,context=baseline((11,));calls=[]
+        class Provider:
+            interrupt=True
+            def extract(self,prompt):
+                calls.append(prompt);self.last_raw_response=None;self.last_finish_reason=None
+                data=json.loads(prompt.split('SOURCE DATA:\n')[1])
+                if len(data['working_units'])==1 and self.interrupt:raise KeyboardInterrupt()
+                value=assessment_answer(data);self.last_raw_response=json.dumps(value);self.last_finish_reason='STOP';return value
+        with TemporaryDirectory() as tmp:
+            provider=Provider();cached=CachedModel(provider,Path(tmp)/'cache',{'model':'fixture'})
+            with self.assertRaises(KeyboardInterrupt):extract_consequences(saved,docs,RawRunRecorder(cached,Path(tmp)/'old.json'),context_documents=context)
+            provider.interrupt=False
+            result=extract_consequences(saved,docs,RawRunRecorder(cached,Path(tmp)/'new.json'),context_documents=context)
+            self.assertEqual(result['status'],'recorded');self.assertEqual(len(calls),3)
+            raw=json.loads((Path(tmp)/'new.json').read_text());self.assertEqual(len(raw),2)
+            self.assertEqual(raw[0],assessment_answer({'working_units':{f'U{i+1}':{} for i in range(10)}}))

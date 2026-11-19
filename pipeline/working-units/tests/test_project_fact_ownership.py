@@ -96,7 +96,7 @@ class ProvisionOwnershipTests(unittest.TestCase):
             result = collect_historical_facts([doc], SimpleNamespace(extract=provider))
             self.assertEqual(result['status'], 'recorded')
             self.assertEqual(facts_view(result)['facts'][0]['status'], status)
-            for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
+            for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_APPLICABILITY'):
                 data = payload(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de'))
                 if phase == 'PAGE_TIMING':
                     self.assertEqual(data['project_facts'], {'facts': [{'id': f['id'], 'text': f['text']} for f in facts_view(result)['facts']]})

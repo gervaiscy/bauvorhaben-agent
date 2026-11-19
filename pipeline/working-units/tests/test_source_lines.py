@@ -101,7 +101,7 @@ class VersionedClauseIndexTests(unittest.TestCase):
         self.assertEqual(len(facts['gemini_responses'][0]['coverage']['indexed_ids']),3)
         self.assertEqual([f['derived']['text'] for f in facts['facts']],expected)
         self.assertEqual(validate_facts(facts,[doc]),facts)
-        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_APPLICABILITY'):
             data=json.loads(_prompt(phase,{'source_pages':[], 'project_facts':facts_view(facts)},'de')
                             .split('SOURCE DATA:\n')[1])
             if phase == 'PAGE_EXTRACTION':
@@ -121,7 +121,7 @@ class VersionedClauseIndexTests(unittest.TestCase):
         self.assertEqual(facts['facts'][0]['derived']['text'],doc.pages[0]['text'])
         before=copy.deepcopy(facts)
         self.assertEqual(validate_facts(facts,[doc]),facts)
-        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_APPLICABILITY'):
             data={'source_pages':[], 'project_facts':facts_view(facts)}
             actual=json.loads(_prompt(phase,data,'de').split('SOURCE DATA:\n')[1])
             if phase == 'PAGE_EXTRACTION':

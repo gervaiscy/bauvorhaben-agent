@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 from clause_fixtures import index_answer, answer_for
 """Pass ownership, context identity and raw evidence are application contracts."""
@@ -56,6 +57,10 @@ class PassResponsibilitiesTests(unittest.TestCase):
         calls=[];answers=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             citation={'pdf_page':1,'quote':data['source_pages'][0]['text']}
             if kind=='PAGE_EXTRACTION':
                 out={'working_units':[{'name':'Lichtplanung','action':'Lichtplanung optional beauftragen',
@@ -126,10 +131,14 @@ class PassResponsibilitiesTests(unittest.TestCase):
         calls=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             if kind=='PAGE_EXTRACTION':return {'working_units':[{'action':'Anlage installieren',
                 'citations':[{'pdf_page':1,'quote':source.pages[0]['text']}]}],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
             if kind=='PAGE_APPLICABILITY':calls.append(data)
+            if kind=='PAGE_TIMING':return {'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]} for u in data['working_units']]}
             return {'assessments':[{'unit_id':u['id'],'missing_evidence':['Paketwahl'],
                     'applicability':'CONDITIONAL','citations':[]} for u in data['working_units']]}
         result=extract_page_units([source],SimpleNamespace(extract=extract))
@@ -167,11 +176,15 @@ class ProjectContextCliTests(unittest.TestCase):
                 def __init__(self,*args):pass
                 def extract(self,prompt):
                     kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
+                    if prompt.startswith('PAGE_CONSEQUENCES.'):
+                        out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                        answers.append(out)
+                        return out
                     if kind=='PAGE_PROJECT_FACTS':out=index_answer(data)
                     elif kind=='PAGE_EXTRACTION':out={'working_units':[{'action':'Owner task',
                         'citations':[{'pdf_page':1,'quote':'Owner must complete task 1.'}]}],'carry_forward':''}
                     elif kind=='PAGE_OFFERS':out={'offers':[]}
-                    else:out={'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
+                    else:out={'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]} for u in data['working_units']]}
                     answers.append(copy.deepcopy(out));return out
             argv=['units','--pages',str(local/'pages.json'),'--documents',str(local/'documents.json'),
                   '--context-pages',str(external/'pages.json'),'--context-documents',str(external/'documents.json'),
@@ -194,9 +207,12 @@ class ContextFindingTests(unittest.TestCase):
         source=doc('blb','Eine Aufgabe ist genannt.')
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             if kind=='PAGE_EXTRACTION':return {'working_units':[{'action':'Aufgabe erledigen','citations':[]}],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
-            return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
+            return {'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]} for u in data['working_units']]}
         result=extract_page_units([source],SimpleNamespace(extract=extract))
         self.assertEqual(len([f for f in result['review_findings'] if f['code']=='assessment_context_unresolved']),1)
 
@@ -207,6 +223,9 @@ class OverlapIdentityTests(unittest.TestCase):
         calls=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             if kind in ('PAGE_EXTRACTION','PAGE_OFFERS'):
                 page=next(p['pdf_page'] for p in data['source_pages'] if p['primary'])
                 c={'pdf_page':page,'quote':data['source_pages'][0]['text']}
@@ -214,7 +233,7 @@ class OverlapIdentityTests(unittest.TestCase):
                     'actor':'Kunde','performed_by':'Kunde','citations':[c]}],'carry_forward':''}
                 return {'offers':[{'name':'Zusatzpaket','description':'Zusatzpaket','provider':None,'terms':[],
                     'citations':[{'passage':data['source_pages'][0]['passages'][0]['passage']}]}]}
-            return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
+            return {'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]} for u in data['working_units']]}
         result=extract_page_units([source],SimpleNamespace(extract=extract))
         self.assertEqual(len(result['working_units']),2)
         self.assertEqual(len({u['id'] for u in result['working_units']}),2)

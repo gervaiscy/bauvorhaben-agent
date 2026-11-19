@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import copy
 from typing import Any
-from .schemas import generation_for, RESPONSE_SCHEMAS
+from .schemas import generation_for, RESPONSE_SCHEMAS, response_schema_for
 
 
 class IncompleteResponse(ValueError):
@@ -35,7 +35,7 @@ class GeminiModel:
         self.last_diagnostics = None
         phase = prompt.split('.', 1)[0]
         config = self._types.GenerateContentConfig(**generation_for(phase),
-            **({'response_json_schema': RESPONSE_SCHEMAS[phase]} if phase in RESPONSE_SCHEMAS else {}))
+            **({'response_json_schema': response_schema_for(prompt)} if phase in RESPONSE_SCHEMAS else {}))
         settings = (config.model_dump(mode='json', exclude_none=True)
                     if hasattr(config, 'model_dump') else copy.deepcopy(config))
         self.last_diagnostics = {'requested_model': self._model, 'generation_config': settings,

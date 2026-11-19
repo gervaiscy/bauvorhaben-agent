@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 import copy
 import json
@@ -77,11 +78,15 @@ class DateCalculationTests(unittest.TestCase):
         answers=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             if kind=='PAGE_EXTRACTION':out={'working_units':[{'action':'Freigabe vorlegen','citations':[self.citation]}],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
             elif kind=='PAGE_TIMING':out={'assessments':[{'unit_id':data['working_units'][0]['id'],'status':'EXPLICIT',
                 'timing_rules':[copy.deepcopy(self.rule)],'missing_evidence':[]}]}
-            else:out={'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
+            else:out={'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]} for u in data['working_units']]}
             answers.append(copy.deepcopy(out));return out
         result=extract_page_units([self.doc],SimpleNamespace(extract=extract),supported_anchors=self.anchors)
         review=next(r for r in result['working_units'][0]['reviews'] if r['kind']=='PAGE_TIMING')
@@ -135,6 +140,10 @@ class FivePassTests(unittest.TestCase):
         calls=[];answers=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt);calls.append((kind,data))
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             page=data.get('primary_pages',[data['source_pages'][0]['pdf_page']])[0];citation={'pdf_page':page,'quote':text}
             if kind=='PAGE_EXTRACTION':
                 out={'working_units':[{'action':'Planung bestätigen','actor':'Kunde','performed_by':'Kunde',
@@ -143,8 +152,8 @@ class FivePassTests(unittest.TestCase):
                 primary=next(p for p in data['source_pages'] if p['primary'])
                 out={'offers':[{'name':'Zusatzplanung','provider':'Anbieter','description':'Zusatzplanung',
                     'terms':['100 Euro'],'citations':[{'passage':primary['passages'][0]['passage']}]}]}
-            else:out={'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','timing_rules':[],
-                                      'consequences':[],'citations':[]} for u in data['working_units']]}
+            else:out={'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED',
+                                      'citations':[]} for u in data['working_units']]}
             answers.append(copy.deepcopy(out));return out
         result=extract_page_units(docs,SimpleNamespace(extract=extract))
         self.assertEqual([w['pages'] for w in result['windows']],[list(range(1,11)),list(range(10,20)),[19,20],[21]])
@@ -153,6 +162,7 @@ class FivePassTests(unittest.TestCase):
         self.assertTrue(all(len(u['reviews'])==3 for u in result['working_units']))
         self.assertEqual([r['gemini'] for r in result['gemini_responses']],answers)
         for kind,data in calls:
+            if kind=='PAGE_CONSEQUENCES':continue
             self.assertLessEqual(len(data['source_pages']),10)
             if kind!='PAGE_OFFERS' and data['document']['id']=='D2':
                 self.assertEqual([p['pdf_page'] for p in data['source_pages']],[21])

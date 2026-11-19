@@ -74,7 +74,7 @@ class FullContractFactsTests(unittest.TestCase):
         self.assertEqual(validate_facts(result,docs),result)
         for doc in docs:
             self.assertEqual(document_facts_view(result,doc)['facts'][0]['id'],fact['id'])
-        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_APPLICABILITY'):
             payload={'source_pages':[], 'project_facts':facts_view(result)}
             actual=json.loads(_prompt(phase,payload,'de').split('SOURCE DATA:\n')[1])
             selected=actual['project_facts']['facts'][0]

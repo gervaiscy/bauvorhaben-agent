@@ -173,6 +173,8 @@ def extract_project_units(documents: list[Document], model: Model,
                 result['gemini_responses'] = copy.deepcopy(facts['gemini_responses']) + result['gemini_responses']
             result['review_findings'] = copy.deepcopy(facts['review_findings']) + result['review_findings']
             result['status'] = ('request_failed' if any(f['code']=='model_request_failed' for f in result['review_findings'])
+                                else 'incomplete' if any(f['code'] in ('consequence_validation_failed', 'offer_validation_failed', 'consequence_input_invalid')
+                                                        for f in result['review_findings'])
                                 else 'needs_review' if result['review_findings'] else 'recorded')
             return result
 

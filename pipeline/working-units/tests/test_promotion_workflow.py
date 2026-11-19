@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 """Empty extraction and optional activities remain provider-owned, with no text filters."""
 import copy
@@ -23,6 +24,9 @@ class PromotionWorkflowTests(unittest.TestCase):
         def extract(prompt):
             kind=prompt.split('.',1)[0]
             payload=decode_prompt(prompt);calls.append(kind)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             self.assertEqual(payload['source_pages'][0]['text'],case['pages'][0]['text'])
             self.assertFalse(set(payload)&{'expected_units','expected_offers','expectations','forbidden_inferences'})
             if kind=='PAGE_EXTRACTION':return {'working_units':copy.deepcopy(units),'carry_forward':''}
@@ -65,6 +69,10 @@ class PromotionWorkflowTests(unittest.TestCase):
         calls=[];answers=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];calls.append(kind);data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             if kind=='PAGE_EXTRACTION':out={'working_units':[copy.deepcopy(unit)],'offers':[],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
             else:

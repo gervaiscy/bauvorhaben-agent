@@ -5,13 +5,13 @@ import json
 # Bump the affected protocol when orchestration changes a stage's input/output meaning.
 PROTOCOL={stage:1 for stage in ('extract','units','reconcile','review','timing','report')}
 PROTOCOL['extract']=36
-PROTOCOL['units']=127
+PROTOCOL['units']=134
 for stage in ('reconcile','review','timing','report'):PROTOCOL[stage]=2
 PROTOCOL['full_context_review']=1
 FILES={
  'full_context_review':['scripts/manual_applicability_review.py','scripts/review_alternatives.py','scripts/cache_binding.py'],
  'extract':['pipeline/working-units/src/bauvo_working_units/call_budget_ledger.py','pipeline/working-units/src/bauvo_working_units/__init__.py','pipeline/pdf-extractor/*.py','pipeline/pdf-extractor/prompt.txt','pipeline/document-boundaries/*.py','pipeline/document-boundaries/prompt.txt','scripts/extraction_acceptance.py'],
- 'units':['scripts/bauvo.py','scripts/extraction_acceptance.py','pipeline/working-units/src/**/*.py','pipeline/working-units/src/**/*.txt','pipeline/working-units/src/**/recovery-bindings.json','pipeline/enrich_working_units.py','pipeline/customer_report.py','pipeline/source_integrity.py'],
+ 'units':['scripts/bauvo.py','scripts/extraction_acceptance.py','requirements.txt','requirements.lock','pipeline/requirements.txt','pipeline/working-units/pyproject.toml','pipeline/working-units/src/**/*.py','pipeline/working-units/src/**/*.txt','pipeline/working-units/src/**/recovery-bindings.json','pipeline/enrich_working_units.py','pipeline/customer_report.py','pipeline/source_integrity.py'],
  'reconcile':['pipeline/batched_report.py','pipeline/customer_report.py','pipeline/enrich_working_units.py','pipeline/source_integrity.py','pipeline/report_schema.py'],
  'review':['pipeline/document_review.py','pipeline/document_report.py','pipeline/customer_report.py','pipeline/document_planning.py','pipeline/enrich_working_units.py','pipeline/source_integrity.py','pipeline/report_schema.py'],
  'timing':['pipeline/timing_assessment.py','pipeline/price_anchor.py','pipeline/customer_report.py','pipeline/enrich_working_units.py','pipeline/source_integrity.py','pipeline/report_schema.py'],

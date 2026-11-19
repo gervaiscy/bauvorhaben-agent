@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 import copy
 import json
@@ -67,12 +68,15 @@ class AssessmentContextTests(unittest.TestCase):
         doc = document(end=7);before = copy.deepcopy(doc.pages);calls = []
         def extract(prompt):
             data = decode_prompt(prompt);kind = prompt.split('.',1)[0];calls.append((kind,data))
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             if kind == 'PAGE_OFFERS':return {'offers': []}
             if kind == 'PAGE_EXTRACTION':
                 units = [{'action': 'Approve plan', 'citations': [{'pdf_page': 5, 'quote': 'Task on page 5.'}]}] if any(p['pdf_page']==5 and p['primary'] for p in data['source_pages']) else []
                 return {'working_units': units, 'offers': [], 'carry_forward': ''}
             self.assertEqual([p['pdf_page'] for p in data['source_pages']], [1,2,3,4,5] if kind=='PAGE_APPLICABILITY' else [5,6,7])
-            return {'assessments': [{'unit_id': u['id'], 'status': 'NOT_STATED', 'citations': []} for u in data['working_units']]}
+            return {'assessments': [{'unit_id': u['id'], 'answer': 'NOT_STATED', 'citations': []} for u in data['working_units']]}
         result = extract_page_units([doc], SimpleNamespace(extract=extract), chunk_pages=5)
         self.assertEqual([[p['pdf_page'] for p in d['source_pages'] if p['primary']] for k,d in calls if k=='PAGE_EXTRACTION'], [[1,2,3,4,5],[6,7]])
         self.assertEqual([k for k,_ in calls if k not in ('PAGE_EXTRACTION','PAGE_OFFERS')], ['PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'])
@@ -161,8 +165,9 @@ class RetryEvidenceTests(unittest.TestCase):
             data=decode_prompt(prompt)
             if kind=='PAGE_EXTRACTION':return response(json.dumps({'working_units':[{'action':'Do task','citations':[{'pdf_page':1,'quote':'Task on page 1.'}]}],'offers':[],'carry_forward':''}))
             if kind=='PAGE_OFFERS':return response('{"offers": []}')
+            if kind=='PAGE_CONSEQUENCES':return response(json.dumps(assessment_answer(data)))
             if kind=='PAGE_APPLICABILITY':return response('{broken','MAX_TOKENS')
-            return response(json.dumps({'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}))
+            return response(json.dumps({'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]} for u in data['working_units']]}))
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'raw.json';model=RetryingModel(RawRunRecorder(adapter(generate),path))
             result=extract_page_units([document(end=1)],model)
@@ -197,12 +202,13 @@ class PartialBatchEvidenceTests(unittest.TestCase):
             data=decode_prompt(prompt);calls.append((kind,prompt))
             if kind=='PAGE_EXTRACTION':
                 return response(json.dumps({'working_units':[{'action':f'Task {i}',
-                    'citations':[{'pdf_page':1,'quote':'Task on page 1.'}]} for i in range(6)],
+                    'citations':[{'pdf_page':1,'quote':'Task on page 1.'}]} for i in range(11)],
                     'offers':[],'carry_forward':''}))
             if kind=='PAGE_OFFERS':return response('{"offers": []}')
             units=data['working_units']
             if kind=='PAGE_CONSEQUENCES' and len(units)==1:
                 return response('{unfinished repeating repeating','MAX_TOKENS')
+            if kind=='PAGE_CONSEQUENCES':return response(json.dumps(assessment_answer(data)))
             rows=[]
             for unit in units:
                 row={'unit_id':unit['id']}
@@ -217,16 +223,16 @@ class PartialBatchEvidenceTests(unittest.TestCase):
             model=RetryingModel(TracingModel(RawRunRecorder(adapter(generate),folder/'raw.json'),folder/'trace'))
             result=extract_page_units([document(end=1)],model)
             self.assertEqual(result['status'],'request_failed')
-            self.assertEqual(len(result['working_units']),6)
-            self.assertEqual([len(u['reviews']) for u in result['working_units']],[3,3,3,3,3,2])
+            self.assertEqual(len(result['working_units']),11)
+            self.assertEqual([len(u['reviews']) for u in result['working_units']],[2]*10+[1])
             failure=[f for f in result['review_findings'] if f['code']=='model_request_failed']
             self.assertEqual(len(failure),1);self.assertEqual(len(failure[0]['attempts']),2)
             failed_calls=[p for k,p in calls if k=='PAGE_CONSEQUENCES']
             self.assertEqual(len(failed_calls),3);self.assertEqual(failed_calls[1],failed_calls[2])
             self.assertNotIn('{unfinished repeating repeating',failed_calls[2])
-            self.assertEqual(len([f for f in result['review_findings'] if f['code']=='suspicious_text_character']),6)
+            self.assertFalse(any(k=='PAGE_APPLICABILITY' for k,_ in calls))
             raw=json.loads((folder/'raw.json').read_text())
-            self.assertEqual(raw[-1]['assessments'][0]['reason'],'W\u0004nde')
+            self.assertEqual(raw[-1],'{unfinished repeating repeating')
             self.assertEqual([r for r in raw if isinstance(r,str)],['{unfinished repeating repeating']*2)
             self.assertEqual(len([p for p in (folder/'trace').glob('*-response.json') if p.read_text()=='{unfinished repeating repeating']),2)
             attempts=json.loads((folder/'raw.attempts.json').read_text())

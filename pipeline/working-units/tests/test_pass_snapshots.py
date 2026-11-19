@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 from clause_fixtures import index_answer, answer_for
 """Explicit BLB exclusion and cumulative snapshots are independently observable."""
@@ -29,6 +30,9 @@ class Model:
         self.calls=[];self.fail_timing=fail_timing
     def extract(self,prompt):
         kind=prompt.split('.',1)[0];data=decode_prompt(prompt);self.calls.append((kind,data))
+        if prompt.startswith('PAGE_CONSEQUENCES.'):
+            out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+            return out
         if kind=='PAGE_PROJECT_FACTS':return index_answer(data)
         c={'pdf_page':data['source_pages'][-1]['pdf_page'],'quote':data['source_pages'][-1]['text']}
         if kind=='PAGE_EXTRACTION':return {'working_units':[{'name':'Planung','action':'Planung bestätigen',
@@ -124,7 +128,7 @@ class CumulativeSnapshotTests(unittest.TestCase):
         self.assertEqual(saved[1][1]['status'],'recorded')
         self.assertEqual(saved[3][1]['status'],'request_failed')
         self.assertEqual(result['status'],'request_failed')
-        self.assertEqual(len(result['working_units'][0]['reviews']),2)
+        self.assertEqual(len(result['working_units'][0]['reviews']),0)
         self.assertEqual(saved[1][1]['working_units'][0]['reviews'],[])
         self.assertEqual(next(f for f in result['review_findings'] if f['code']=='model_request_failed')['pass'],'PAGE_TIMING')
 

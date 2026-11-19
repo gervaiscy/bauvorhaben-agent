@@ -41,6 +41,12 @@ def _payload(document, chunk):
 
 
 def _prompt(pass_name, payload, language):
+    if pass_name == 'PAGE_CONSEQUENCES':
+        from .phases.consequences.schema import response_schema
+        language_rule = '' if language == 'de' else '\nWrite reasoning in English.\n'
+        return (pass_name + '.\n' + PASS_RULES[pass_name].rstrip() + language_rule
+                + '\nRESPONSE SCHEMA:\n' + json.dumps(response_schema(payload['working_units']), ensure_ascii=False)
+                + '\nSOURCE DATA:\n' + json.dumps(payload, ensure_ascii=False))
     if pass_name == 'PAGE_TIMING':
         from .phases.timing.payload import model_payload
         from .schemas import RESPONSE_SCHEMAS
@@ -344,7 +350,7 @@ def extract_page_units(documents, model, max_chars=80000, chunk_pages=10, overla
                    if 'PAGE_OFFERS' in completed_passes else {}),
                 'gemini_responses': responses, 'review_findings': findings,
                 'status': 'request_failed' if any(f['code']=='model_request_failed' for f in findings)
-                    else 'incomplete' if any(f['code']=='offer_validation_failed' for f in findings)
+                    else 'incomplete' if any(f['code'] in ('offer_validation_failed', 'consequence_validation_failed', 'consequence_input_invalid') for f in findings)
                     else 'needs_review' if findings else 'recorded'}
 
     def save_pass(pass_name):
@@ -378,7 +384,7 @@ def extract_page_units(documents, model, max_chars=80000, chunk_pages=10, overla
     from .call_budget import prepare_requests
     ctx = SimpleNamespace(documents=documents, context_documents=context_documents, chunks=chunks, units=units, offers=offers,
         windows=windows, findings=findings, responses=responses, anchors=anchors, project_facts=project_facts,
-        extraction_context=extraction_context, request=request, metadata=metadata,
+        extraction_context=extraction_context, request=request, metadata=metadata, model=model, language=language,
         plan_requests=lambda prompts: prepare_requests(model, prompts),
         resolved_response=lambda rid: resolved_responses.get(rid),
         save_batch=lambda: on_batch(copy.deepcopy(current_result())) if on_batch is not None else None)
@@ -389,6 +395,8 @@ def extract_page_units(documents, model, max_chars=80000, chunk_pages=10, overla
             continue
         phase.run(ctx)
         save_pass(phase.PASS)
-        if stop_after == phase.PASS or any(f['code'] == 'offer_validation_failed' for f in findings):
+        if stop_after == phase.PASS or any(f['code'] in ('offer_validation_failed', 'consequence_validation_failed', 'consequence_input_invalid')
+                                         or f['code'] == 'model_request_failed' and f.get('pass') == 'PAGE_CONSEQUENCES'
+                                         for f in findings):
             return current_result()
     return current_result()

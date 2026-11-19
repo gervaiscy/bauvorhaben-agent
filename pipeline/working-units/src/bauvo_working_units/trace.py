@@ -33,7 +33,9 @@ class RetryingModel:
             try:
                 return self._model.extract(prompt)
             except Exception as exc:
-                transient = getattr(exc, 'code', None) in (429, 500, 502, 503, 504) or isinstance(exc, (TimeoutError, TransportError))
+                transient = (getattr(exc, 'retryable', False)
+                             or getattr(exc, 'code', None) in (429, 500, 502, 503, 504)
+                             or isinstance(exc, (TimeoutError, TransportError)))
                 incomplete = isinstance(exc, IncompleteResponse)
                 if not (transient or incomplete or isinstance(getattr(exc, 'code', None), int)):
                     raise

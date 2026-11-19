@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 """Current task quotation contract across transport, source binding and handoffs."""
 import copy
 import json
@@ -387,6 +388,12 @@ class TaskQuotationTests(unittest.TestCase):
             if phase == 'PAGE_EXTRACTION': return copy.deepcopy(raw)
             if phase == 'PAGE_OFFERS': return {'offers': []}
             wire = data(prompt); seen.append(phase)
+            if phase == 'PAGE_CONSEQUENCES':
+                for unit, original in zip(wire['working_units'].values(), raw['working_units']):
+                    self.assertEqual(unit['quote'], original['quote'])
+                    self.assertEqual(unit['actor'], original['actor'])
+                    self.assertIn('timing', unit)
+                return assessment_answer(wire)
             for unit, original in zip(wire['working_units'], raw['working_units']):
                 self.assertEqual(unit['action'], original['quote'])
                 self.assertEqual(unit['name'], original['title'])

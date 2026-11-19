@@ -95,7 +95,7 @@ class ProviderReplayWorkflowTests(unittest.TestCase):
         self.assertEqual(len(derived['claims'][0]['verified_citations']), 2)
         self.assertEqual(derived['interpretation'], row['claims'][0]['statement'])
         self.assertIsNone(derived['uncertainty'])
-        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_APPLICABILITY'):
             prompt = _prompt(phase, {'source_pages':[], 'project_facts':facts_view(result)}, 'de')
             self.assertNotIn('WRONG OLD SUMMARY', prompt)
             if phase == 'PAGE_TIMING':

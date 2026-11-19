@@ -43,7 +43,7 @@ class FactClaimsTests(unittest.TestCase):
         self.assertEqual(claims[1]['text'], 'Prior deduction is excluded.')
         self.assertEqual(validate_facts(result, [self.doc]), result)
         before = copy.deepcopy(result)
-        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_CONSEQUENCES', 'PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING', 'PAGE_APPLICABILITY'):
             data = json.loads(_prompt(phase, {'source_pages': [], 'project_facts': facts_view(result)}, 'de')
                               .split('SOURCE DATA:\n', 1)[1])
             if phase == 'PAGE_TIMING':

@@ -15,7 +15,7 @@ class FactInputProjectionTests(unittest.TestCase):
                 'zitate':[{'pdf_page':1,'text':'First quote'},{'pdf_page':2,'text':'Second quote'}]},
                 'review_findings':[{'code':'issue'}]}]}}
         original=copy.deepcopy(payload)
-        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_CONSEQUENCES'):
+        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS'):
             with self.subTest(phase=phase):
                 supplied=copy.deepcopy(payload)
                 if phase=='PAGE_OFFERS':
@@ -50,7 +50,7 @@ class FactInputProjectionTests(unittest.TestCase):
     def test_anchors_are_local_only_for_every_pass(self):
         payload={'source_pages':[], 'supported_anchors':[{'event':'Signature','date':'2026-10-25'}]}
         original=copy.deepcopy(payload)
-        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_CONSEQUENCES','PAGE_PROJECT_FACTS'):
+        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_PROJECT_FACTS'):
             with self.subTest(phase=phase):
                 prompt=_prompt(phase,payload,'de')
                 self.assertNotIn('supported_anchors',prompt)
@@ -59,7 +59,7 @@ class FactInputProjectionTests(unittest.TestCase):
     def test_source_snapshot_is_local_only_for_every_pass(self):
         payload={'source_key':'source', 'source_snapshot':'original-hash', 'source_pages':[]}
         original=copy.deepcopy(payload)
-        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_CONSEQUENCES','PAGE_PROJECT_FACTS'):
+        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_PROJECT_FACTS'):
             with self.subTest(phase=phase):
                 data=json.loads(_prompt(phase,payload,'de').split('SOURCE DATA:\n')[1])
                 self.assertNotIn('source_snapshot',data)
@@ -70,7 +70,7 @@ class FactInputProjectionTests(unittest.TestCase):
             {'pdf_page':1,'text':'Overlap','primary':False},
             {'pdf_page':2,'text':'New page','primary':True}]}
         original=copy.deepcopy(payload)
-        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_CONSEQUENCES','PAGE_PROJECT_FACTS'):
+        for phase in ('PAGE_TIMING','PAGE_APPLICABILITY','PAGE_EXTRACTION','PAGE_OFFERS','PAGE_PROJECT_FACTS'):
             with self.subTest(phase=phase):
                 data=json.loads(_prompt(phase,payload,'de').split('SOURCE DATA:\n')[1])
                 self.assertNotIn('primary_pages',data)

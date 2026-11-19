@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 import copy
 import json
@@ -18,6 +19,10 @@ class NegativeWordingTests(unittest.TestCase):
         calls=[];answers=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];calls.append(kind);data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                answers.append(out)
+                return out
             if kind=='PAGE_EXTRACTION':out={'working_units':[copy.deepcopy(proposal)],'offers':[],'carry_forward':''}
             elif kind=='PAGE_OFFERS':out={'offers':[]}
             else:

@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import index_answer, answer_for
 import copy
 import json
@@ -21,6 +22,10 @@ class SimpleWorkflowTests(unittest.TestCase):
             def extract(prompt):
                 p = payload(prompt);kind = prompt.split('.', 1)[0]
                 calls.append((kind, copy.deepcopy(p)))
+                if prompt.startswith('PAGE_CONSEQUENCES.'):
+                    out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                    answers.append(out)
+                    return out
                 if kind == 'PAGE_PROJECT_FACTS':
                     response = index_answer(p)
                 elif kind == 'PAGE_EXTRACTION':
@@ -42,6 +47,8 @@ class SimpleWorkflowTests(unittest.TestCase):
                         self.assertNotIn('local_source_context', unit)
                         rows.append({'unit_id': unit['id'], 'unverified_interpretation': 'Preserve this',
                                      'citations': [{'pdf_page': 999, 'quote': 'not on any page'}]})
+                    if kind == 'PAGE_TIMING':
+                        for row in rows: row['answer'] = 'NOT_STATED'
                     if response_mode == 'missing':rows = []
                     if response_mode == 'unknown' and rows:rows[0]['unit_id'] = 'not-requested'
                     response = {'assessments': rows}
@@ -57,14 +64,14 @@ class SimpleWorkflowTests(unittest.TestCase):
         self.assertEqual(len(RESPONSE_SCHEMAS), 7)
         self.assertEqual([w['pages'] for w in result['windows']], [[1,2,3], [3,4,5], [5,6], [7]])
         for kind, p in calls:
-            if kind != 'PAGE_PROJECT_FACTS':self.assertLessEqual(len(p['source_pages']), 5)
+            if kind not in ('PAGE_PROJECT_FACTS','PAGE_CONSEQUENCES'):self.assertLessEqual(len(p['source_pages']), 5)
             if p.get('document', {}).get('id') == 'D2':self.assertEqual([x['pdf_page'] for x in p['source_pages']], [7])
         first=[p for k,p in calls if k=='PAGE_EXTRACTION' and p['document']['id']=='D2'][0]
         self.assertNotIn('prior_context', first);self.assertEqual(first['known_items'], [])
 
     def test_applicability_uses_whole_window_while_other_assessments_keep_five_unit_batches(self):
         result, calls, _ = self.run_case(12)
-        for kind in ('PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
+        for kind in ('PAGE_TIMING','PAGE_APPLICABILITY'):
             first=[p for k,p in calls if k==kind and [x['pdf_page'] for x in p['source_pages']]==[1,2,3]]
             self.assertEqual([len(p['working_units']) for p in first], [12] if kind=='PAGE_APPLICABILITY' else [5,5,2])
             for p in first:self.assertEqual([x['pdf_page'] for x in p['source_pages']], [1,2,3])
@@ -88,15 +95,17 @@ class SimpleWorkflowTests(unittest.TestCase):
         by_id={r['id']:r['gemini'] for r in result['gemini_responses']}
         for u in result['working_units']:
             self.assertEqual(u['gemini'], by_id[u['derived']['response_id']]['working_units'][u['derived']['response_position']])
-            for r in u['reviews']:self.assertEqual(r['gemini'],by_id[r['response_id']]['assessments'][r['response_position']])
+            for r in u['reviews']:
+                expected = by_id[r['response_id']][r['response_label']] if r['kind']=='PAGE_CONSEQUENCES' else by_id[r['response_id']]['assessments'][r['response_position']]
+                self.assertEqual(r['gemini'],expected)
 
     def test_structural_failures_remain_visible_without_semantic_retry(self):
         for mode, code in [('missing','missing_review'),('unknown','unknown_review_target')]:
             with self.subTest(mode=mode):
                 result,calls,_=self.run_case(response_mode=mode)
-                self.assertEqual(result['status'],'needs_review')
-                self.assertTrue(any(f['code']==code for f in result['review_findings']))
-                self.assertEqual(len(calls),21)  # One facts request plus four windows with five task passes.
+                self.assertEqual(result['status'],'incomplete')
+                self.assertTrue(any(f['code']=='consequence_input_invalid' for f in result['review_findings']))
+                self.assertFalse(any(k=='PAGE_CONSEQUENCES' for k,_ in calls))
         self.assertEqual(assessment_findings('bad JSON',['U1']),[{'code':'missing_or_invalid_assessments'}])
         self.assertTrue(any(f['code']=='duplicate_review_target' for f in assessment_findings({'assessments':[{'unit_id':'U1'},{'unit_id':'U1'}]},['U1'])))
 

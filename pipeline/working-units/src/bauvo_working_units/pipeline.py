@@ -51,7 +51,8 @@ def code_binding():
 
 def run(contracts, blbs, output, project, location='global', model_name='gemini-3.5-flash',
         resume=False, model=None, command_runner=None, accept_analysis_changes=False,
-        max_new_calls=0):
+        max_new_calls=0, consequence_provider='gemini', consequence_model=None,
+        consequence_reasoning='medium', consequence_budget_usd='30'):
     """One phase's saved result is the next phase's input; never resume changed inputs."""
     sources = [{'id':f'{kind}-{i:02d}', 'type':source_type, 'pdf':str(Path(path).expanduser().resolve())}
                for kind, source_type, paths in (('contract','project',contracts),('blb','blb',blbs))
@@ -62,10 +63,14 @@ def run(contracts, blbs, output, project, location='global', model_name='gemini-
         raise ValueError('Every source PDF must exist')
     if len({s['pdf'] for s in sources}) != len(sources):
         raise ValueError('Each PDF must be supplied once, with one source role')
+    from .phases.consequences.backend import provider_identity, backend as consequence_backend
+    consequence_model = consequence_model or (model_name if consequence_provider == 'gemini' else None)
+    consequence_identity = provider_identity(consequence_provider, project, location, consequence_model, consequence_reasoning)
     binding = {'sources':[{**s,'sha256':sha(s['pdf'])} for s in sources],
                'project':project,'location':location,'model':model_name,
                'chunk_pages':10,'overlap_pages':1,'code':code_binding(),
                'phase_thinking_levels':PHASE_THINKING_LEVELS,
+               'consequences': {'identity': consequence_identity, 'max_cost_usd': str(consequence_budget_usd)},
                'recovery':{'code':compatible_code(ROOT), 'generation':generation_settings()}}
     output = Path(output).resolve()
     manifest_path = output/'pipeline.json'
@@ -139,7 +144,8 @@ def run(contracts, blbs, output, project, location='global', model_name='gemini-
                          result_status=result.get('status','recorded'))
             if result.get('status') == 'incomplete':
                 phase = 'offers' if any(f.get('code') == 'offer_validation_failed'
-                                       for f in result.get('review_findings', [])) else 'project facts'
+                                       for f in result.get('review_findings', [])) else (
+                    'consequences' if key.startswith('07-consequences/') else 'project facts')
                 raise RuntimeError(f'Incomplete {phase}; raw output and validation findings preserved')
             if result.get('status') == 'request_failed':
                 raise RuntimeError('Unresolved model requests; phase output and raw attempts preserved')
@@ -153,17 +159,26 @@ def run(contracts, blbs, output, project, location='global', model_name='gemini-
             raise
 
     def recorded(folder, operation):
-        backend.plan_path = folder/'request-plan.json'
-        backend.plans = []
+        selected = (consequence_backend(folder/'result.json', output/'provider-responses', budget,
+            provider=consequence_provider, project=project, location=location, model=consequence_model,
+            reasoning=consequence_reasoning, max_cost_usd=consequence_budget_usd,
+            spend_ledger=output/'consequence-spend.json', factory=(lambda: model) if model is not None else None)
+            if folder.parent.parent.name == '07-consequences' else backend)
+        selected.plan_path = folder/'request-plan.json'
+        selected.plans = []
         previous = sorted((p for p in folder.parent.glob('attempt-*') if p != folder),
                           key=lambda p:int(p.name.split('-')[-1]))
-        recovery = RequestRecovery(backend, folder, previous,
-            {'project':project,'location':location,'model':model_name}, manifest.get('legacy_generation'))
+        recovery = (selected if folder.parent.parent.name == '07-consequences' else
+            RequestRecovery(selected, folder, previous,
+                {'project':project,'location':location,'model':model_name}, manifest.get('legacy_generation')))
         recorder = RetryingModel(TracingModel(RawRunRecorder(recovery, folder/'raw.json'), folder/'trace'))
         result = operation(recorder)
         path = folder/'result.json'
         if result.get('completed_passes', [])[-1:] == ['PAGE_TIMING']:
             from .phases.timing.artifact import write_outputs
+            return write_outputs(path, result)
+        if result.get('completed_passes', [])[-1:] == ['PAGE_CONSEQUENCES']:
+            from .phases.consequences.artifact import write_outputs
             return write_outputs(path, result)
         write(path, result)
         return path
@@ -243,9 +258,15 @@ def main():
     parser.add_argument('--accept-analysis-changes', action='store_true',
                         help='With --resume, retain completed PDF phases after analysis-code/settings changes; only before analysis starts')
     parser.add_argument('--max-new-calls', type=int, default=0, help='Shared Gemini attempt limit for OCR, grouping and analysis, including retries; default offline')
+    parser.add_argument('--consequence-provider', choices=('gemini', 'sol'), default='gemini')
+    parser.add_argument('--consequence-model')
+    parser.add_argument('--consequence-reasoning', choices=('low', 'medium', 'high'), default='medium')
+    parser.add_argument('--consequence-budget-usd', default='30')
     args = parser.parse_args()
     result = run(args.contract,args.blb,args.output,args.project,args.location,args.model,args.resume,accept_analysis_changes=args.accept_analysis_changes,
-                 max_new_calls=args.max_new_calls)
+                 max_new_calls=args.max_new_calls, consequence_provider=args.consequence_provider,
+                 consequence_model=args.consequence_model, consequence_reasoning=args.consequence_reasoning,
+                 consequence_budget_usd=args.consequence_budget_usd)
     print('Pipeline '+result['status']+': '+str(Path(args.output)/'pipeline.json'))
 
 

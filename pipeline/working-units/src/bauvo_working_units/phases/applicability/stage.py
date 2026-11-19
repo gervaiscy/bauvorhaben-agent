@@ -9,7 +9,7 @@ from ...fact_artifact import validate_facts
 from ...offer_stage import validate_input
 from ...page_flow import extract_page_units
 from ...project_flow import load_documents
-from ..timing.artifact import load_artifact
+from ..consequences.artifact import load_artifact
 
 PRIOR_PASSES = ('PAGE_EXTRACTION', 'PAGE_OFFERS', 'PAGE_TIMING')
 
@@ -22,6 +22,9 @@ def prior_passes(baseline):
 
 def extract_applicability(baseline, documents, model, chunk_pages=10, overlap_pages=1,
                           context_documents=()):
+    if 'PAGE_CONSEQUENCES' in baseline.get('completed_passes', []):
+        from ..consequences.validation import require_complete
+        require_complete(baseline)
     validate_input(baseline, documents, chunk_pages, overlap_pages, expected_passes=prior_passes(baseline))
     facts = validate_facts(baseline['project_facts'], [*documents, *context_documents])
     result = extract_page_units(documents, model, chunk_pages=chunk_pages, overlap_pages=overlap_pages,

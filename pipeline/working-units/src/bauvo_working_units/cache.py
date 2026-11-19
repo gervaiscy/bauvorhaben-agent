@@ -15,9 +15,16 @@ def digest(value):
 def provider_request(prompt, identity):
     # Only settings that actually reach this request belong in its identity.
     phase = prompt.split('.', 1)[0]
+    from .schemas import response_schema_for
+    if identity.get('provider') == 'sol':
+        from .sol import generation_for_sol
+        return {'identity': {'provider': 'sol', 'model': identity['model'],
+                             'reasoning': identity.get('reasoning', 'medium')},
+                'prompt': prompt, 'generation': generation_for_sol(phase, identity.get('reasoning', 'medium')),
+                'response_schema': response_schema_for(prompt)}
     return {'identity': {k: copy.deepcopy(identity[k]) for k in ('project', 'location', 'model') if k in identity},
             'prompt': prompt, 'generation': generation_for(phase),
-            'response_schema': copy.deepcopy(RESPONSE_SCHEMAS.get(phase))}
+            'response_schema': response_schema_for(prompt)}
 
 
 class CachedModel:

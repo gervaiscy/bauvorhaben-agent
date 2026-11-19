@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from clause_fixtures import decode_prompt
 import copy
 import hashlib
@@ -58,8 +59,7 @@ class SimpleTimingTests(unittest.TestCase):
         self.assertEqual(result['gemini_responses'][-1]['gemini']['assessments'][0],review['gemini'])
         self.assertEqual(baseline,original)
         def consequence(prompt):
-            data=decode_prompt(prompt);return {'assessments':[
-                {'unit_id':data['working_units'][0]['id'],'status':'NOT_STATED','consequences':[],'citations':[]}]}
+            return assessment_answer(json.loads(prompt.split('SOURCE DATA:\n')[1]))
         extended=extract_consequences(result,docs,SimpleNamespace(extract=consequence))
         def applicable(prompt):
             data=decode_prompt(prompt);return {'assessments':[

@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 """Readable timing exports retain lossless evidence and downstream handoffs."""
 import copy
 import io
@@ -144,6 +145,9 @@ class TimingArtifactCliTests(unittest.TestCase):
                 last_finish_reason = 'STOP'
                 def extract(self, prompt):
                     calls.append(prompt)
+                    if prompt.startswith('PAGE_CONSEQUENCES.'):
+                        value = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n')[1]))
+                        self.last_raw_response = json.dumps(value); return value
                     fields = ({'answer': 'NOT_STATED', 'citations': []} if prompt.startswith('PAGE_TIMING.')
                               else {'status': 'NOT_STATED', 'consequences': [], 'citations': []}
                               if prompt.startswith('PAGE_CONSEQUENCES.')
@@ -178,7 +182,7 @@ class TimingArtifactCliTests(unittest.TestCase):
             for main, name in ((consequences_main, 'consequences'), (applicability_main, 'applicability')):
                 following = root/name/'result.json'
                 run(main, output, following)
-                full = json.loads(following.read_text())
+                full = json.loads(following.with_name('result.audit.json').read_text()) if name=='consequences' else json.loads(following.read_text())
                 self.assertEqual(full['working_units'][0]['reviews'][0], audit['working_units'][0]['reviews'][0])
             self.assertEqual(len(calls), 3)
             self.assertEqual(raw.read_bytes(), original_raw)

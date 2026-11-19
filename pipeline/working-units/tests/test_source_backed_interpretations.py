@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from historical_facts import collect_historical_facts
 from clause_fixtures import decode_prompt
 """Interpretation transport, literal evidence, full context and failure boundaries."""
@@ -52,7 +53,7 @@ class SourceBackedInterpretationTests(unittest.TestCase):
                                           interpretation,uncertainty)])
         facts=collect_historical_facts([doc],SimpleNamespace(extract=lambda _:copy.deepcopy(answer)))
         before=copy.deepcopy(facts)
-        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY'):
+        for phase in ('PAGE_EXTRACTION','PAGE_OFFERS','PAGE_TIMING','PAGE_APPLICABILITY'):
             data=json.loads(_prompt(phase,{'source_pages':[], 'project_facts':facts_view(facts)},'de')
                             .split('SOURCE DATA:\n')[1])
             fact=data['project_facts']['facts'][0]
@@ -83,6 +84,9 @@ class SourceBackedInterpretationTests(unittest.TestCase):
             phase=prompt.split('.',1)[0]
             self.assertNotEqual(phase,'PAGE_CITATION_REPAIR')
             data=decode_prompt(prompt);calls.append(phase)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             if phase == 'PAGE_TIMING':
                 self.assertNotIn('source_documents', data['project_facts'])
                 return {'assessments': [{'unit_id': u['id'], 'answer': 'NOT_STATED', 'citations': []} for u in data['working_units']]}

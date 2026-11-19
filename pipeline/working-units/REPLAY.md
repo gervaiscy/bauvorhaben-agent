@@ -252,3 +252,55 @@ truncated output and non-JSON answers remain attempt evidence, not completed
 responses. Input and response checksum failures stop replay rather than contacting
 the provider as a fallback. The SDK's implicit retries are disabled at the guarded
 boundaries so each counted attempt corresponds to one SDK request.
+
+
+## Simplified consequences with a provider switch
+
+Start from an accepted timing result and keep its `.audit.json` sibling. No task
+without a timing assessment is submitted. `NOT_STATED` is a valid assessment.
+Batches contain ten tasks regardless of the extraction windows; no scope or verifier
+calls run. The German prompt and two-field assessment schema are shared by Sol and Gemini.
+
+```sh
+PYTHONPATH=pipeline/working-units/src .venv/bin/python \
+  -m bauvo_working_units.phases.consequences.stage \
+  --provider sol \
+  --working-units /accepted/timing/result.json \
+  --pages /accepted/blb/pages.json \
+  --documents /accepted/blb/documents.json \
+  --context-pages /accepted/contract/pages.json \
+  --context-documents /accepted/contract/documents.json \
+  --reasoning-effort medium \
+  --max-new-calls 11 \
+  --max-cost-usd 30 \
+  --cache-dir /new/consequences/provider-responses \
+  --spend-ledger /new/consequences/spend.json \
+  --output /new/consequences/result.json
+```
+
+Sol reads `OPENAI_API_KEY` from the environment; it never falls back to Gemini.
+For Gemini, replace `--provider sol` with `--provider gemini --project PROJECT_ID`.
+The default model is selected accordingly. Use `--plan-only --max-new-calls 0` first
+to see how many saved/new requests exist without contacting either provider.
+For a replay, retain the cache and spend-ledger paths but use a new output folder
+and `--max-new-calls 0`. Local validation changes do not invalidate paid responses;
+actual prompt, provider, model, effort or schema changes do.
+
+The complete BLB is sent once in each batch. Contract pages supplied through
+`--context-pages` are checked locally against project-fact provenance, but the model
+receives compact facts instead of the full contract. When BLB is itself a context
+source, mark it with `--context-type blb` (repeat types for multiple sources).
+Only provided sources can support the answer.
+
+The readable output adds `consequences: {classification, reasoning}` to each task.
+Raw JSON is in `result.openai-raw.json` for Sol or `result.gemini-raw.json` for Gemini.
+Each has an attempts sidecar; exact prompts are in `result.trace`. The lossless
+cumulative artifact is in `result.audit.json`; validation findings and partial
+output are retained separately. Page/fact references in reasoning are prose, not
+machine-validated citations. No model or local check certifies semantic correctness.
+
+A shared USD ledger conservatively reserves each attempt, including retries and
+failures, and reports token usage/cost estimates. It does not represent an invoice.
+The sequential pipeline accepts `--consequence-provider sol` and
+`--consequence-reasoning medium`; other stages continue to use Gemini and the
+existing shared call limit.

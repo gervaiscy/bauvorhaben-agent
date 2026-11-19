@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 from historical_facts import collect_historical_facts
 from clause_fixtures import labeled_answer
 from clause_fixtures import decode_prompt
@@ -189,11 +190,14 @@ class ProjectFactsTests(unittest.TestCase):
         local=document('blb','Der Kunde bestätigt die Planung.');calls=[]
         def extract(prompt):
             kind=prompt.split('.',1)[0];data=decode_prompt(prompt)
+            if prompt.startswith('PAGE_CONSEQUENCES.'):
+                out = assessment_answer(json.loads(prompt.split('SOURCE DATA:\n', 1)[1]))
+                return out
             if kind=='PAGE_EXTRACTION':return {'working_units':[{'action':'Planung bestätigen',
                 'citations':[{'pdf_page':1,'quote':local.pages[0]['text']}]}],'carry_forward':''}
             if kind=='PAGE_OFFERS':return {'offers':[]}
             if kind=='PAGE_APPLICABILITY':calls.append(data)
-            return {'assessments':[{'unit_id':u['id'],'status':'NOT_STATED','citations':[]} for u in data['working_units']]}
+            return {'assessments':[{'unit_id':u['id'],'answer':'NOT_STATED','citations':[]} for u in data['working_units']]}
         result=extract_page_units([local],SimpleNamespace(extract=extract),project_facts=facts)
         received=calls[0]['project_facts']['facts']
         self.assertEqual([r['text'] for r in received],[d.pages[0]['text'] for d in docs])

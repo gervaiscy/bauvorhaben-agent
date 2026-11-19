@@ -1,3 +1,4 @@
+from consequence_fixtures import assessment_answer
 """Task selection, literal review text, shared evidence and stage handoff offline."""
 import copy
 import json
@@ -188,6 +189,12 @@ class SourceSelectedTaskTests(unittest.TestCase):
                 return copy.deepcopy(raw)
             if phase == 'PAGE_OFFERS':
                 return {'offers': []}
+            if phase == 'PAGE_CONSEQUENCES':
+                seen[phase] = [{'id': label} for label in wire['working_units']]
+                for unit in wire['working_units'].values():
+                    self.assertEqual(unit['quote'], text)
+                    self.assertIn('timing', unit)
+                return assessment_answer(wire)
             seen[phase] = wire['working_units']
             for unit in wire['working_units']:
                 self.assertEqual(unit['action'], text)

@@ -43,6 +43,9 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                             'belege':[e['evidence_id']]} for e in data['evidence_catalog']]}
                     elif prompt.startswith('PAGE_EXTRACTION'):response={'working_units':[proposal]}
                     elif prompt.startswith('PAGE_OFFERS'):response={'offers':[]}
+                    elif prompt.startswith('PAGE_CONSEQUENCES'):
+                        response={label:{'classification':'NOT_STATED','reasoning':'No supported consequence stated.'}
+                                  for label in data['working_units']}
                     elif prompt.startswith(('PAGE_TIMING','PAGE_CONSEQUENCES','PAGE_APPLICABILITY')):
                         row={'unit_id':data['working_units'][0]['id'],'citations':[]}
                         if prompt.startswith('PAGE_APPLICABILITY'):
@@ -57,7 +60,7 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                 argv=['units','--pages',str(root/'pages.json'),'--documents',str(root/'documents.json'),'--project','p',
                       '--output',str(root/f'output-{attempt}.json'),'--trace-dir',str(root/f'trace-{attempt}'),'--cache-dir',str(root/'cache'),'--max-new-calls','6']
                 with patch.object(sys,'argv',argv),patch('bauvo_working_units.cli.GeminiModel',Fake):main()
-            self.assertEqual(models,['gemini-3.5-flash']);self.assertEqual(len(calls),6)
+            self.assertEqual(models,['gemini-3.5-flash','gemini-3.5-flash']);self.assertEqual(len(calls),6)
             self.assertEqual((root/'pages.json').read_bytes(),before)
             result=json.loads((root/'output-1.json').read_text());self.assertEqual(result['schema_version'],18)
             self.assertEqual(result['project_facts']['schema_version'],15)
@@ -81,6 +84,12 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                     self.assertNotIn('source_documents',data['project_facts'])
                     self.assertEqual(data['source_pages'],[{'pdf_page':1,'passages':[{'passage':'P1-1','text':text}]}])
                     self.assertNotIn('source_documents',data)
+                elif prompt.startswith('PAGE_CONSEQUENCES.'):
+                    self.assertEqual(data['project_facts'],[{'id':facts['facts'][0]['id'],'text':text}])
+                    self.assertEqual(set(data['working_units']['U1']),{'title','actor','quote','timing'})
+                    self.assertEqual(data['working_units']['U1']['timing']['status'],'NOT_STATED')
+                    self.assertNotIn('evidence_catalog',data)
+                    self.assertEqual(data['source_documents'],[])
                 else:
                     self.assertEqual(data['project_facts']['facts'][0]['text'],text)
             self.assertEqual(result['working_units'][0]['gemini'],proposal)
@@ -174,3 +183,20 @@ class Schema6CLIIntegrationTests(unittest.TestCase):
                 bauvo.execute_stage('units',root,{'sources':sources,'contract_signed':'2025-01-01'},config)
             self.assertEqual([args[args.index('--source-type')+1] for args in calls],['project','blb'])
             self.assertEqual([args[args.index('--context-type')+1] for args in calls],['blb','project'])
+
+    def test_case_runner_cannot_mark_incomplete_consequences_complete_on_retry(self):
+        from bauvo_working_units.schemas import PROTOCOL
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);extracted=root/'extraction/contract';extracted.mkdir(parents=True)
+            (extracted/'pages.json').write_text('{"schema_version":6}')
+            folder=root/'working-units/contract';folder.mkdir(parents=True)
+            target=folder/'working-units.json'
+            target.write_text(json.dumps({'schema_version':18,'protocol':PROTOCOL,'status':'incomplete',
+                'review_findings':[{'code':'consequence_validation_failed'}]}))
+            before=target.read_bytes()
+            with patch('extraction_acceptance.require_approved'),patch.object(bauvo,'command') as command,patch.object(bauvo,'complete') as complete:
+                with self.assertRaisesRegex(ValueError,'incomplete stage'):
+                    bauvo.execute_stage('units',root,{'sources':[{'key':'contract'}]},
+                        {'project':'p','location':'global','model':'report','thinking_budget':2048})
+                command.assert_not_called();complete.assert_not_called()
+            self.assertEqual(target.read_bytes(),before)
